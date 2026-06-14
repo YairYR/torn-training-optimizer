@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
 import { gainPerTrain } from '../engine/vladar';
 import {
@@ -6,6 +6,7 @@ import {
   evaluateGymEligibility,
   isUsable,
 } from '../engine/gym-eligibility';
+import { trainingRegime, atGrowthCap, STAT_GROWTH_CAP } from '../engine/training-method';
 import { rankEnergy, Prices } from '../engine/cost-model';
 import { ENERGY_SOURCES } from '../data/consumables';
 import { fmtGain, fmtInt, fmtMoney } from '../format';
@@ -24,8 +25,8 @@ function secondHighest(stats: Record<StatKey, number>): number {
 }
 
 export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
-  const baseHappy = player.happy.maximum;
-  const edvdForCap = Math.max(0, Math.ceil((HAPPY_CAP / 2 - baseHappy) / 2500));
+  const [book, setBook] = useState(false);
+  const maxHappy = player.happy.maximum;
 
   const cheapestEnergy = useMemo(() => {
     if (!prices) return null;
@@ -39,24 +40,29 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
       const usableId = bestUsableGymIdForStat(gyms, stat, player.stats, player.xanaxEcstasyTaken);
       const gym = gyms.find((g) => g.id === usableId);
       const dots = gym ? gym.dots[stat] : 0;
-      const perTrain = gym
-        ? gainPerTrain({
-            modifiers: modifiers[stat],
-            dots,
-            energyPerTrain: gym.energyPerTrain,
-            happy: HAPPY_CAP,
-            statValue: player.stats[stat],
-          })
-        : 0;
+      const regime = trainingRegime(player.stats[stat]);
+      const capped = atGrowthCap(player.stats[stat]);
 
-      // Best locked gym that would beat the usable one (an upgrade target).
+      const gainAt = (happy: number) =>
+        gym
+          ? gainPerTrain({
+              modifiers: modifiers[stat],
+              dots,
+              energyPerTrain: gym.energyPerTrain,
+              happy,
+              statValue: player.stats[stat],
+            })
+          : 0;
+
+      const recommendedHappy = book ? HAPPY_CAP : maxHappy;
+
+      // Best locked gym that would beat the usable one (upgrade target).
       let upgrade: { gym: Gym; requirement?: string; target?: number; gap?: number } | null = null;
       for (const g of gyms) {
         if (g.dots[stat] <= dots) continue;
         const el = evaluateGymEligibility(g, player.stats, player.xanaxEcstasyTaken);
         if (isUsable(el.status)) continue;
         if (!upgrade || g.dots[stat] > upgrade.gym.dots[stat]) {
-          // Numeric target for 50E single-stat specialists.
           let target: number | undefined;
           let gap: number | undefined;
           if (g.energyPerTrain === 50) {
@@ -67,13 +73,30 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
         }
       }
 
-      return { stat, gym, dots, perTrain, upgrade };
+      return {
+        stat,
+        gym,
+        dots,
+        regime,
+        capped,
+        recommendedHappy,
+        gainRecommended: gainAt(recommendedHappy),
+        gainCap: gainAt(HAPPY_CAP),
+        upgrade,
+      };
     });
-  }, [gyms, player, modifiers]);
+  }, [gyms, player, modifiers, book, maxHappy]);
 
   return (
     <section className="panel">
       <h2>Optimal training plan</h2>
+      <div className="plan-toggle">
+        <label className="rule">
+          <input type="checkbox" checked={book} onChange={(e) => setBook(e.target.checked)} />
+          I have the “Ignorance Is Bliss” book (sustained 99,999 happy)
+        </label>
+      </div>
+
       <div className="plan-grid">
         {plans.map((p) => (
           <div className="plan-card" key={p.stat}>
@@ -81,6 +104,9 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
               <span className="plan-stat">{STAT_LABEL[p.stat]}</span>
               <span className="plan-now">{fmtInt(player.stats[p.stat])}</span>
             </div>
+
+            <div className={`plan-method method-${p.regime.regime}`}>{p.regime.label}</div>
+            <div className="plan-rationale">{p.regime.rationale}</div>
 
             {p.gym ? (
               <>
@@ -93,7 +119,11 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
                 <div className="plan-row">
                   <span className="plan-k">Happy</span>
                   <span className="plan-v">
-                    jump to 99,999 (≈ {edvdForCap} Erotic DVD + Ecstasy)
+                    {book
+                      ? 'sustained 99,999 (book)'
+                      : `train at your max ~${fmtInt(maxHappy)}${
+                          p.regime.regime !== 'energy-training' ? '; jump when affordable' : '; optional 1 Ecstasy ×2'
+                        }`}
                   </span>
                 </div>
                 <div className="plan-row">
@@ -105,8 +135,18 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
                   </span>
                 </div>
                 <div className="plan-gain">
-                  ≈ +{fmtGain(p.perTrain)} <span className="plan-gain-lbl">per train at cap</span>
+                  ≈ +{fmtGain(p.gainRecommended)}{' '}
+                  <span className="plan-gain-lbl">per train{book ? ' (book)' : ' at max happy'}</span>
                 </div>
+                {!book && (
+                  <div className="plan-ceiling">99k jump ceiling: +{fmtGain(p.gainCap)} / train</div>
+                )}
+                {p.capped && (
+                  <div className="plan-cap-note">
+                    ⚠ At {fmtInt(STAT_GROWTH_CAP)}+ the stat-growth term flattens — extra stat no longer
+                    compounds (community-reported; verify).
+                  </div>
+                )}
                 {p.upgrade && (
                   <div className="plan-upgrade">
                     Next upgrade: <strong>{p.upgrade.gym.name || 'Fight Club'}</strong> (
@@ -128,9 +168,11 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
         ))}
       </div>
       <p className="footnote">
-        For each stat: the best gym you can use right now, the happy jump to the 99,999 cap, the
-        cheapest energy, and the resulting per-train gain (at your stats, capped happy and your M).
-        "Next upgrade" is the better gym you don't qualify for yet and what it takes.
+        Method is chosen by stat level: 99k happy jumps win at low stats but lose to energy training
+        as stats grow (you waste 32–35h of regen stacking for a jump, and the stat-growth term
+        flattens near 50M). The “per train” figure uses your sustainable max happy — the realistic
+        daily case — with the 99k ceiling shown for reference. For the budget-optimal buy-list of a
+        single session, use the <strong>Budget optimizer</strong> panel.
       </p>
     </section>
   );

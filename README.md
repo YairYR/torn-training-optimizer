@@ -107,9 +107,15 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   — a heuristic parser sums the gym-gain bonuses (`M = 1 + Σ%`) and shows the
   breakdown. Editable per stat; "Detect from perks" re-applies. `M` affects
   absolute gains, not the gym ranking.
-- **Optimal training plan** (`src/components/TrainingPlan.tsx`): per stat, states
-  the best usable gym, the happy jump to the 99,999 cap, the cheapest energy, the
-  per-train gain, and the next gym upgrade with its numeric requirement.
+- **Optimal training plan** (`src/components/TrainingPlan.tsx`): per stat, the
+  recommended **method by stat level** (`src/engine/training-method.ts`) — happy
+  jumps win at low stats but lose to energy training as stats grow (you waste
+  32–35h of regen stacking for a jump, and the stat-growth term flattens near
+  50M). Shows the best usable gym, the per-train gain at your sustainable max
+  happy (realistic) with the 99k ceiling for reference, a toggle for the
+  "Ignorance Is Bliss" book (sustained 99k), a 50M growth-cap warning, and the
+  next gym upgrade with its numeric requirement. Use the **Budget optimizer**
+  panel for the cost-optimal buy-list of a single session.
 - **Consumable effects** (`src/data/consumables.ts`): confirmed against the Torn
   wiki / training guides — Xanax 250 E, LSD 50 E, refill 150 E for 25 points,
   Erotic DVD +2500 happy, Ecstasy ×2 happy. Happy cap confirmed 99,999. Prices

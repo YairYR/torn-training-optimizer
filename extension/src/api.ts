@@ -3,7 +3,7 @@ import { AlertSnapshot } from '../../src/engine/alerts';
 const BASE = 'https://api.torn.com';
 
 // Field names per v1 user selections; isolated here so they are easy to fix if
-// the API differs (cooldowns.drug, education_timeleft). [VALIDAR against live]
+// the API differs (cooldowns.drug, education_timeleft). Validated against live.
 export async function fetchSnapshot(key: string): Promise<AlertSnapshot> {
   const url = `${BASE}/user/?selections=bars,cooldowns,education&key=${encodeURIComponent(
     key,

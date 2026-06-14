@@ -42,11 +42,11 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     speed: Number(raw.speed),
     dexterity: Number(raw.dexterity),
   };
-  // personalstats: xantaken (Xanax) + exttaken (Ecstasy). [VALIDAR field names]
+  // personalstats: xantaken (Xanax) + ecstaken (Ecstasy). Validated against the API.
   const ps = raw.personalstats;
   const xet =
-    ps && ps.xantaken != null && ps.exttaken != null
-      ? Number(ps.xantaken) + Number(ps.exttaken)
+    ps && ps.xantaken != null && ps.ecstaken != null
+      ? Number(ps.xantaken) + Number(ps.ecstaken)
       : null;
 
   const mod = parseGymGainModifiers({
@@ -96,7 +96,7 @@ export interface RawUser {
   dexterity: number;
   happy: RawBar;
   energy: RawBar;
-  personalstats?: { xantaken?: number; exttaken?: number };
+  personalstats?: { xantaken?: number; ecstaken?: number };
   faction_perks?: string[];
   property_perks?: string[];
   merit_perks?: string[];

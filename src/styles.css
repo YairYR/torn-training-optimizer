@@ -237,3 +237,20 @@ td.muted-cell { color: #525a68; }
   padding: 14px 8px 6px;
   margin-bottom: 16px;
 }
+
+.access {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+.access-accessible { color: var(--muted); }
+.access-eligible { color: var(--best); border-color: #2f5a50; }
+.access-locked { color: var(--danger); border-color: #5a3330; cursor: help; }
+.access-invite { color: var(--accent); border-color: var(--accent-dim); }
+.access-unknown { color: var(--muted); border-color: var(--line); cursor: help; }
+tbody tr.row-locked td { opacity: 0.55; }
+tbody tr.row-locked:hover td { opacity: 0.8; }

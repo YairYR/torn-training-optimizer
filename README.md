@@ -111,6 +111,13 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   Erotic DVD +2500 happy, Ecstasy ×2 happy. Happy cap confirmed 99,999. Prices
   are fetched live (`torn/items` market value + `pointsmarket`); unresolved names
   show "price n/a".
+- **Gym eligibility** (`src/engine/gym-eligibility.ts`): specialist-gym unlock
+  requirements are computed from the player's stats (the ratio rules) and, for
+  the Sports Science Lab, from the Xanax+Ecstasy count (`personalstats`). The
+  "best gym" recommendation (comparator, projector, defaults) only picks gyms the
+  player can actually use; locked specialists are shown with their requirement.
+  `torn/gyms` lists every gym in the game, so this filtering matters. Standard-gym
+  unlock by cost/progression isn't exposed by the API and is assumed.
 
 ## Alerts extension (Phase 4)
 

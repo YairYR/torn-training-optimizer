@@ -41,10 +41,17 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     speed: Number(raw.speed),
     dexterity: Number(raw.dexterity),
   };
+  // personalstats: xantaken (Xanax) + exttaken (Ecstasy). [VALIDAR field names]
+  const ps = raw.personalstats;
+  const xet =
+    ps && ps.xantaken != null && ps.exttaken != null
+      ? Number(ps.xantaken) + Number(ps.exttaken)
+      : null;
   return {
     stats,
     happy: { current: Number(raw.happy.current), maximum: Number(raw.happy.maximum) },
     energy: { current: Number(raw.energy.current), maximum: Number(raw.energy.maximum) },
+    xanaxEcstasyTaken: xet,
   };
 }
 
@@ -73,4 +80,5 @@ export interface RawUser {
   dexterity: number;
   happy: RawBar;
   energy: RawBar;
+  personalstats?: { xantaken?: number; exttaken?: number };
 }

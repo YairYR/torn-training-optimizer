@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
-import { compareGyms } from '../engine/gym-comparator';
+import { bestUsableGymIdForStat } from '../engine/gym-eligibility';
 import { project, DailyPlan, GymForStat, Goal } from '../engine/projector';
 import { Prices } from '../engine/cost-model';
 import { SessionConfig } from '../session-config';
@@ -41,16 +41,16 @@ export function Projector({ gyms, player, modifiers, config, prices }: Props) {
   const currentValue = goalType === 'total' ? currentTotal : player.stats[goalType];
   const [target, setTarget] = useState<number>(Math.round(currentTotal * 1.5));
 
-  // Best gym per stat = highest gain-per-energy = highest dots (E cancels in gpe).
+  // Best usable gym per stat (respects specialist unlock requirements).
   const gymForStat = useMemo<Record<StatKey, GymForStat>>(() => {
-    const rows = compareGyms({ gyms, stats: player.stats, happy: player.happy.current, modifiers });
     const out = {} as Record<StatKey, GymForStat>;
     for (const s of STAT_KEYS) {
-      const best = rows.find((r) => r.perStat[s].isBest)?.gym;
-      out[s] = best ? { energyPerTrain: best.energyPerTrain, dots: best.dots[s] } : { energyPerTrain: 10, dots: 0 };
+      const id = bestUsableGymIdForStat(gyms, s, player.stats, player.xanaxEcstasyTaken);
+      const g = gyms.find((x) => x.id === id);
+      out[s] = g ? { energyPerTrain: g.energyPerTrain, dots: g.dots[s] } : { energyPerTrain: 10, dots: 0 };
     }
     return out;
-  }, [gyms, player, modifiers]);
+  }, [gyms, player]);
 
   const allocation = useMemo<Record<StatKey, number>>(() => {
     if (alloc === 'focus') {

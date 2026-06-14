@@ -21,6 +21,8 @@ export interface PlayerState {
   stats: Record<StatKey, number>; // current value of each battle stat
   happy: Bar;
   energy: Bar;
+  /** Total Xanax + Ecstasy taken (for SSL eligibility). null if unavailable. */
+  xanaxEcstasyTaken?: number | null;
 }
 
 export interface Gym {

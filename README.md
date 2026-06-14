@@ -107,6 +107,12 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   — a heuristic parser sums the gym-gain bonuses (`M = 1 + Σ%`) and shows the
   breakdown. Editable per stat; "Detect from perks" re-applies. `M` affects
   absolute gains, not the gym ranking.
+- **Gym unlocking**: the 24 standard gyms (through George's) unlock by **gym EXP
+  = total energy spent training over your whole career**, not days or stats. The
+  API doesn't expose gym EXP, so the tool reads your active gym as a default and
+  offers a "Highest unlocked gym" selector; standard gyms above it (and the
+  specialists that require George's) are marked locked. Specialist gyms gate on
+  stat ratios + drug count, which `src/engine/gym-eligibility.ts` computes.
 - **Optimal training plan** (`src/components/TrainingPlan.tsx`): per stat, the
   recommended **method by stat level** (`src/engine/training-method.ts`) — happy
   jumps win at low stats but lose to energy training as stats grow (you waste

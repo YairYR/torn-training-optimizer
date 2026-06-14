@@ -1,16 +1,24 @@
 import { Gym, StatKey, STAT_KEYS, STAT_LABEL } from './types';
 
-// Specialist-gym unlock requirements are computable from the player's stats
-// (wiki). Standard gyms (through George's) unlock by money/progression, which
-// the API doesn't expose, so they are assumed accessible for an established
-// player. Specialists are identified by their energy + dot signature (robust to
-// the "Unknown"/Fight Club name coming back empty from the API).
+// Standard gyms (the 24 progressing to George's) unlock by GYM EXP, which is
+// total energy spent training over the player's whole career (wiki). The API
+// doesn't expose gym EXP, but it does expose the active gym; combined with a
+// manual "highest unlocked gym" cap we can gate the standard progression
+// instead of assuming every gym is available. Specialist gyms gate on stats
+// (ratios) + drug count (SSL) AND require George's / Last Round unlocked.
 
 export type EligibilityStatus = 'accessible' | 'eligible' | 'locked' | 'invite' | 'unknown';
 
 export interface GymEligibility {
   status: EligibilityStatus;
   requirement?: string;
+}
+
+export interface GymGate {
+  /** Numeric id of the highest unlocked standard gym. Standard gyms above this are locked. */
+  unlockedCapId?: number | null;
+  /** Whether George's (the top standard gym) is unlocked — required by specialists. */
+  georgesUnlocked?: boolean;
 }
 
 function trainedStats(gym: Gym): StatKey[] {
@@ -25,10 +33,18 @@ function sum(stats: Record<StatKey, number>, keys: StatKey[]): number {
   return keys.reduce((a, k) => a + stats[k], 0);
 }
 
+function specialistLockedByProgress(gate?: GymGate): GymEligibility | null {
+  if (gate && gate.georgesUnlocked === false) {
+    return { status: 'locked', requirement: 'Unlock George’s first (needs more gym EXP)' };
+  }
+  return null;
+}
+
 export function evaluateGymEligibility(
   gym: Gym,
   stats: Record<StatKey, number>,
   xanaxEcstasyTaken?: number | null,
+  gate?: GymGate,
 ): GymEligibility {
   const e = gym.energyPerTrain;
   const trained = trainedStats(gym);
@@ -38,11 +54,22 @@ export function evaluateGymEligibility(
   if (e <= 10 && trained.length === 4 && maxDots >= 9.5) {
     return { status: 'invite', requirement: 'Invite only' };
   }
-  // Standard gyms (Premier through George's).
-  if (e <= 10) return { status: 'accessible' };
+
+  // Standard gyms (Premier through George's) — gated by gym EXP via the cap.
+  if (e <= 10) {
+    if (gate && gate.unlockedCapId != null && Number(gym.id) > gate.unlockedCapId) {
+      return {
+        status: 'locked',
+        requirement: 'Not yet unlocked — needs more gym EXP (total energy trained)',
+      };
+    }
+    return { status: 'accessible' };
+  }
 
   // 50E single-stat specialists: trained stat 25% above the 2nd-highest stat.
   if (e === 50 && trained.length === 1) {
+    const locked = specialistLockedByProgress(gate);
+    if (locked) return locked;
     const s = trained[0];
     const ok = stats[s] >= 1.25 * secondHighest(stats);
     return {
@@ -53,6 +80,8 @@ export function evaluateGymEligibility(
 
   // 25E specialists.
   if (e === 25) {
+    const locked = specialistLockedByProgress(gate);
+    if (locked) return locked;
     if (trained.length === 4) {
       // The Sports Science Lab.
       if (xanaxEcstasyTaken == null) {
@@ -85,18 +114,18 @@ export function bestUsableGymIdForStat(
   stat: StatKey,
   stats: Record<StatKey, number>,
   xanaxEcstasyTaken?: number | null,
+  gate?: GymGate,
 ): string {
   let bestId = '';
   let bestDots = -1;
   for (const g of gyms) {
     if (g.dots[stat] <= 0) continue;
-    const el = evaluateGymEligibility(g, stats, xanaxEcstasyTaken);
+    const el = evaluateGymEligibility(g, stats, xanaxEcstasyTaken, gate);
     if (USABLE.includes(el.status) && g.dots[stat] > bestDots) {
       bestDots = g.dots[stat];
       bestId = g.id;
     }
   }
-  // Fallback: any gym training the stat (should not happen for established players).
   if (!bestId) {
     for (const g of gyms) {
       if (g.dots[stat] > bestDots) {
@@ -106,6 +135,25 @@ export function bestUsableGymIdForStat(
     }
   }
   return bestId;
+}
+
+/** Standard (non-specialist, non-invite) gyms, ordered by progression (id). */
+export function standardGyms(gyms: Gym[]): Gym[] {
+  return gyms
+    .filter((g) => {
+      const maxDots = Math.max(...STAT_KEYS.map((s) => g.dots[s]));
+      const allFour = STAT_KEYS.every((s) => g.dots[s] > 0);
+      const isFightClub = g.energyPerTrain <= 10 && allFour && maxDots >= 9.5;
+      return g.energyPerTrain <= 10 && !isFightClub;
+    })
+    .sort((a, b) => Number(a.id) - Number(b.id));
+}
+
+/** Id of George's — the top standard gym (highest id among standard gyms). */
+export function georgesGymId(gyms: Gym[]): number | null {
+  const std = standardGyms(gyms);
+  if (!std.length) return null;
+  return Number(std[std.length - 1].id);
 }
 
 export function isUsable(status: EligibilityStatus): boolean {

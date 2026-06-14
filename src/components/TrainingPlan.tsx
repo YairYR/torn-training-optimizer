@@ -5,6 +5,7 @@ import {
   bestUsableGymIdForStat,
   evaluateGymEligibility,
   isUsable,
+  GymGate,
 } from '../engine/gym-eligibility';
 import { trainingRegime, atGrowthCap, STAT_GROWTH_CAP } from '../engine/training-method';
 import { rankEnergy, Prices } from '../engine/cost-model';
@@ -16,6 +17,10 @@ interface Props {
   player: PlayerState;
   modifiers: Record<StatKey, number>;
   prices: Prices | null;
+  gate: GymGate;
+  standardGyms: Gym[];
+  unlockedGymId: number | null;
+  onUnlockedGym: (id: number) => void;
 }
 
 const HAPPY_CAP = 99_999;
@@ -24,7 +29,16 @@ function secondHighest(stats: Record<StatKey, number>): number {
   return STAT_KEYS.map((s) => stats[s]).sort((a, b) => b - a)[1];
 }
 
-export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
+export function TrainingPlan({
+  gyms,
+  player,
+  modifiers,
+  prices,
+  gate,
+  standardGyms,
+  unlockedGymId,
+  onUnlockedGym,
+}: Props) {
   const [book, setBook] = useState(false);
   const maxHappy = player.happy.maximum;
 
@@ -37,7 +51,13 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
 
   const plans = useMemo(() => {
     return STAT_KEYS.map((stat) => {
-      const usableId = bestUsableGymIdForStat(gyms, stat, player.stats, player.xanaxEcstasyTaken);
+      const usableId = bestUsableGymIdForStat(
+        gyms,
+        stat,
+        player.stats,
+        player.xanaxEcstasyTaken,
+        gate,
+      );
       const gym = gyms.find((g) => g.id === usableId);
       const dots = gym ? gym.dots[stat] : 0;
       const regime = trainingRegime(player.stats[stat]);
@@ -60,7 +80,7 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
       let upgrade: { gym: Gym; requirement?: string; target?: number; gap?: number } | null = null;
       for (const g of gyms) {
         if (g.dots[stat] <= dots) continue;
-        const el = evaluateGymEligibility(g, player.stats, player.xanaxEcstasyTaken);
+        const el = evaluateGymEligibility(g, player.stats, player.xanaxEcstasyTaken, gate);
         if (isUsable(el.status)) continue;
         if (!upgrade || g.dots[stat] > upgrade.gym.dots[stat]) {
           let target: number | undefined;
@@ -85,17 +105,34 @@ export function TrainingPlan({ gyms, player, modifiers, prices }: Props) {
         upgrade,
       };
     });
-  }, [gyms, player, modifiers, book, maxHappy]);
+  }, [gyms, player, modifiers, book, maxHappy, gate]);
 
   return (
     <section className="panel">
       <h2>Optimal training plan</h2>
-      <div className="plan-toggle">
+      <div className="plan-controls">
+        <label className="plan-select">
+          Highest unlocked gym
+          <select
+            value={unlockedGymId ?? ''}
+            onChange={(e) => onUnlockedGym(Number(e.target.value))}
+          >
+            {standardGyms.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name || `Gym ${g.id}`}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="rule">
           <input type="checkbox" checked={book} onChange={(e) => setBook(e.target.checked)} />
-          I have the “Ignorance Is Bliss” book (sustained 99,999 happy)
+          “Ignorance Is Bliss” book (sustained 99,999 happy)
         </label>
       </div>
+      <p className="plan-gate-note">
+        Standard gyms unlock by gym EXP (total energy spent training), which the API doesn’t expose —
+        set your highest unlocked gym so the plan only recommends gyms you can actually use.
+      </p>
 
       <div className="plan-grid">
         {plans.map((p) => (

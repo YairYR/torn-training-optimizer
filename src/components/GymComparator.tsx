@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
 import { compareGyms } from '../engine/gym-comparator';
-import { evaluateGymEligibility, GymEligibility, isUsable } from '../engine/gym-eligibility';
+import { evaluateGymEligibility, GymEligibility, isUsable, GymGate } from '../engine/gym-eligibility';
 import { fmtGain } from '../format';
 
 interface Props {
   gyms: Gym[];
   player: PlayerState;
   modifiers: Record<StatKey, number>;
+  gate: GymGate;
 }
 
 type Metric = 'gpe' | 'gpt';
@@ -20,7 +21,7 @@ const STATUS_LABEL: Record<GymEligibility['status'], string> = {
   unknown: '?',
 };
 
-export function GymComparator({ gyms, player, modifiers }: Props) {
+export function GymComparator({ gyms, player, modifiers, gate }: Props) {
   const [focus, setFocus] = useState<StatKey>('defense');
   const [metric, setMetric] = useState<Metric>('gpe');
 
@@ -31,9 +32,9 @@ export function GymComparator({ gyms, player, modifiers }: Props) {
 
   const eligibility = useMemo(() => {
     const m = new Map<string, GymEligibility>();
-    for (const g of gyms) m.set(g.id, evaluateGymEligibility(g, player.stats, player.xanaxEcstasyTaken));
+    for (const g of gyms) m.set(g.id, evaluateGymEligibility(g, player.stats, player.xanaxEcstasyTaken, gate));
     return m;
-  }, [gyms, player]);
+  }, [gyms, player, gate]);
 
   // Best gym per stat among those the player can actually use (overrides the
   // engine's raw isBest, which ignores unlock requirements).

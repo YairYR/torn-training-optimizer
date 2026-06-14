@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateGymEligibility, bestUsableGymIdForStat } from './gym-eligibility';
+import { evaluateGymEligibility, bestUsableGymIdForStat, standardGyms, georgesGymId } from './gym-eligibility';
 import { Gym, StatKey } from './types';
 
 const g = (id: string, energyPerTrain: number, dots: Partial<Record<StatKey, number>>): Gym => ({
@@ -65,5 +65,57 @@ describe('bestUsableGymIdForStat', () => {
     const ok = { ...stats, dexterity: 60_000_000 };
     const best = bestUsableGymIdForStat([georges, elites], 'dexterity', ok);
     expect(best).toBe('elites');
+  });
+});
+
+describe('gym EXP gating (unlocked cap)', () => {
+  const lowStats: Record<StatKey, number> = {
+    strength: 5000,
+    defense: 6000,
+    speed: 5000,
+    dexterity: 50,
+  };
+  const premier = g('1', 5, { strength: 2, defense: 2, speed: 2, dexterity: 2 });
+  const mid = g('10', 10, { strength: 4, defense: 4, speed: 4, dexterity: 4 });
+  const georgesN = g('24', 10, { strength: 7.3, defense: 7.3, speed: 7.3, dexterity: 7.3 });
+  const isoyamasN = g('30', 50, { defense: 8.0 });
+
+  it('locks standard gyms above the unlocked cap', () => {
+    const gate = { unlockedCapId: 10, georgesUnlocked: false };
+    expect(evaluateGymEligibility(mid, lowStats, null, gate).status).toBe('accessible');
+    expect(evaluateGymEligibility(georgesN, lowStats, null, gate).status).toBe('locked');
+  });
+
+  it('leaves standard gyms open when no gate is given', () => {
+    expect(evaluateGymEligibility(georgesN, lowStats).status).toBe('accessible');
+  });
+
+  it('locks specialists until George’s is unlocked', () => {
+    const gate = { unlockedCapId: 10, georgesUnlocked: false };
+    expect(evaluateGymEligibility(isoyamasN, lowStats, null, gate).status).toBe('locked');
+  });
+
+  it('bestUsableGymIdForStat respects the cap', () => {
+    const gyms = [premier, mid, georgesN];
+    const gate = { unlockedCapId: 10, georgesUnlocked: false };
+    expect(bestUsableGymIdForStat(gyms, 'strength', lowStats, null, gate)).toBe('10');
+  });
+});
+
+describe('standardGyms / georgesGymId', () => {
+  const premier = g('1', 5, { strength: 2 });
+  const mid = g('10', 10, { strength: 4 });
+  const georgesN = g('24', 10, { strength: 7.3, defense: 7.3, speed: 7.3, dexterity: 7.3 });
+  const fc = g('25', 10, { strength: 10, defense: 10, speed: 10, dexterity: 10 });
+  const iso = g('30', 50, { defense: 8 });
+  const gyms = [premier, mid, georgesN, fc, iso];
+
+  it('keeps only standard gyms, excluding Fight Club and specialists', () => {
+    const ids = standardGyms(gyms).map((x) => x.id);
+    expect(ids).toEqual(['1', '10', '24']);
+  });
+
+  it('identifies George’s as the top standard gym', () => {
+    expect(georgesGymId(gyms)).toBe(24);
   });
 });

@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Gym, PlayerState, StatKey, STAT_KEYS } from './engine/types';
 import { fetchGyms, fetchPlayer } from './api/client';
 import { fetchPrices } from './api/market';
 import { Prices } from './engine/cost-model';
-import { bestUsableGymIdForStat } from './engine/gym-eligibility';
+import {
+  bestUsableGymIdForStat,
+  standardGyms,
+  georgesGymId,
+  GymGate,
+} from './engine/gym-eligibility';
 import { flatModifiers } from './engine/modifiers';
 import { ENERGY_SOURCES, HAPPY_BOOSTERS } from './data/consumables';
 import { SessionConfig } from './session-config';
@@ -43,11 +48,22 @@ export default function App() {
   const [gyms, setGyms] = useState<Gym[] | null>(null);
   const [prices, setPrices] = useState<Prices | null>(null);
   const [config, setConfig] = useState<SessionConfig | null>(null);
+  const [unlockedGymId, setUnlockedGymId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => localStorage.setItem(KEY_STORE, apiKey), [apiKey]);
   useEffect(() => localStorage.setItem(MOD_STORE, JSON.stringify(modifiers)), [modifiers]);
+
+  const georgesId = useMemo(() => (gyms ? georgesGymId(gyms) : null), [gyms]);
+
+  const gate: GymGate = useMemo(
+    () => ({
+      unlockedCapId: unlockedGymId,
+      georgesUnlocked: georgesId == null || unlockedGymId == null ? true : unlockedGymId >= georgesId,
+    }),
+    [unlockedGymId, georgesId],
+  );
 
   async function load() {
     setLoading(true);
@@ -62,9 +78,23 @@ export default function App() {
       setGyms(g);
       setPrices(pr);
       if (p.detectedModifiers) setModifiers(p.detectedModifiers);
+
+      // Default the unlocked cap from the active gym if it's a standard gym,
+      // otherwise assume fully progressed (George's).
+      const std = standardGyms(g);
+      const stdIds = new Set(std.map((x) => Number(x.id)));
+      const gId = georgesGymId(g);
+      const defaultCap =
+        p.activeGymId != null && stdIds.has(p.activeGymId) ? p.activeGymId : gId;
+      setUnlockedGymId(defaultCap);
+
+      const localGate: GymGate = {
+        unlockedCapId: defaultCap,
+        georgesUnlocked: gId == null || defaultCap == null ? true : defaultCap >= gId,
+      };
       setConfig({
         stat: 'defense',
-        gymId: bestUsableGymIdForStat(g, 'defense', p.stats, p.xanaxEcstasyTaken),
+        gymId: bestUsableGymIdForStat(g, 'defense', p.stats, p.xanaxEcstasyTaken, localGate),
         energy: p.energy.current,
         happy: p.happy.current,
       });
@@ -80,7 +110,13 @@ export default function App() {
       if (!c) return c;
       const next = { ...c, ...patch };
       if (patch.stat && patch.gymId === undefined && gyms && player) {
-        next.gymId = bestUsableGymIdForStat(gyms, patch.stat, player.stats, player.xanaxEcstasyTaken);
+        next.gymId = bestUsableGymIdForStat(
+          gyms,
+          patch.stat,
+          player.stats,
+          player.xanaxEcstasyTaken,
+          gate,
+        );
       }
       return next;
     });
@@ -111,7 +147,16 @@ export default function App() {
             onDetect={detectMods}
           />
           <PlayerSummary player={player} />
-          <TrainingPlan gyms={gyms} player={player} modifiers={modifiers} prices={prices} />
+          <TrainingPlan
+            gyms={gyms}
+            player={player}
+            modifiers={modifiers}
+            prices={prices}
+            gate={gate}
+            standardGyms={standardGyms(gyms)}
+            unlockedGymId={unlockedGymId}
+            onUnlockedGym={setUnlockedGymId}
+          />
           <SessionSimulator
             gyms={gyms}
             player={player}
@@ -133,8 +178,15 @@ export default function App() {
             config={config}
             prices={prices}
           />
-          <Projector gyms={gyms} player={player} modifiers={modifiers} config={config} prices={prices} />
-          <GymComparator gyms={gyms} player={player} modifiers={modifiers} />
+          <Projector
+            gyms={gyms}
+            player={player}
+            modifiers={modifiers}
+            config={config}
+            prices={prices}
+            gate={gate}
+          />
+          <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
         </>
       )}
     </div>

@@ -67,6 +67,7 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     xanaxEcstasyTaken: xet,
     detectedModifiers: mod.perStat,
     modifierContributions: mod.contributions,
+    activeGymId: raw.active_gym != null ? Number(raw.active_gym) : null,
   };
 }
 
@@ -104,4 +105,5 @@ export interface RawUser {
   book_perks?: string[];
   job_perks?: string[];
   stock_perks?: string[];
+  active_gym?: number;
 }

@@ -28,6 +28,8 @@ export interface PlayerState {
   /** Gym-gain modifier M per stat, parsed from perks. */
   detectedModifiers?: Record<StatKey, number>;
   modifierContributions?: ModifierContribution[];
+  /** Active gym id from the API (a sensible default for the unlocked cap). */
+  activeGymId?: number | null;
 }
 
 export interface Gym {

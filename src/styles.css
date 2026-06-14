@@ -319,6 +319,35 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
 }
 .plan-toggle { margin-bottom: 14px; }
 .plan-toggle .rule { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.plan-controls {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.plan-controls .rule { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.plan-select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.plan-select select {
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.plan-gate-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
 .plan-method {
   font-family: var(--display);
   font-weight: 600;

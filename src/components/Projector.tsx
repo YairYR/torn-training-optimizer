@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
-import { bestUsableGymIdForStat } from '../engine/gym-eligibility';
+import { bestUsableGymIdForStat, GymGate } from '../engine/gym-eligibility';
 import { project, DailyPlan, GymForStat, Goal } from '../engine/projector';
 import { Prices } from '../engine/cost-model';
 import { SessionConfig } from '../session-config';
@@ -20,6 +20,7 @@ interface Props {
   gyms: Gym[];
   player: PlayerState;
   modifiers: Record<StatKey, number>;
+  gate: GymGate;
   config: SessionConfig;
   prices: Prices | null;
 }
@@ -32,7 +33,7 @@ function edvdToCap(baseHappy: number, ecstasy: boolean): number {
   return Math.max(0, Math.ceil(need / 2500));
 }
 
-export function Projector({ gyms, player, modifiers, config, prices }: Props) {
+export function Projector({ gyms, player, modifiers, config, prices, gate }: Props) {
   const [goalType, setGoalType] = useState<'total' | StatKey>('total');
   const [horizon, setHorizon] = useState<number>(180);
   const [alloc, setAlloc] = useState<'focus' | 'balanced'>('balanced');
@@ -45,12 +46,12 @@ export function Projector({ gyms, player, modifiers, config, prices }: Props) {
   const gymForStat = useMemo<Record<StatKey, GymForStat>>(() => {
     const out = {} as Record<StatKey, GymForStat>;
     for (const s of STAT_KEYS) {
-      const id = bestUsableGymIdForStat(gyms, s, player.stats, player.xanaxEcstasyTaken);
+      const id = bestUsableGymIdForStat(gyms, s, player.stats, player.xanaxEcstasyTaken, gate);
       const g = gyms.find((x) => x.id === id);
       out[s] = g ? { energyPerTrain: g.energyPerTrain, dots: g.dots[s] } : { energyPerTrain: 10, dots: 0 };
     }
     return out;
-  }, [gyms, player]);
+  }, [gyms, player, gate]);
 
   const allocation = useMemo<Record<StatKey, number>>(() => {
     if (alloc === 'focus') {

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        width: 280px;
+        margin: 0;
+        padding: 14px;
+        background: #14161b;
+        color: #e8e4d9;
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+      }
+      h1 {
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin: 0 0 12px;
+      }
+      h1 span { color: #d99a4e; }
+      label.field { display: block; font-size: 11px; color: #8c95a4; margin-bottom: 4px; }
+      input[type='password'] {
+        width: 100%;
+        box-sizing: border-box;
+        background: #1b1f27;
+        border: 1px solid #2e3543;
+        color: #e8e4d9;
+        border-radius: 6px;
+        padding: 8px;
+        font-family: monospace;
+      }
+      .rule {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+        font-size: 12.5px;
+      }
+      #rules { margin: 12px 0; }
+      button {
+        width: 100%;
+        background: #d99a4e;
+        color: #15110a;
+        border: none;
+        border-radius: 6px;
+        padding: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+      }
+      #status { color: #5ec0a8; font-size: 12px; text-align: center; height: 16px; margin-top: 6px; }
+      .hint { font-size: 11px; color: #8c95a4; margin-top: 10px; line-height: 1.4; }
+    </style>
+  </head>
+  <body>
+    <h1>Torn <span>Training</span> Alerts</h1>
+    <label class="field" for="key">API key (bars access)</label>
+    <input id="key" type="password" placeholder="Torn API key" />
+    <div id="rules"></div>
+    <button id="save">Save</button>
+    <div id="status"></div>
+    <p class="hint">Polls every minute. The key stays local and is sent only to api.torn.com.</p>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

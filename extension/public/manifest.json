@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Torn Training Alerts",
+  "version": "1.0.0",
+  "description": "Anti-waste training alerts for Torn: energy overflow, happy jumped, drug cooldown clear.",
+  "permissions": ["alarms", "notifications", "storage"],
+  "host_permissions": ["https://api.torn.com/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "Torn Training Alerts" },
+  "icons": { "128": "icon128.png" }
+}

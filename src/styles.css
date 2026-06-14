@@ -1,0 +1,239 @@
+:root {
+  --ink: #14161b;
+  --surface: #1b1f27;
+  --surface-2: #232834;
+  --line: #2e3543;
+  --text: #e8e4d9;
+  --muted: #8c95a4;
+  --accent: #d99a4e;        /* brass — structure, interactive */
+  --accent-dim: #8f6a37;
+  --best: #5ec0a8;          /* teal — "best" highlight only */
+  --danger: #d96a5e;
+
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --display: 'Oswald', system-ui, sans-serif;
+  --body: 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .readout-value { transition: color 120ms ease; }
+}
+
+.app {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px 80px;
+}
+
+/* ---- Masthead ---- */
+.masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 2px solid var(--line);
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.masthead h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.masthead h1 .mark { color: var(--accent); }
+.masthead .phase {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ---- Panels ---- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.panel > h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+/* ---- API bar ---- */
+.apibar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.apibar input[type='password'],
+.apibar input[type='text'] { flex: 1 1 280px; }
+.apibar .hint {
+  flex-basis: 100%;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+input, select {
+  background: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  padding: 9px 11px;
+}
+input:focus, select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: var(--accent);
+}
+label { font-size: 12.5px; color: var(--muted); display: block; margin-bottom: 5px; }
+
+button {
+  background: var(--accent);
+  color: #15110a;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 13px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+button:hover { background: #e6a85d; }
+button:disabled { background: var(--accent-dim); cursor: not-allowed; opacity: 0.7; }
+
+.error {
+  color: var(--danger);
+  font-family: var(--mono);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* ---- Player summary ---- */
+.statgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.stat-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.stat-card .k {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.stat-card .v { font-family: var(--mono); font-size: 20px; font-weight: 700; margin-top: 4px; }
+.stat-card .sub { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ---- Comparator table ---- */
+.controls { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 14px; }
+.controls > div { min-width: 140px; }
+
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: right; padding: 8px 12px; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+tbody td { font-family: var(--mono); border-bottom: 1px solid #20252e; }
+tbody tr:hover { background: var(--surface-2); }
+td.gym-name { font-family: var(--body); }
+td.muted-cell { color: #525a68; }
+.col-focus { color: var(--text); }
+.cell-best {
+  color: var(--best);
+  font-weight: 700;
+}
+.cell-best::after { content: ' \25B2'; font-size: 9px; vertical-align: 2px; }
+.e-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---- Session simulator ---- */
+.sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+
+.readouts { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 14px; }
+@media (max-width: 640px) { .readouts { grid-template-columns: 1fr; } }
+.readout {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+.readout.hero { border-color: var(--accent-dim); }
+.readout .k {
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.readout-value {
+  font-family: var(--mono); font-weight: 700; margin-top: 6px;
+}
+.readout.hero .readout-value { font-size: 34px; color: var(--accent); }
+.readout .readout-value { font-size: 22px; }
+.readout .band { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 4px; }
+.readout .note { font-size: 11.5px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+
+.footnote { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.footnote code { font-family: var(--mono); color: var(--accent); }
+
+.subhead {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 22px 0 10px;
+}
+.subhead:first-of-type { margin-top: 4px; }
+.qty-input {
+  width: 64px;
+  padding: 5px 8px;
+  font-size: 13px;
+  text-align: right;
+}
+
+.chart-wrap {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 8px 6px;
+  margin-bottom: 16px;
+}

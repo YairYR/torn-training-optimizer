@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Gym, PlayerState } from './engine/types';
+import { Gym, PlayerState, StatKey } from './engine/types';
 import { fetchGyms, fetchPlayer } from './api/client';
 import { fetchPrices } from './api/market';
 import { Prices } from './engine/cost-model';
@@ -21,6 +21,20 @@ const PRICED_ITEMS = [
   ...ENERGY_SOURCES.filter((s) => s.itemName).map((s) => s.itemName!),
   ...HAPPY_BOOSTERS.map((b) => b.itemName),
 ];
+
+// Best gym for a stat = highest dots (energy cancels in gain-per-energy, so the
+// gym with the most dots is always the most efficient choice).
+function bestGymIdForStat(gyms: Gym[], stat: StatKey): string {
+  let bestId = gyms[0]?.id ?? '';
+  let bestDots = -1;
+  for (const g of gyms) {
+    if (g.dots[stat] > bestDots) {
+      bestDots = g.dots[stat];
+      bestId = g.id;
+    }
+  }
+  return bestId;
+}
 
 export default function App() {
   const [apiKey, setApiKey] = useState<string>(() => localStorage.getItem(KEY_STORE) ?? '');
@@ -49,7 +63,7 @@ export default function App() {
       setPrices(pr);
       setConfig({
         stat: 'defense',
-        gymId: g[0]?.id ?? '',
+        gymId: bestGymIdForStat(g, 'defense'),
         energy: p.energy.current,
         happy: p.happy.current,
       });
@@ -61,7 +75,15 @@ export default function App() {
   }
 
   const patchConfig = (patch: Partial<SessionConfig>) =>
-    setConfig((c) => (c ? { ...c, ...patch } : c));
+    setConfig((c) => {
+      if (!c) return c;
+      const next = { ...c, ...patch };
+      // Changing stat (without an explicit gym pick) follows the best gym.
+      if (patch.stat && patch.gymId === undefined && gyms) {
+        next.gymId = bestGymIdForStat(gyms, patch.stat);
+      }
+      return next;
+    });
 
   return (
     <div className="app">

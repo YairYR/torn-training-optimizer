@@ -55,7 +55,7 @@ export const ENERGY_SOURCES: EnergySource[] = [
     note: 'Once per day. Priced from the live points market.',
   },
   { id: 'xanax', name: 'Xanax', energyGain: 250, priceKind: 'item', itemName: 'Xanax' },
-  { id: 'lsd', name: 'LSD', energyGain: 50, priceKind: 'item', itemName: 'Lysergic Acid Diethylamide' },
+  { id: 'lsd', name: 'LSD', energyGain: 50, priceKind: 'item', itemName: 'LSD' },
   { id: 'can_munster', name: 'Can of Munster', energyGain: 20, priceKind: 'item', itemName: 'Can of Munster' },
 ];
 

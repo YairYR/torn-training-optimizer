@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { project, ProjectorInput, DailyPlan } from './projector';
 import { StatKey } from './types';
+import { flatModifiers } from './modifiers';
 
 const gymForStat = {
   strength: { energyPerTrain: 10, dots: 7.3 },
@@ -17,7 +18,7 @@ const base: ProjectorInput = {
   stats: { strength: 1_000_000, defense: 1_000_000, speed: 1_000_000, dexterity: 1_000_000 },
   baseHappy: 5025,
   happyCap: 99_999,
-  modifiers: 1.186,
+  modifiers: flatModifiers(1.186),
   gymForStat,
   allocation: focusDefense,
   plan: basePlan,

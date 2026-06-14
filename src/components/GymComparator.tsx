@@ -7,7 +7,7 @@ import { fmtGain } from '../format';
 interface Props {
   gyms: Gym[];
   player: PlayerState;
-  modifiers: number;
+  modifiers: Record<StatKey, number>;
 }
 
 type Metric = 'gpe' | 'gpt';

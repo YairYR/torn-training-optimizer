@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { compareGyms } from './gym-comparator';
 import { Gym, StatKey } from './types';
+import { flatModifiers } from './modifiers';
 
 const mkGym = (id: string, energyPerTrain: number, dots: number): Gym => ({
   id,
@@ -21,21 +22,21 @@ const stats: Record<StatKey, number> = {
 describe('compareGyms', () => {
   it('marks the gym with the highest gain-per-energy as best', () => {
     const gyms = [mkGym('low', 10, 2.0), mkGym('high', 10, 5.0)];
-    const rows = compareGyms({ gyms, stats, happy: 5000, modifiers: 1 });
+    const rows = compareGyms({ gyms, stats, happy: 5000, modifiers: flatModifiers(1) });
     const best = rows.find((r) => r.perStat.strength.isBest);
     expect(best?.gym.id).toBe('high');
   });
 
   it('computes gpe as gpt / energyPerTrain', () => {
-    const rows = compareGyms({ gyms: [mkGym('g', 10, 2.0)], stats, happy: 5000, modifiers: 1 });
+    const rows = compareGyms({ gyms: [mkGym('g', 10, 2.0)], stats, happy: 5000, modifiers: flatModifiers(1) });
     const m = rows[0].perStat.strength;
     expect(m.gpe).toBeCloseTo(m.gpt / 10, 6);
   });
 
   it('ranking is invariant to the modifier M', () => {
     const gyms = [mkGym('a', 10, 2.0), mkGym('b', 25, 4.0)];
-    const r1 = compareGyms({ gyms, stats, happy: 5000, modifiers: 1 });
-    const r2 = compareGyms({ gyms, stats, happy: 5000, modifiers: 3.5 });
+    const r1 = compareGyms({ gyms, stats, happy: 5000, modifiers: flatModifiers(1) });
+    const r2 = compareGyms({ gyms, stats, happy: 5000, modifiers: flatModifiers(3.5) });
     const best1 = r1.find((r) => r.perStat.defense.isBest)?.gym.id;
     const best2 = r2.find((r) => r.perStat.defense.isBest)?.gym.id;
     expect(best1).toBe(best2);
@@ -50,7 +51,7 @@ describe('compareGyms', () => {
       unlockStage: null,
       joinCost: null,
     };
-    const rows = compareGyms({ gyms: [onlyDef], stats, happy: 5000, modifiers: 1 });
+    const rows = compareGyms({ gyms: [onlyDef], stats, happy: 5000, modifiers: flatModifiers(1) });
     expect(rows[0].perStat.strength.isBest).toBe(false);
     expect(rows[0].perStat.defense.isBest).toBe(true);
   });

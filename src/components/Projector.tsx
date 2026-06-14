@@ -19,7 +19,7 @@ import { fmtInt, fmtMoney } from '../format';
 interface Props {
   gyms: Gym[];
   player: PlayerState;
-  modifiers: number;
+  modifiers: Record<StatKey, number>;
   config: SessionConfig;
   prices: Prices | null;
 }

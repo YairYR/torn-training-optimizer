@@ -1,6 +1,8 @@
 // Domain types — single source of truth for the engine.
 // No UI dependencies here (spec §3.3): reusable by web app, extension, bot.
 
+import type { ModifierContribution } from './modifiers';
+
 export type StatKey = 'strength' | 'defense' | 'speed' | 'dexterity';
 
 export const STAT_KEYS: readonly StatKey[] = ['strength', 'defense', 'speed', 'dexterity'];
@@ -23,6 +25,9 @@ export interface PlayerState {
   energy: Bar;
   /** Total Xanax + Ecstasy taken (for SSL eligibility). null if unavailable. */
   xanaxEcstasyTaken?: number | null;
+  /** Gym-gain modifier M per stat, parsed from perks. */
+  detectedModifiers?: Record<StatKey, number>;
+  modifierContributions?: ModifierContribution[];
 }
 
 export interface Gym {

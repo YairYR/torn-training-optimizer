@@ -30,7 +30,7 @@ export interface ProjectorInput {
   stats: Record<StatKey, number>;
   baseHappy: number; // daily happy before the jump (regenerates to max)
   happyCap: number; // 99999
-  modifiers: number;
+  modifiers: Record<StatKey, number>;
   gymForStat: Record<StatKey, GymForStat>;
   allocation: Record<StatKey, number>; // weights, summing to 1
   plan: DailyPlan;
@@ -118,7 +118,7 @@ export function project(i: ProjectorInput): ProjectionResult {
       const sim = simulateSession({
         statValue: stats[stat],
         happy: sessionHappy,
-        modifiers: i.modifiers,
+        modifiers: i.modifiers[stat],
         energyPerTrain: gym.energyPerTrain,
         dots: gym.dots,
         energyBudget: e,

@@ -103,9 +103,13 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   handled in `normalize.ts`. Confirmed.
 - **Energy-per-train field**: confirmed `energy` in the `gyms` response (`cost` =
   money to join, `energy` = exact energy cost per train, not scaled).
-- **Modifier `M`**: entered manually in this phase. Perk auto-resolution
-  (faction / education / property / job / book / enhancer) is a later phase. `M`
-  does not affect the gym ranking, only absolute gains.
+- **Modifier `M`**: auto-detected per stat from your perks (`src/engine/modifiers.ts`)
+  — a heuristic parser sums the gym-gain bonuses (`M = 1 + Σ%`) and shows the
+  breakdown. Editable per stat; "Detect from perks" re-applies. `M` affects
+  absolute gains, not the gym ranking.
+- **Optimal training plan** (`src/components/TrainingPlan.tsx`): per stat, states
+  the best usable gym, the happy jump to the 99,999 cap, the cheapest energy, the
+  per-train gain, and the next gym upgrade with its numeric requirement.
 - **Consumable effects** (`src/data/consumables.ts`): confirmed against the Torn
   wiki / training guides — Xanax 250 E, LSD 50 E, refill 150 E for 25 points,
   Erotic DVD +2500 happy, Ecstasy ×2 happy. Happy cap confirmed 99,999. Prices

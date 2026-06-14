@@ -1,4 +1,5 @@
 import { Gym, PlayerState, StatKey } from '../engine/types';
+import { parseGymGainModifiers } from '../engine/modifiers';
 
 /**
  * Maps the raw `torn/gyms` (v1) response to domain Gym objects.
@@ -47,11 +48,25 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     ps && ps.xantaken != null && ps.exttaken != null
       ? Number(ps.xantaken) + Number(ps.exttaken)
       : null;
+
+  const mod = parseGymGainModifiers({
+    faction_perks: raw.faction_perks,
+    property_perks: raw.property_perks,
+    merit_perks: raw.merit_perks,
+    education_perks: raw.education_perks,
+    enhancer_perks: raw.enhancer_perks,
+    book_perks: raw.book_perks,
+    job_perks: raw.job_perks,
+    stock_perks: raw.stock_perks,
+  });
+
   return {
     stats,
     happy: { current: Number(raw.happy.current), maximum: Number(raw.happy.maximum) },
     energy: { current: Number(raw.energy.current), maximum: Number(raw.energy.maximum) },
     xanaxEcstasyTaken: xet,
+    detectedModifiers: mod.perStat,
+    modifierContributions: mod.contributions,
   };
 }
 
@@ -81,4 +96,12 @@ export interface RawUser {
   happy: RawBar;
   energy: RawBar;
   personalstats?: { xantaken?: number; exttaken?: number };
+  faction_perks?: string[];
+  property_perks?: string[];
+  merit_perks?: string[];
+  education_perks?: string[];
+  enhancer_perks?: string[];
+  book_perks?: string[];
+  job_perks?: string[];
+  stock_perks?: string[];
 }

@@ -25,7 +25,7 @@ async function call<T>(path: string, key: string): Promise<T> {
 
 /** Requires a key with battlestats access (Limited or Full). */
 export async function fetchPlayer(key: string): Promise<PlayerState> {
-  const data = await call<RawUser>('/user/?selections=battlestats,bars,personalstats', key);
+  const data = await call<RawUser>('/user/?selections=battlestats,bars,personalstats,perks', key);
   return normalizePlayer(data);
 }
 

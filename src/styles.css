@@ -254,3 +254,66 @@ td.muted-cell { color: #525a68; }
 .access-unknown { color: var(--muted); border-color: var(--line); cursor: help; }
 tbody tr.row-locked td { opacity: 0.55; }
 tbody tr.row-locked:hover td { opacity: 0.8; }
+
+button.ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+}
+button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+.mod-actions { display: flex; gap: 10px; margin: 14px 0 4px; flex-wrap: wrap; }
+.mod-pct { color: var(--accent); font-family: var(--mono); }
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+.plan-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.plan-stat {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.plan-now { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.plan-row { display: flex; gap: 10px; font-size: 13px; padding: 3px 0; }
+.plan-k {
+  flex: 0 0 56px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  padding-top: 2px;
+}
+.plan-v { flex: 1; }
+.plan-gain {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 10px 0 4px;
+}
+.plan-gain-lbl { font-size: 11px; color: var(--muted); font-weight: 400; }
+.plan-upgrade {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--best);
+  line-height: 1.4;
+}

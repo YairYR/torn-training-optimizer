@@ -19,20 +19,20 @@ export interface CompareInput {
   gyms: Gym[];
   stats: Record<StatKey, number>;
   happy: number;
-  modifiers: number;
+  modifiers: Record<StatKey, number>;
 }
 
 /**
  * Ranks gyms per stat by gain-per-energy (spec §9).
- * Note: M multiplies every gym equally, so the ranking is invariant to M
- * (verified by tests). M only affects the absolute gpt/gpe figures.
+ * Note: M multiplies every gym equally for a given stat, so the ranking is
+ * invariant to M; M only affects the absolute gpt/gpe figures.
  */
 export function compareGyms(i: CompareInput): GymComparisonRow[] {
   const rows: GymComparisonRow[] = i.gyms.map((gym) => {
     const perStat = {} as Record<StatKey, GymStatMetric>;
     for (const s of STAT_KEYS) {
       const gpt = gainPerTrain({
-        modifiers: i.modifiers,
+        modifiers: i.modifiers[s],
         dots: gym.dots[s],
         energyPerTrain: gym.energyPerTrain,
         happy: i.happy,

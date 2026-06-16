@@ -22,6 +22,7 @@ import { SessionSimulator } from './components/SessionSimulator';
 import { Economics } from './components/Economics';
 import { Optimizer } from './components/Optimizer';
 import { Projector } from './components/Projector';
+import { ProgressTracker } from './components/ProgressTracker';
 import './styles.css';
 
 const KEY_STORE = 'tto.apiKey';
@@ -189,6 +190,7 @@ export default function App() {
             gate={gate}
           />
           <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+          <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
         </>
       )}
     </div>

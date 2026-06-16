@@ -107,6 +107,12 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   — a heuristic parser sums the gym-gain bonuses (`M = 1 + Σ%`) and shows the
   breakdown. Editable per stat; "Detect from perks" re-applies. `M` affects
   absolute gains, not the gym ranking.
+- **Progress tracking** (`src/components/ProgressTracker.tsx`,
+  `src/engine/progress.ts`): save stat snapshots over time (stored in your
+  browser via localStorage), see per-stat deltas, gain/day and a line chart, and
+  validate the engine — pick an interval + stat + energy trained and it compares
+  your real gain to the engine's prediction. Above 50M it helps test the
+  community-reported growth cap.
 - **Daily energy capacity** (`src/engine/energy-capacity.ts`): drugs share one
   cooldown (~6-8h ≈ 3 doses/day), so the per-unit $/energy ranking is only half
   the story. The Economics panel shows natural regen (5/10 min donator = 720/day)

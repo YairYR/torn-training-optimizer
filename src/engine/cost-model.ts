@@ -38,6 +38,25 @@ export function rankEnergy(sources: EnergySource[], prices: Prices): EnergyRank[
     });
 }
 
+/**
+ * The practical drug energy source for training. Drugs share ONE cooldown, so
+ * each slot you take the drug with the most energy per dose (Xanax 250 > LSD 50)
+ * — NOT the cheapest $/energy, which can pick LSD but ignores the dose cap.
+ * Falls back to any priced item by energy if no drug is priced.
+ */
+export function primaryDrugSource(
+  sources: EnergySource[],
+  prices: Prices,
+): EnergyRank | null {
+  const priced = sources
+    .filter((s) => s.priceKind === 'item')
+    .map((s) => ({ source: s, dollarsPerEnergy: dollarsPerEnergy(s, prices) }))
+    .filter((x) => x.dollarsPerEnergy != null && (x.dollarsPerEnergy as number) > 0);
+  const drugs = priced.filter((x) => x.source.sharesDrugCooldown);
+  const pool = drugs.length > 0 ? drugs : priced;
+  return pool.sort((a, b) => b.source.energyGain - a.source.energyGain)[0] ?? null;
+}
+
 /** Resulting happy after applying additive then multiplicative boosters. */
 export function applyHappyPlan(
   baseHappy: number,

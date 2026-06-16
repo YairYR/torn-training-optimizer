@@ -1,5 +1,5 @@
 import { EnergySource, HappyBooster } from '../data/consumables';
-import { Prices, dollarsPerEnergy } from './cost-model';
+import { Prices, primaryDrugSource } from './cost-model';
 import { simulateSession } from './session';
 
 export interface OptimizerInput {
@@ -58,13 +58,13 @@ export function optimizeBudget(i: OptimizerInput): OptimizerResult {
   const edvdAmount = edvd?.amount ?? 2500;
   const ecstasyMult = ecstasyB?.amount ?? 2;
 
-  // cheapest paid energy source with a known price
-  const paid =
-    i.energySources
-      .filter((s) => s.priceKind === 'item')
-      .map((s) => ({ s, dpe: dollarsPerEnergy(s, i.prices) }))
-      .filter((x) => x.dpe != null && x.dpe > 0)
-      .sort((a, b) => (a.dpe as number) - (b.dpe as number))[0] ?? null;
+  // Practical drug energy: per shared cooldown slot you take the biggest drug
+  // (Xanax 250 > LSD 50), not the cheapest $/E — which would pick LSD and ignore
+  // the ~3 doses/day cooldown cap.
+  const primary = primaryDrugSource(i.energySources, i.prices);
+  const paid = primary
+    ? { s: primary.source, dpe: primary.dollarsPerEnergy }
+    : null;
 
   const refill = i.energySources.find((s) => s.priceKind === 'points');
   const refillCost =

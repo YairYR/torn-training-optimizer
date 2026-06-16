@@ -8,7 +8,7 @@ import {
   GymGate,
 } from '../engine/gym-eligibility';
 import { trainingRegime, atGrowthCap, STAT_GROWTH_CAP } from '../engine/training-method';
-import { rankEnergy, Prices } from '../engine/cost-model';
+import { rankEnergy, primaryDrugSource, Prices } from '../engine/cost-model';
 import { ENERGY_SOURCES } from '../data/consumables';
 import { fmtGain, fmtInt, fmtMoney } from '../format';
 
@@ -42,7 +42,13 @@ export function TrainingPlan({
   const [book, setBook] = useState(false);
   const maxHappy = player.happy.maximum;
 
-  const cheapestEnergy = useMemo(() => {
+  // Practical training energy: the biggest drug per cooldown slot (Xanax), not
+  // the cheapest $/E (which can be LSD but is capped to ~3 doses/day).
+  const drugEnergy = useMemo(() => {
+    if (!prices) return null;
+    return primaryDrugSource(ENERGY_SOURCES, prices);
+  }, [prices]);
+  const cheapestPerE = useMemo(() => {
     if (!prices) return null;
     return rankEnergy(ENERGY_SOURCES, prices).find(
       (r) => r.dollarsPerEnergy != null && r.dollarsPerEnergy > 0,
@@ -166,9 +172,9 @@ export function TrainingPlan({
                 <div className="plan-row">
                   <span className="plan-k">Energy</span>
                   <span className="plan-v">
-                    {cheapestEnergy
-                      ? `${cheapestEnergy.source.name} (${fmtMoney(cheapestEnergy.dollarsPerEnergy)}/E)`
-                      : 'cheapest available'}
+                    {drugEnergy
+                      ? `${drugEnergy.source.name} (${fmtMoney(drugEnergy.dollarsPerEnergy)}/E) + refill + natural`
+                      : 'Xanax + refill + natural'}
                   </span>
                 </div>
                 <div className="plan-gain">
@@ -211,6 +217,14 @@ export function TrainingPlan({
         daily case — with the 99k ceiling shown for reference. For the budget-optimal buy-list of a
         single session, use the <strong>Budget optimizer</strong> panel.
       </p>
+      {drugEnergy && cheapestPerE && cheapestPerE.source.id !== drugEnergy.source.id && (
+        <p className="footnote">
+          Note: {cheapestPerE.source.name} shows a lower $/E ({fmtMoney(cheapestPerE.dollarsPerEnergy)})
+          than {drugEnergy.source.name} ({fmtMoney(drugEnergy.dollarsPerEnergy)}), but{' '}
+          {drugEnergy.source.name} is recommended — drugs share one cooldown (~3 doses/day), so per
+          slot the bigger drug wins (250 E vs 50). You can’t make up the difference with volume.
+        </p>
+      )}
     </section>
   );
 }

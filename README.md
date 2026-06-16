@@ -112,7 +112,9 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   the story. The Economics panel shows natural regen (5/10 min donator = 720/day)
   + drug energy (Xanax 3×250 vs LSD 3×50) + refill, making explicit that per
   cooldown slot Xanax gives 5× the energy of LSD. The Unlock planner uses this
-  capacity as its energy/day default.
+  capacity as its energy/day default. Because of the shared cooldown the plan
+  and Budget optimizer recommend **Xanax** (the biggest drug per slot), not
+  whatever shows the lowest $/energy (which can be LSD) — `primaryDrugSource`.
 - **Unlock planner** (`src/components/Planner.tsx`, `src/engine/planner.ts`):
   inverts the gain model — pick a goal (unlock a specific gym, or reach a stat
   value) and it simulates the trains (gain compounds as the stat grows) and

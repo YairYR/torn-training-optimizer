@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dollarsPerEnergy, rankEnergy, applyHappyPlan, boosterValue, Prices } from './cost-model';
+import { dollarsPerEnergy, rankEnergy, applyHappyPlan, boosterValue, primaryDrugSource, Prices } from './cost-model';
 import { ENERGY_SOURCES, HAPPY_BOOSTERS } from '../data/consumables';
 
 const prices: Prices = {
@@ -78,5 +78,23 @@ describe('boosterValue', () => {
     const noPrice: Prices = { items: {}, pointPrice: null };
     const v = boosterValue(edvd, 5, ctx, noPrice);
     expect(v.dollarsPerPoint).toBeNull();
+  });
+});
+
+describe('primaryDrugSource', () => {
+  it('prefers Xanax over LSD even when LSD is cheaper per energy', () => {
+    // LSD priced so its $/E is lower than Xanax, but Xanax has more energy/dose.
+    const prices: Prices = {
+      items: { Xanax: 900_000, LSD: 90_000 }, // Xanax 3600/E, LSD 1800/E
+      pointPrice: null,
+    };
+    const r = primaryDrugSource(ENERGY_SOURCES, prices);
+    expect(r?.source.id).toBe('xanax');
+  });
+
+  it('falls back to LSD if Xanax has no price', () => {
+    const prices: Prices = { items: { LSD: 90_000 }, pointPrice: null };
+    const r = primaryDrugSource(ENERGY_SOURCES, prices);
+    expect(r?.source.id).toBe('lsd');
   });
 });

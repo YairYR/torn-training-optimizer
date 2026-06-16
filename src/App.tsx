@@ -193,6 +193,11 @@ export default function App() {
           <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
         </>
       )}
+
+      <footer className="site-footer">
+        Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
+        and is sent only to api.torn.com — nothing is stored on any server.
+      </footer>
     </div>
   );
 }

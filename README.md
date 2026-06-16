@@ -70,6 +70,33 @@ This is a static SPA, so GitHub Pages is the natural host.
 The API key is never committed and never leaves the user's browser, so a public
 Pages site is safe.
 
+## Custom domain + analytics (optional)
+
+`base: './'` is relative, so the same build works at the github.io subpath **and**
+at the root of a custom domain — no code change needed for the domain itself.
+
+**Custom domain (e.g. `torntrainer.example`):**
+1. Add a file `public/CNAME` containing only your domain (one line, no protocol):
+   `torntrainer.example`. Vite copies `public/` into the build, so the artifact
+   serves the custom domain.
+2. At your registrar, point DNS at GitHub Pages:
+   - Apex domain → four `A` records: `185.199.108.153`, `185.199.109.153`,
+     `185.199.110.153`, `185.199.111.153` (optionally the matching `AAAA` IPv6).
+   - `www`/sub-domain → a `CNAME` record to `<user>.github.io`.
+3. Repo → **Settings → Pages → Custom domain**: enter the domain, then enable
+   **Enforce HTTPS** once the cert provisions (a few minutes to a few hours).
+
+**Analytics (GA4):** the snippet is in `index.html`, commented out. Uncomment it
+and replace `G-XXXXXXXXXX` with your Measurement ID. It sends only anonymous
+page/usage events — never pass Torn data (key, stats) to gtag. Disclose analytics
+in the footer (already notes the tool is unofficial and the key stays local) and
+add a consent prompt if you expect EU traffic.
+
+> Monetization note: Torn has a default no-advertising policy for API tools and
+> asks you to contact them before advertising, taking donations, or charging.
+> This build ships ad-free and disinterested; add nothing of that kind without
+> Torn's prior OK.
+
 ## Project structure (maps to the spec)
 
 ```

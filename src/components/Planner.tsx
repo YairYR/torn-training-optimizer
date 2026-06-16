@@ -7,6 +7,7 @@ import {
   GymGate,
 } from '../engine/gym-eligibility';
 import { rankEnergy, Prices } from '../engine/cost-model';
+import { dailyEnergyCapacity } from '../engine/energy-capacity';
 import { ENERGY_SOURCES } from '../data/consumables';
 import { fmtInt, fmtMoney } from '../format';
 
@@ -23,7 +24,15 @@ const HAPPY_CAP = 99_999;
 export function Planner({ gyms, player, modifiers, prices, gate }: Props) {
   const [mode, setMode] = useState<'gym' | 'stat'>('gym');
   const [book, setBook] = useState(false);
-  const [energyPerDay, setEnergyPerDay] = useState(1000);
+  const [energyPerDay, setEnergyPerDay] = useState(() => {
+    const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax');
+    if (!xan?.cooldownMinutes) return 1000;
+    return dailyEnergyCapacity({
+      maxEnergy: player.energy.maximum,
+      drugEnergyPerDose: xan.energyGain,
+      drugCooldownMinutes: xan.cooldownMinutes,
+    }).total;
+  });
   const [targetStat, setTargetStat] = useState<StatKey>('dexterity');
   const [targetValue, setTargetValue] = useState<number>(
     Math.round(player.stats.dexterity * 1.1),

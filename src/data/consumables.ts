@@ -23,6 +23,10 @@ export interface EnergySource {
   pointsCost?: number;
   /** Optional daily cap (units/day). null = uncapped here. */
   dailyLimit?: number | null;
+  /** Drugs share ONE drug cooldown — only one drug per cooldown window. */
+  sharesDrugCooldown?: boolean;
+  /** Average drug cooldown in minutes (wiki ranges), for daily-capacity math. */
+  cooldownMinutes?: number;
   note?: string;
 }
 
@@ -43,7 +47,7 @@ export const ENERGY_SOURCES: EnergySource[] = [
     name: 'Natural energy',
     energyGain: 1,
     priceKind: 'free',
-    note: 'Regenerates 5 / 15 min up to your max. Always use first.',
+    note: 'Regenerates 5 / 10 min (donator, max 150) → ~720/day; else 5 / 15 min → ~480/day.',
   },
   {
     id: 'refill',
@@ -54,8 +58,25 @@ export const ENERGY_SOURCES: EnergySource[] = [
     dailyLimit: 1,
     note: 'Once per day. Priced from the live points market.',
   },
-  { id: 'xanax', name: 'Xanax', energyGain: 250, priceKind: 'item', itemName: 'Xanax' },
-  { id: 'lsd', name: 'LSD', energyGain: 50, priceKind: 'item', itemName: 'LSD' },
+  {
+    id: 'xanax',
+    name: 'Xanax',
+    energyGain: 250,
+    priceKind: 'item',
+    itemName: 'Xanax',
+    sharesDrugCooldown: true,
+    cooldownMinutes: 420, // wiki 360-480
+  },
+  {
+    id: 'lsd',
+    name: 'LSD',
+    energyGain: 50,
+    priceKind: 'item',
+    itemName: 'LSD',
+    sharesDrugCooldown: true,
+    cooldownMinutes: 425, // wiki 400-450
+    note: 'Also +200-500 happy, but high OD risk. Shares the drug cooldown with Xanax.',
+  },
   { id: 'can_munster', name: 'Can of Munster', energyGain: 20, priceKind: 'item', itemName: 'Can of Munster' },
 ];
 

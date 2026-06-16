@@ -107,6 +107,12 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   — a heuristic parser sums the gym-gain bonuses (`M = 1 + Σ%`) and shows the
   breakdown. Editable per stat; "Detect from perks" re-applies. `M` affects
   absolute gains, not the gym ranking.
+- **Daily energy capacity** (`src/engine/energy-capacity.ts`): drugs share one
+  cooldown (~6-8h ≈ 3 doses/day), so the per-unit $/energy ranking is only half
+  the story. The Economics panel shows natural regen (5/10 min donator = 720/day)
+  + drug energy (Xanax 3×250 vs LSD 3×50) + refill, making explicit that per
+  cooldown slot Xanax gives 5× the energy of LSD. The Unlock planner uses this
+  capacity as its energy/day default.
 - **Unlock planner** (`src/components/Planner.tsx`, `src/engine/planner.ts`):
   inverts the gain model — pick a goal (unlock a specific gym, or reach a stat
   value) and it simulates the trains (gain compounds as the stat grows) and

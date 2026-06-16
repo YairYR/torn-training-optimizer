@@ -348,6 +348,31 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   margin: 0 0 14px;
   line-height: 1.4;
 }
+.planner-line { font-size: 14px; margin: 6px 0 14px; line-height: 1.5; }
+.planner-met { color: var(--best); font-size: 14px; margin: 8px 0; }
+.planner-none { font-size: 13px; color: var(--muted); }
+.planner-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.ptile {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ptile-k {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.ptile-v { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent); }
 .plan-method {
   font-family: var(--display);
   font-weight: 600;

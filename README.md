@@ -107,6 +107,13 @@ extension/                # Phase 4 — MV3 alerts (reuses src/engine/alerts.ts)
   — a heuristic parser sums the gym-gain bonuses (`M = 1 + Σ%`) and shows the
   breakdown. Editable per stat; "Detect from perks" re-applies. `M` affects
   absolute gains, not the gym ranking.
+- **Unlock planner** (`src/components/Planner.tsx`, `src/engine/planner.ts`):
+  inverts the gain model — pick a goal (unlock a specific gym, or reach a stat
+  value) and it simulates the trains (gain compounds as the stat grows) and
+  reports the gap, trains, energy, money cost (energy × your cheapest source)
+  and days. For gym goals it derives the target stat and value from the unlock
+  requirement (e.g. a 50E single-stat gym needs that stat ≥ 1.25× your highest
+  other stat).
 - **Gym unlocking**: the 24 standard gyms (through George's) unlock by **gym EXP
   = total energy spent training over your whole career**, not days or stats. The
   API doesn't expose gym EXP, so the tool reads your active gym as a default and

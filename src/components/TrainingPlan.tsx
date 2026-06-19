@@ -186,8 +186,8 @@ export function TrainingPlan({
                 )}
                 {p.capped && (
                   <div className="plan-cap-note">
-                    ⚠ At {fmtInt(STAT_GROWTH_CAP)}+ the stat-growth term flattens — extra stat no longer
-                    compounds (community-reported; verify).
+                    ⚠ Above {fmtInt(STAT_GROWTH_CAP)}, real gains grow at a decreasing rate (Torn
+                    removed the old 50M cap in 2022), so this linear estimate runs slightly optimistic.
                   </div>
                 )}
                 {p.upgrade && (
@@ -212,8 +212,8 @@ export function TrainingPlan({
       </div>
       <p className="footnote">
         Method is chosen by stat level: 99k happy jumps win at low stats but lose to energy training
-        as stats grow (you waste 32–35h of regen stacking for a jump, and the stat-growth term
-        flattens near 50M). The “per train” figure uses your sustainable max happy — the realistic
+        as stats grow (you waste 32–35h of regen stacking for a jump). The “per train” figure uses
+        your sustainable max happy — the realistic
         daily case — with the 99k ceiling shown for reference. For the budget-optimal buy-list of a
         single session, use the <strong>Budget optimizer</strong> panel.
       </p>

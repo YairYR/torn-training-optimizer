@@ -256,8 +256,9 @@ export function ProgressTracker({ player, gyms, modifiers, gate }: Props) {
           )}
           {validation?.capped && (
             <p className="plan-cap-note">
-              ⚠ This stat started above {fmtInt(50_000_000)} — if actual lands well under predicted, that
-              supports the community-reported stat-growth cap (the engine still assumes it keeps scaling).
+              ⚠ This stat is above {fmtInt(50_000_000)}. Torn removed the old 50M cap in 2022 — above
+              it, real gains grow at a decreasing rate, so the engine's linear prediction tends to run
+              a bit high here.
             </p>
           )}
           <p className="footnote">

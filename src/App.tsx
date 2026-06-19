@@ -24,6 +24,8 @@ import { Optimizer } from './components/Optimizer';
 import { Projector } from './components/Projector';
 import { ProgressTracker } from './components/ProgressTracker';
 import { AboutSection } from './components/AboutSection';
+import { ManualEntry, ManualData } from './components/ManualEntry';
+import { STATIC_GYMS } from './data/gyms';
 import './styles.css';
 
 const KEY_STORE = 'tto.apiKey';
@@ -108,6 +110,33 @@ export default function App() {
     }
   }
 
+  function loadManual(data: ManualData) {
+    setError(null);
+    setPrices(null);
+    const ps: PlayerState = {
+      stats: data.stats,
+      happy: { current: data.maxHappy, maximum: data.maxHappy },
+      energy: { current: data.maxEnergy, maximum: data.maxEnergy },
+      xanaxEcstasyTaken: data.xanaxEcstasy,
+      activeGymId: null,
+    };
+    setPlayer(ps);
+    setGyms(STATIC_GYMS);
+    const gId = georgesGymId(STATIC_GYMS);
+    const cap = data.unlockedGymId;
+    setUnlockedGymId(cap);
+    const localGate: GymGate = {
+      unlockedCapId: cap,
+      georgesUnlocked: gId == null || cap >= gId,
+    };
+    setConfig({
+      stat: 'defense',
+      gymId: bestUsableGymIdForStat(STATIC_GYMS, 'defense', ps.stats, ps.xanaxEcstasyTaken, localGate),
+      energy: ps.energy.current,
+      happy: ps.happy.current,
+    });
+  }
+
   const patchConfig = (patch: Partial<SessionConfig>) =>
     setConfig((c) => {
       if (!c) return c;
@@ -140,7 +169,17 @@ export default function App() {
 
       <ApiKeyBar apiKey={apiKey} onApiKey={setApiKey} loading={loading} onLoad={load} error={error} />
 
-      {!player && <AboutSection />}
+      {!player && (
+        <>
+          <p className="getstarted">
+            Two ways to start: paste your Torn <strong>API key</strong> above and everything fills in
+            instantly — your stats, gyms, perks and prices. Or enter your stats by hand below — no key
+            needed.
+          </p>
+          <ManualEntry onSubmit={loadManual} />
+          <AboutSection />
+        </>
+      )}
 
       {player && gyms && config && (
         <>

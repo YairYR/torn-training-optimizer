@@ -1,0 +1,13 @@
+{
+  "name": "Torn Training Optimizer",
+  "short_name": "Torn Trainer",
+  "description": "Free gym training calculator and planner for the game Torn.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14161b",
+  "theme_color": "#14161b",
+  "icons": [
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}

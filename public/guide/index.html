@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torn Gym Training Guide — Happy, Energy, Drugs &amp; Gyms (Verified Mechanics)</title>
+    <meta
+      name="description"
+      content="A verified guide to gym training in Torn: how happy, energy, drugs and gyms actually work, when to happy-jump vs energy-train, how gyms unlock, and how to plan your build. Mechanics checked against the Torn wiki and in-game testing."
+    />
+    <link rel="canonical" href="https://torntraining.com/guide/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#14161b" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Torn Training Optimizer" />
+    <meta property="og:title" content="Torn Gym Training Guide — Verified Mechanics" />
+    <meta
+      property="og:description"
+      content="How happy, energy, drugs and gyms actually work in Torn — and when to happy-jump vs energy-train. Verified against the wiki and in-game testing."
+    />
+    <meta property="og:url" content="https://torntraining.com/guide/" />
+    <meta property="og:image" content="https://torntraining.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-VXBFXDRGL2');
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Torn Gym Training Guide: Verified Mechanics",
+      "description": "How happy, energy, drugs and gyms work in Torn, and when to happy-jump vs energy-train.",
+      "image": "https://torntraining.com/og-image.png",
+      "author": { "@type": "Organization", "name": "Torn Training Optimizer" },
+      "publisher": { "@type": "Organization", "name": "Torn Training Optimizer" },
+      "mainEntityOfPage": "https://torntraining.com/guide/"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Torn Training Optimizer", "item": "https://torntraining.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Gym Training Guide", "item": "https://torntraining.com/guide/" }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Should I happy jump or energy train in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It depends on your stat level. Happy jumps to 99,999 give the best gains at low stats, but once stats are high, energy training wins because stacking energy for a jump wastes natural regeneration. Below roughly a few hundred thousand, jump; above a few million, energy-train at your max happy." } },
+        { "@type": "Question", "name": "How do gyms unlock in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The standard gyms up to George's unlock by gym EXP, which is the total energy you have ever spent training across every gym. Specialist gyms instead require stat ratios, such as a stat being at least 25% higher than your second-highest." } },
+        { "@type": "Question", "name": "Is Xanax or LSD better for training?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Xanax. Both share one drug cooldown of about 6 to 8 hours, so you get roughly three doses a day. Xanax gives 250 energy per dose versus 50 for LSD, and you cannot make up that 5x difference with volume because of the cooldown." } }
+      ]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
+        --text: #e9ecf1; --muted: #8c95a4; --accent: #d99a4e; --best: #5ec0a8;
+        --display: 'Oswald', sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.7; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 64px; }
+      a { color: var(--accent); }
+      .crumb { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 18px; }
+      h1 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.2; letter-spacing: 0.02em; margin: 0 0 8px; }
+      .sub { color: var(--muted); font-size: 16px; margin: 0 0 24px; }
+      h2 { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; margin: 34px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+      h3 { font-size: 17px; margin: 20px 0 6px; }
+      p, li { font-size: 15.5px; }
+      ul, ol { padding-left: 22px; }
+      li { margin-bottom: 7px; }
+      .toc { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 0 0 8px; }
+      .toc strong { font-family: var(--display); letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+      .toc ol { margin: 8px 0 0; }
+      .toc a { text-decoration: none; }
+      .callout { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 16px 0; font-size: 14.5px; }
+      .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
+      .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
+      .cta b { color: var(--accent); }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+      td.num { font-family: var(--mono); }
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="crumb"><a href="/">Torn Training Optimizer</a> › Gym Training Guide</div>
+
+      <h1>Torn Gym Training Guide</h1>
+      <p class="sub">
+        How happy, energy, drugs and gyms actually work — and how to train smart at any stat level.
+        Mechanics here are checked against the Torn wiki and in-game testing; community lore that
+        isn't officially confirmed is flagged as such.
+      </p>
+
+      <nav class="toc">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#factors">What drives your gym gains</a></li>
+          <li><a href="#happy">Happy: the cap and the catch</a></li>
+          <li><a href="#energy">Energy: what you really get per day</a></li>
+          <li><a href="#drugs">Xanax vs LSD: the cooldown is everything</a></li>
+          <li><a href="#method">Happy jump vs energy training</a></li>
+          <li><a href="#gyms">How gyms unlock</a></li>
+          <li><a href="#modifiers">Gym-gain modifiers (perks)</a></li>
+          <li><a href="#routine">A practical routine</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="factors">What drives your gym gains</h2>
+      <p>
+        Gym gains in Torn aren't random — a single train follows a known formula. Five things decide
+        how much a train adds to a battle stat:
+      </p>
+      <ul>
+        <li><b>Gym dots</b> for that stat — each gym trains each stat at a fixed rate. George's, the best
+          non-specialist gym, gives 7.3 dots to every stat.</li>
+        <li><b>Energy per train</b> — 5, 10, 25 or 50 depending on the gym. What matters for efficiency is
+          gain <em>per energy</em>, not per train.</li>
+        <li><b>Happy</b> at the moment you train — the biggest lever at low-to-mid stats. Gains rise with
+          happy but with diminishing returns (a logarithmic relationship).</li>
+        <li><b>The stat's current value</b> — counter-intuitively, the higher the stat, the more each train
+          adds, so gains compound as you grow (with a likely ceiling — see below).</li>
+        <li><b>Your gym-gain modifier (M)</b> — the total of your gym-gain perk bonuses.</li>
+      </ul>
+
+      <h2 id="happy">Happy: the cap and the catch</h2>
+      <p>
+        Happy regenerates up to a personal maximum (your soft cap), but the true ceiling is
+        <b>99,999</b>. You push above your soft cap with boosters: <b>Ecstasy doubles</b> your current
+        happy, an <b>Erotic DVD adds 2,500</b>, and a Lollipop adds a small amount. Stacking Erotic DVDs
+        and then doubling with Ecstasy is how players reach the big numbers.
+      </p>
+      <div class="callout">
+        The catch — and why "always jump to 99,999" is bad advice — is that happy above your soft cap
+        <b>decays fast</b>. You get a short window to train it off before it falls back. The only way to
+        hold high happy long term is the book <b>"Ignorance Is Bliss,"</b> which lets happy regenerate
+        above your maximum for 31 days.
+      </div>
+
+      <h2 id="energy">Energy: what you really get per day</h2>
+      <p>
+        Energy regenerates <b>5 points every 10 minutes</b> with donator (max 150) — about
+        <b>720/day</b> — or every 15 minutes without it (about 480/day). On top of that you can buy
+        <b>one points refill per day</b> (150 energy) and take energy drugs. That daily ceiling matters:
+        you can't train more than the energy you can actually get.
+      </p>
+
+      <h2 id="drugs">Xanax vs LSD: the cooldown is everything</h2>
+      <p>
+        Both give energy, but they share <b>one drug cooldown</b> — you can only have one drug active at
+        a time, and the cooldown runs roughly <b>6–8 hours</b>. So you get about <b>three doses a day,
+        total</b>.
+      </p>
+      <table>
+        <thead><tr><th>Drug</th><th>Energy/dose</th><th>~3 doses/day</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Xanax</td><td class="num">250</td><td class="num">~750</td><td>+75 happy; the training staple</td></tr>
+          <tr><td>LSD</td><td class="num">50</td><td class="num">~150</td><td>happy boost, but high overdose risk</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Because the cooldown caps you at ~3 doses, the drug with the most energy <em>per dose</em> wins.
+        Even if LSD looks cheaper per point of energy on the market, you can't make up the <b>5×</b>
+        difference with volume — the cooldown won't let you. So <b>Xanax is the staple</b>; LSD is a
+        budget fallback. Overdosing is punishing: any overdose wipes 100% of your stacked energy (except
+        Vicodin), and a Xanax OD also empties your happy.
+      </p>
+      <p>
+        A realistic daily baseline most guides converge on: natural regen + 3 Xanax + 1 refill — roughly
+        <b>1,300–1,600 energy a day</b>, depending on how continuously you train.
+      </p>
+
+      <h2 id="method">Happy jump vs energy training</h2>
+      <p>The question everyone asks. The honest answer is: it depends how big the stat already is.</p>
+      <ul>
+        <li><b>Low stats</b> (roughly under a few hundred thousand): <b>happy dominates</b>. Big happy jumps
+          give the best gains per energy — jump, then train a modest amount of energy.</li>
+        <li><b>High stats</b> (multi-million): <b>energy training wins</b>. Stacking energy for 30+ hours to
+          set up one huge jump wastes all the natural regen you'd have trained in that time, plus the
+          booster-cooldown energy. Better to train your full energy daily at your normal happy, popping a
+          single Ecstasy when affordable.</li>
+      </ul>
+      <div class="flag">
+        <b>Community lore (not officially confirmed):</b> the stat-growth scaling is widely reported to
+        flatten near <b>50M per stat</b>, after which a bigger stat no longer earns more per train. It's
+        repeated across guides but not confirmed, so treat very-high-stat projections with caution.
+      </div>
+
+      <h2 id="gyms">How gyms unlock</h2>
+      <p>There are two kinds, and they unlock very differently.</p>
+      <h3>Standard gyms (Premier Fitness → George's)</h3>
+      <p>
+        These unlock by <b>gym EXP</b>, which is the <b>total energy you've ever spent training</b> —
+        across every gym, your whole career, not just your current one. Not days played, not stats:
+        you unlock them by training. George's (7.3 dots to all stats) is the last and best standard gym.
+      </p>
+      <h3>Specialist gyms</h3>
+      <p>These gate on <b>stat ratios</b>, not gym EXP:</p>
+      <ul>
+        <li><b>50-energy single-stat gyms</b> (e.g. Mr. Isoyamas for Defense, The Elites for Dexterity):
+          require that stat to be at least <b>25% higher than your second-highest</b> stat.</li>
+        <li><b>25-energy paired gyms</b> (Balboas for Def+Dex, Frontline for Str+Spd): require that pair's
+          sum to be 25% above the other pair's sum.</li>
+        <li><b>The Sports Science Lab</b>: requires you to have taken no more than <b>150 Xanax + Ecstasy</b>
+          in total.</li>
+        <li><b>Fight Club</b> (10 dots to everything): invite-only.</li>
+      </ul>
+      <p>
+        This ratio system is why experienced players "whore" one stat — pushing a single stat far ahead
+        to unlock its specialist gym, which then accelerates that stat even more.
+      </p>
+
+      <h2 id="modifiers">Gym-gain modifiers (perks)</h2>
+      <p>
+        Your gym-gain bonus (M) is the <b>sum</b> of percentage bonuses from faction steadfast upgrades,
+        the matching merit, certain education courses, a couple of jobs (some give +10% to specific
+        stats), property, and temporary training books. They add up into a single multiplier applied to
+        every train. A private island and full armour help indirectly (happy and defense), and stacking
+        all of these is how top players squeeze out extra gains.
+      </p>
+
+      <h2 id="routine">A practical routine</h2>
+      <ul>
+        <li>Train at the best gym you can use for each stat.</li>
+        <li>Keep your drug cooldown running — Xanax for energy, every cooldown.</li>
+        <li>Refill once a day, always.</li>
+        <li>Below a few hundred k, jump happy; above a few million, just energy-train at your max happy.</li>
+        <li>Rent a private island (or better) for happy, and chase faction steadfast plus the gym-gain
+          job, education and merits.</li>
+        <li>Pick a build (push one stat, leave its opposite behind) to unlock specialist gyms.</li>
+      </ul>
+
+      <a class="cta" href="/">
+        <b>Let the math do it for you →</b><br />
+        The Torn Training Optimizer reads your stats, gyms and perks and applies all of this
+        automatically — the best gym per stat, the right method for your level, your cheapest energy, and
+        what it takes to unlock your next gym. Your API key never leaves your browser.
+      </a>
+
+      <h2>What's verified vs community lore</h2>
+      <p>
+        <b>Verified</b> against the Torn wiki and in-game testing: the gym-gain formula, the 99,999 happy
+        cap, energy regeneration rates, drug effects and cooldowns, gym-EXP unlocking of standard gyms,
+        and the specialist ratio requirements. <b>Community-reported but not officially confirmed:</b> the
+        exact happy-jump vs energy-training crossover thresholds and the ~50M stat-growth cap — flagged
+        wherever they appear above.
+      </p>
+
+      <footer>
+        Unofficial fan-made guide · not affiliated with Torn.com ·
+        <a href="/">Torn Training Optimizer</a>
+      </footer>
+    </main>
+  </body>
+</html>

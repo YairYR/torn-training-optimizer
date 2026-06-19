@@ -70,6 +70,28 @@ This is a static SPA, so GitHub Pages is the natural host.
 The API key is never committed and never leaves the user's browser, so a public
 Pages site is safe.
 
+## SEO &amp; GEO (discoverability)
+
+Because this is a client-rendered SPA, crawlers and AI/answer engines (which
+usually don't run JS) would otherwise see an empty page. The build ships:
+
+- **`index.html` head**: descriptive `<title>` + meta description, canonical,
+  Open Graph + Twitter Card (with `public/og-image.png`), theme-color, icons,
+  and two JSON-LD blocks (`WebApplication` + `FAQPage`).
+- **Static content for crawlers**: a `<noscript>` summary in `index.html`, plus
+  an `AboutSection` (features, how-to, FAQ) rendered whenever no player is loaded
+  — so the page a crawler sees (no API key) is full of real, indexable text.
+- **`public/robots.txt`**: allows everything and explicitly welcomes AI crawlers
+  (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended, …) for GEO;
+  links the sitemap.
+- **`public/sitemap.xml`** and **`public/llms.txt`** (a plain-language summary of
+  the tool for LLMs).
+- **`public/CNAME`** pins the custom domain into the build.
+
+After deploying: submit the site in Google Search Console, request indexing for
+`https://torntraining.com/`, and validate the structured data with Google's Rich
+Results Test. Update `lastmod` in `sitemap.xml` on meaningful changes.
+
 ## Custom domain + analytics (optional)
 
 `base: './'` is relative, so the same build works at the github.io subpath **and**

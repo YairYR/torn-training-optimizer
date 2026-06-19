@@ -3,16 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Torn Training Optimizer</title>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-VXBFXDRGL2');
-</script>
+    <title>Torn Training Optimizer — Free Gym Training Calculator for Torn</title>
+    <meta
+      name="description"
+      content="Free gym-training optimizer for the game Torn. Get the best gym, training method, energy plan and unlock targets for every stat — using the validated gym-gain formula. Your API key never leaves your browser."
+    />
+    <link rel="canonical" href="https://torntraining.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#14161b" />
+    <meta name="author" content="Torn Training Optimizer" />
+    <meta
+      name="keywords"
+      content="Torn, Torn City, gym training, gym optimizer, gym calculator, gym gains, best gym Torn, happy jump, energy training, Torn stats, Torn tools, battle stats"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Torn Training Optimizer" />
+    <meta property="og:title" content="Torn Training Optimizer — Free Gym Training Calculator for Torn" />
+    <meta
+      property="og:description"
+      content="The best gym, training method, energy plan and unlock targets for every stat in Torn — using the validated gym-gain formula. Privacy-first: your API key stays in your browser."
+    />
+    <meta property="og:url" content="https://torntraining.com/" />
+    <meta property="og:image" content="https://torntraining.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Torn Training Optimizer — Free Gym Training Calculator for Torn" />
+    <meta
+      name="twitter:description"
+      content="The best gym, training method, energy plan and unlock targets for every stat in Torn. Your API key stays in your browser."
+    />
+    <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-VXBFXDRGL2');
+    </script>
+
+    <!-- Structured data: WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Torn Training Optimizer",
+      "url": "https://torntraining.com/",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript and a Torn API key.",
+      "description": "Free gym-training optimizer for the game Torn. It computes the best gym, training method, energy plan and unlock targets for every battle stat using the validated gym-gain formula. The player's API key stays in their browser.",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+
+    <!-- Structured data: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the Torn Training Optimizer?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It is a free web tool for the game Torn that reads your stats, gyms and perks through the Torn API and tells you, for each battle stat, the best gym to use, the optimal training method, the cheapest energy plan and what it takes to unlock your next gym." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my Torn API key safe?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Your API key stays in your browser and is only ever sent to api.torn.com. There is no server, no database and no account, and a read-only Limited access key is enough." }
+        },
+        {
+          "@type": "Question",
+          "name": "Should I happy jump or energy train in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It depends on your stat level. Happy jumps to 99,999 win at low stats, but once stats are high, plain energy training wins because stacking energy for a jump wastes regeneration. The optimizer picks the right method per stat for you." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is it free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes, it is completely free, has no ads, and is not affiliated with Torn." }
+        }
+      ]
+    }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,7 +110,22 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <noscript>
+        <h1>Torn Training Optimizer</h1>
+        <p>
+          A free, privacy-first gym-training planner for the online game
+          <a href="https://www.torn.com/">Torn</a>. Enable JavaScript and load your Torn API key to
+          get, for every battle stat, the best gym to use, the optimal training method
+          (happy jump vs energy training by stat level), the cheapest energy plan, a budget
+          optimizer, an unlock planner and multi-day projections.
+        </p>
+        <p>
+          Your Torn API key stays in your browser and is only ever sent to api.torn.com. There is no
+          server, no database and no account. Free, no ads, not affiliated with Torn.
+        </p>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

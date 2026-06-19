@@ -1,0 +1,38 @@
+# Torn Training Optimizer
+
+> A free, privacy-first web app that helps players of the online game Torn (torn.com)
+> optimize gym training. It reads a player's stats, gym dots and perks via the official
+> Torn API and computes, for each battle stat, the best gym to use, the optimal training
+> method, the cheapest energy plan, what it costs to unlock the next gym, and a multi-day
+> stat projection — using the game's validated gym-gain formula.
+
+Website: https://torntraining.com
+
+## What it does
+- Optimal training plan per battle stat (Strength, Defense, Speed, Dexterity): it picks
+  the method by stat level — happy jumps win at low stats, but plain energy training wins
+  once stats are high (stacking energy for a jump wastes regeneration), so it does not tell
+  high-stat players to chase 99k happy jumps.
+- Auto-detects the player's gym-gain modifier (M) per stat from their perks, with a breakdown.
+- Best gym a player can actually use per stat, respecting unlocked gyms (gym EXP) and the
+  specialist-gym requirements (Balboas, Frontline, Mr. Isoyamas, The Elites, Sports Science Lab, etc.).
+- Economics: cheapest energy by $/energy and a daily energy capacity view that accounts for
+  the shared drug cooldown — so it does not call LSD "cheaper" when Xanax gives 5x the energy
+  per cooldown slot.
+- Budget optimizer: the best items to buy under a money budget for the most gains.
+- Unlock planner: how much energy, money and days to unlock a specific gym or reach a target stat.
+- Multi-day stat projection chart and progress tracking (snapshot stats over time, compare
+  real gains to the formula's prediction).
+
+## Key facts
+- Free, no ads, not affiliated with Torn or Torn.com.
+- The player's Torn API key stays in their browser and is only ever sent to api.torn.com.
+  There is no server, no database and no account; nothing is stored remotely.
+- Read-only; a Torn "Limited" access key is sufficient.
+- Uses the standard Torn gym-gain (Vladar) formula, validated against real in-game trains to
+  about 0.1%. Community-reported but unconfirmed mechanics (such as the rumoured ~50M stat-growth
+  cap) are flagged in the tool and not silently baked into the maths.
+
+## Related / similar tools
+TornStats, YATA, Torn Tools. Torn Training Optimizer is narrower and focused specifically on
+gym-training optimization, with a privacy-first (client-side, no server) design.

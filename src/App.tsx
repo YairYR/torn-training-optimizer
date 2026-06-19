@@ -23,6 +23,7 @@ import { Economics } from './components/Economics';
 import { Optimizer } from './components/Optimizer';
 import { Projector } from './components/Projector';
 import { ProgressTracker } from './components/ProgressTracker';
+import { AboutSection } from './components/AboutSection';
 import './styles.css';
 
 const KEY_STORE = 'tto.apiKey';
@@ -134,10 +135,12 @@ export default function App() {
         <h1>
           Torn <span className="mark">Training</span> Optimizer
         </h1>
-        <span className="phase">Phase 3 · plan + comparator + economics + optimizer + projector</span>
+        <p className="tagline">Free gym-training planner for Torn — the best gym, method, energy and unlock targets for every stat.</p>
       </header>
 
       <ApiKeyBar apiKey={apiKey} onApiKey={setApiKey} loading={loading} onLoad={load} error={error} />
+
+      {!player && <AboutSection />}
 
       {player && gyms && config && (
         <>

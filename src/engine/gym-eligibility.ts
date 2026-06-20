@@ -144,7 +144,11 @@ export function standardGyms(gyms: Gym[]): Gym[] {
       const maxDots = Math.max(...STAT_KEYS.map((s) => g.dots[s]));
       const allFour = STAT_KEYS.every((s) => g.dots[s] > 0);
       const isFightClub = g.energyPerTrain <= 10 && allFour && maxDots >= 9.5;
-      return g.energyPerTrain <= 10 && !isFightClub;
+      // The Jail Gym is only usable while in jail — it is NOT part of the
+      // gym-EXP progression and must never count as a standard gym (otherwise
+      // its high API id is mistaken for George's, the top standard gym).
+      const isJail = /jail/i.test(g.name ?? '');
+      return g.energyPerTrain <= 10 && !isFightClub && !isJail;
     })
     .sort((a, b) => Number(a.id) - Number(b.id));
 }

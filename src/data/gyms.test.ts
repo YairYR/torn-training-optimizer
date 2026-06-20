@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { STATIC_GYMS } from './gyms';
-import { bestUsableGymIdForStat, georgesGymId, GymGate } from '../engine/gym-eligibility';
+import { bestUsableGymIdForStat, georgesGymId, standardGyms, GymGate } from '../engine/gym-eligibility';
 import { gainPerTrain } from '../engine/vladar';
 
 describe('STATIC_GYMS (manual mode data)', () => {
@@ -46,5 +46,28 @@ describe('STATIC_GYMS (manual mode data)', () => {
     });
     expect(gain).toBeGreaterThan(0);
     expect(Number.isFinite(gain)).toBe(true);
+  });
+});
+
+describe('Jail Gym is excluded from the standard progression', () => {
+  // Regression: the API returns The Jail Gym (5E, jail-only) with an id higher
+  // than George's. It must not count as a standard gym, or georgesGymId picks
+  // it instead of George's and breaks the "George's unlocked?" gate.
+  const jail = {
+    id: '99',
+    name: 'The Jail Gym',
+    energyPerTrain: 5,
+    unlockStage: null,
+    joinCost: null,
+    dots: { strength: 3.4, speed: 3.4, defense: 4.5, dexterity: 0 },
+  };
+  const withJail = [...STATIC_GYMS, jail];
+
+  it('standardGyms excludes The Jail Gym', () => {
+    expect(standardGyms(withJail).some((g: any) => /jail/i.test(g.name))).toBe(false);
+  });
+
+  it("georgesGymId still resolves to George's, not the Jail Gym", () => {
+    expect(georgesGymId(withJail)).toBe(24);
   });
 });

@@ -15,19 +15,22 @@ import { parseGymGainModifiers } from '../engine/modifiers';
  *     "strength": 20, "speed": 20, "defense": 20, "dexterity": 20 }
  */
 export function normalizeGyms(raw: Record<string, RawGym>): Gym[] {
-  return Object.entries(raw).map(([id, g]) => ({
-    id,
-    name: g.name,
-    energyPerTrain: Number(g.energy),
-    dots: {
-      strength: toDots(g.strength),
-      defense: toDots(g.defense),
-      speed: toDots(g.speed),
-      dexterity: toDots(g.dexterity),
-    },
-    unlockStage: g.stage != null ? Number(g.stage) : null,
-    joinCost: g.cost != null ? Number(g.cost) : null,
-  }));
+  return Object.entries(raw)
+    .map(([id, g]) => ({
+      id,
+      name: g.name,
+      energyPerTrain: Number(g.energy),
+      dots: {
+        strength: toDots(g.strength),
+        defense: toDots(g.defense),
+        speed: toDots(g.speed),
+        dexterity: toDots(g.dexterity),
+      },
+      unlockStage: g.stage != null ? Number(g.stage) : null,
+      joinCost: g.cost != null ? Number(g.cost) : null,
+    }))
+    // The Jail Gym is jail-only and not part of the training progression.
+    .filter((g) => !/jail/i.test(g.name ?? ''));
 }
 
 function toDots(v: string | number | undefined): number {

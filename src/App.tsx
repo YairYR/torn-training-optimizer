@@ -17,6 +17,7 @@ import { Modifiers } from './components/Modifiers';
 import { PlayerSummary } from './components/PlayerSummary';
 import { TrainingPlan } from './components/TrainingPlan';
 import { Planner } from './components/Planner';
+import { BuildRoadmap } from './components/BuildRoadmap';
 import { GymComparator } from './components/GymComparator';
 import { SessionSimulator } from './components/SessionSimulator';
 import { Economics } from './components/Economics';
@@ -201,6 +202,7 @@ export default function App() {
             unlockedGymId={unlockedGymId}
             onUnlockedGym={setUnlockedGymId}
           />
+          <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
           <Planner gyms={gyms} player={player} modifiers={modifiers} prices={prices} gate={gate} />
           <SessionSimulator
             gyms={gyms}

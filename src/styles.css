@@ -448,3 +448,86 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   margin-top: 8px;
   line-height: 1.4;
 }
+
+/* ---- Build roadmap ---- */
+.roadmap-archetypes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.roadmap-archetypes button {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.roadmap-archetypes button:hover { border-color: var(--accent-dim); color: var(--text); }
+.roadmap-archetypes button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(217, 154, 78, 0.1);
+}
+.roadmap-desc { font-size: 14px; line-height: 1.55; margin: 0 0 14px; }
+.roadmap-ladder { list-style: none; margin: 0 0 14px; padding: 0; }
+.stage {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.stage:first-child { border-top: none; }
+.stage-dots {
+  flex: none;
+  width: 42px;
+  text-align: center;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 6px 0;
+}
+.stage-next .stage-dots { color: var(--accent); background: rgba(217, 154, 78, 0.12); }
+.stage-unlocked .stage-dots { color: var(--best); }
+.stage-main { flex: 1; min-width: 0; }
+.stage-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.stage-name { font-weight: 600; font-size: 14px; }
+.stage-badge {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.badge-unlocked { color: var(--best); border-color: var(--best); }
+.badge-next { color: var(--accent); border-color: var(--accent); background: rgba(217, 154, 78, 0.1); }
+.badge-baseline { color: var(--muted); }
+.stage-action {
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.stage-req { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+.roadmap-ssl {
+  font-size: 13px;
+  line-height: 1.5;
+  background: rgba(94, 192, 168, 0.06);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 0 0 12px;
+}

@@ -13,6 +13,8 @@ import { flatModifiers } from './engine/modifiers';
 import { ENERGY_SOURCES, HAPPY_BOOSTERS } from './data/consumables';
 import { SessionConfig } from './session-config';
 import { ApiKeyBar } from './components/ApiKeyBar';
+import { SummaryCard } from './components/SummaryCard';
+import { HistoryChart } from './components/HistoryChart';
 import { Modifiers } from './components/Modifiers';
 import { PlayerSummary } from './components/PlayerSummary';
 import { TrainingPlan } from './components/TrainingPlan';
@@ -184,6 +186,7 @@ export default function App() {
 
       {player && gyms && config && (
         <>
+          <SummaryCard gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
           <Modifiers
             modifiers={modifiers}
             detected={player.detectedModifiers}
@@ -235,6 +238,7 @@ export default function App() {
           />
           <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
           <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
+          <HistoryChart player={player} />
         </>
       )}
 

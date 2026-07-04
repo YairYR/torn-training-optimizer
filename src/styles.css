@@ -783,3 +783,20 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   .summary-headline { font-size: 22px; }
   .summary-figure-num { font-size: 28px; }
 }
+
+/* ── Footer nav (internal links, always rendered for crawlability) ─────── */
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-bottom: 10px;
+}
+.footer-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.footer-nav a:hover { text-decoration: underline; }

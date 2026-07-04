@@ -167,7 +167,7 @@ export default function App() {
         <h1>
           Torn <span className="mark">Training</span> Optimizer
         </h1>
-        <p className="tagline">Free gym-training planner for Torn — the best gym, method, energy and unlock targets for every stat.</p>
+        <p className="tagline">The free Torn gym calculator — exact gains per train, happy jump vs energy training, best gym and unlock targets for every battle stat.</p>
       </header>
 
       <ApiKeyBar apiKey={apiKey} onApiKey={setApiKey} loading={loading} onLoad={load} error={error} />
@@ -243,6 +243,11 @@ export default function App() {
       )}
 
       <footer className="site-footer">
+        <nav className="footer-nav">
+          <a href="/guide/">Gym Training Guide</a>
+          <a href="/happy-jump/">Happy Jump Calculator</a>
+          <a href="/specialist-gyms/">Specialist Gyms</a>
+        </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
         and is sent only to api.torn.com — nothing is stored on any server.
       </footer>

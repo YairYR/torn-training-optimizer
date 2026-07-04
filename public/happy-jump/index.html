@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torn Happy Jump Calculator — When to Jump vs Energy Train</title>
+    <meta
+      name="description"
+      content="Free Torn happy jump calculator and guide: how happy jumps work (Ecstasy, eDVDs, the 99,999 cap), the exact jump recipe, and the stat level where energy training beats jumping. Run your own numbers with your real stats."
+    />
+    <link rel="canonical" href="https://torntraining.com/happy-jump/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#14161b" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Torn Training Optimizer" />
+    <meta property="og:title" content="Torn Happy Jump Calculator — When to Jump vs Energy Train" />
+    <meta
+      property="og:description"
+      content="How happy jumps work in Torn, the exact jump recipe, and the stat level where energy training beats jumping — with a free calculator that runs your real numbers."
+    />
+    <meta property="og:url" content="https://torntraining.com/happy-jump/" />
+    <meta property="og:image" content="https://torntraining.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-VXBFXDRGL2');
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Torn Happy Jump Calculator — When to Jump vs Energy Train",
+      "description": "How happy jumps work in Torn, the exact jump recipe, and the stat level where energy training beats jumping.",
+      "image": "https://torntraining.com/og-image.png",
+      "author": { "@type": "Organization", "name": "Torn Training Optimizer" },
+      "publisher": { "@type": "Organization", "name": "Torn Training Optimizer" },
+      "mainEntityOfPage": "https://torntraining.com/happy-jump/"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Torn Training Optimizer", "item": "https://torntraining.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Happy Jump Calculator", "item": "https://torntraining.com/happy-jump/" }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a happy jump in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "A happy jump is spiking your happy far above its normal maximum — by stacking Erotic DVDs and doubling with Ecstasy, up to the hard cap of 99,999 — and then dumping stacked energy at the gym before the boosted happy decays. Because gym gains rise with happy, a single jump can be worth many days of normal training at low stats." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is happy jumping worth it at high stats?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Usually not. Happy affects gains logarithmically while the stat's own value scales gains steadily, so once a stat is in the multi-millions, plain daily energy training beats stacking energy for 30+ hours to set up one jump — the stacking window wastes all the natural regen and drug doses you would otherwise have trained. The calculator finds the break-even for your exact stats." }
+        },
+        {
+          "@type": "Question",
+          "name": "How high can happy go in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The hard ceiling is 99,999. Happy regenerates only up to your personal soft cap; anything pushed above it with boosters (Ecstasy doubles current happy, an Erotic DVD adds 2,500) decays quickly, which is why a jump has to be trained off in a short window." }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I calculate my happy jump gains?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Use the free calculator at torntraining.com: load your API key or type your stats, set the happy level of the jump and the energy you will dump, and it applies the validated gym-gain formula to show the exact total gain — and compares it against just energy training at your normal happy." }
+        }
+      ]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
+        --text: #e9ecf1; --muted: #8c95a4; --accent: #d99a4e; --best: #5ec0a8;
+        --display: 'Oswald', sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.7; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 64px; }
+      a { color: var(--accent); }
+      .crumb { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 18px; }
+      h1 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.2; letter-spacing: 0.02em; margin: 0 0 8px; }
+      .sub { color: var(--muted); font-size: 16px; margin: 0 0 24px; }
+      h2 { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; margin: 34px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+      h3 { font-size: 17px; margin: 20px 0 6px; }
+      p, li { font-size: 15.5px; }
+      ul, ol { padding-left: 22px; }
+      li { margin-bottom: 7px; }
+      .toc { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 0 0 8px; }
+      .toc strong { font-family: var(--display); letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+      .toc ol { margin: 8px 0 0; }
+      .toc a { text-decoration: none; }
+      .callout { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 16px 0; font-size: 14.5px; }
+      .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
+      .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
+      .cta b { color: var(--accent); }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+      td.num { font-family: var(--mono); }
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="crumb"><a href="/">Torn Training Optimizer</a> › Happy Jump Calculator</div>
+
+      <h1>Torn Happy Jump Calculator</h1>
+      <p class="sub">
+        How happy jumps actually work, the exact jump recipe, and — the part most guides skip —
+        the stat level where jumping stops being worth it. Run your own numbers free with the
+        <a href="/">calculator</a>.
+      </p>
+
+      <a class="cta" href="/">
+        <b>▸ Calculate your jump</b> — load your API key or type your stats, set the happy level
+        and energy of the jump, and see the exact gain vs plain energy training. Free, no account,
+        nothing leaves your browser.
+      </a>
+
+      <nav class="toc">
+        <strong>Contents</strong>
+        <ol>
+          <li><a href="#what">What a happy jump is</a></li>
+          <li><a href="#mechanics">The mechanics: caps, boosters and decay</a></li>
+          <li><a href="#recipe">The jump recipe, step by step</a></li>
+          <li><a href="#breakeven">Jump vs energy training: the break-even</a></li>
+          <li><a href="#calculator">Running your numbers</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ol>
+      </nav>
+
+      <h2 id="what">What a happy jump is</h2>
+      <p>
+        Gym gains in Torn rise with your happy at the moment you train. A <strong>happy jump</strong>
+        exploits that: you spike happy far above its normal maximum with boosters, then dump a large
+        pile of stacked energy at the gym before the boost decays. One well-executed jump can be worth
+        many days of normal training — <em>at the right stat level</em>.
+      </p>
+      <p>
+        The relationship between happy and gains is logarithmic (diminishing returns), which is the
+        key to everything on this page: doubling happy does <em>not</em> double gains, and that is
+        exactly why jumping eventually loses to plain energy training as stats grow.
+      </p>
+
+      <h2 id="mechanics">The mechanics: caps, boosters and decay</h2>
+      <ul>
+        <li>
+          <strong>The hard cap is 99,999 happy.</strong> Happy regenerates only up to your personal
+          soft cap (your normal maximum); everything above that comes from boosters.
+        </li>
+        <li>
+          <strong>Ecstasy doubles your current happy.</strong> This is the core of every jump —
+          stack first, double last.
+        </li>
+        <li>
+          <strong>An Erotic DVD adds 2,500 happy</strong>, and a Lollipop adds a small amount.
+          Stacking eDVDs and then doubling with Ecstasy is how players reach the big numbers.
+        </li>
+        <li>
+          <strong>Happy above your soft cap decays fast.</strong> You get a short window to train it
+          off before it falls back — the jump must be executed, not admired.
+        </li>
+        <li>
+          The only way to hold high happy long-term is the book <em>"Ignorance Is Bliss"</em>, which
+          lets happy regenerate above your maximum for 31 days.
+        </li>
+      </ul>
+
+      <div class="callout">
+        <strong>Energy side of the jump:</strong> energy regenerates about 720/day with donator
+        (5 per 10 minutes, max 150) or about 480/day without. Xanax adds 250 energy per dose
+        (plus 75 happy), but drugs share one cooldown of roughly 6–8 hours — about
+        <strong>3 doses a day total</strong> — and you can buy one 150-energy points refill per day.
+        A jump means saving that energy up instead of spending it, which is precisely its hidden cost.
+      </div>
+
+      <h2 id="recipe">The jump recipe, step by step</h2>
+      <ol>
+        <li><strong>Stack energy.</strong> Stop training and let energy build — natural regen plus Xanax doses plus the daily refill. Most jumps stack for 24–36 hours to reach 1,000+ energy.</li>
+        <li><strong>Top up happy to your soft cap</strong> so the doubling starts from the highest possible base.</li>
+        <li><strong>Use your Erotic DVDs.</strong> Each adds 2,500 happy above the cap — this is the stacking phase, so move quickly once you start.</li>
+        <li><strong>Pop Ecstasy last.</strong> It doubles whatever happy you have at that moment, which is why it always goes after the eDVDs, never before.</li>
+        <li><strong>Dump all stacked energy immediately</strong> at your best gym for the target stat. Boosted happy decays fast; every minute of delay is lost gains.</li>
+      </ol>
+      <div class="flag">
+        Overdosing is punishing: any overdose wipes 100% of your stacked energy (Vicodin excepted),
+        and a Xanax OD also empties your happy — which can erase the entire jump you just set up.
+      </div>
+
+      <h2 id="breakeven">Jump vs energy training: the break-even</h2>
+      <p>
+        This is the question that actually matters, and the honest answer is:
+        <strong>it depends on how big the stat already is.</strong>
+      </p>
+      <table>
+        <thead>
+          <tr><th>Stat level</th><th>Better method</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">Under a few 100k</td>
+            <td><strong>Happy jump</strong></td>
+            <td>Happy is the dominant term in the gain formula at low stats — big jumps give the best gain per energy by far.</td>
+          </tr>
+          <tr>
+            <td class="num">Multi-million</td>
+            <td><strong>Energy training</strong></td>
+            <td>The stat's own value now drives gains. Stacking energy for 30+ hours to set up one jump wastes all the regen and drug doses you would have trained daily — the jump never pays that back.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        In between, it is genuinely close and depends on your happy maximum, your perks and your
+        energy ceiling — which is why a per-player calculation beats any rule of thumb. At high
+        stats, the practical routine is training your full energy every day at normal happy,
+        popping a single Ecstasy when it is affordable, rather than chasing 99,999 jumps.
+      </p>
+
+      <h2 id="calculator">Running your numbers</h2>
+      <p>
+        The <a href="/">Torn Training Optimizer</a> is a free happy jump calculator built on the
+        validated gym-gain formula (accurate to about 0.1% against real trains). It will:
+      </p>
+      <ul>
+        <li>Simulate a session at any happy level and energy amount — your exact jump, before you commit the eDVDs and Ecstasy;</li>
+        <li>Compare that jump against plain energy training at your normal happy, per stat, so the break-even is <em>your</em> break-even;</li>
+        <li>Pick the best gym you can actually use for the stat, and price the energy plan (it knows Xanax's shared cooldown, so it won't suggest impossible energy);</li>
+        <li>Work with your API key (read-only, never leaves your browser) or with stats typed in manually.</li>
+      </ul>
+
+      <a class="cta" href="/">
+        <b>▸ Open the calculator</b> — free, no ads, no account. Your API key stays in your browser.
+      </a>
+
+      <h2 id="faq">FAQ</h2>
+      <h3>What is a happy jump in Torn?</h3>
+      <p>
+        Spiking happy far above its normal maximum — stacking Erotic DVDs, then doubling with
+        Ecstasy, up to the 99,999 cap — and dumping stacked energy at the gym before the boost
+        decays. Gains rise with happy, so one jump can be worth days of normal training at low stats.
+      </p>
+      <h3>Is happy jumping worth it at high stats?</h3>
+      <p>
+        Usually not. Happy scales gains logarithmically while the stat's own value scales them
+        steadily, so once a stat is in the multi-millions, daily energy training beats sacrificing
+        30+ hours of regen to set up one jump. Run the comparison with your real numbers to see
+        where you land.
+      </p>
+      <h3>How high can happy go?</h3>
+      <p>
+        99,999 is the hard ceiling. Anything above your personal soft cap decays quickly, which is
+        why the energy dump has to happen immediately after the Ecstasy.
+      </p>
+      <h3>Ecstasy before or after the eDVDs?</h3>
+      <p>
+        After — always. Ecstasy doubles your <em>current</em> happy, so every point of happy you
+        stack first is doubled; anything used after the Ecstasy is not.
+      </p>
+
+      <p>
+        Related: the <a href="/guide/">full Torn gym training guide</a> covers happy, energy, drugs
+        and gym unlocks in depth, and the <a href="/specialist-gyms/">specialist gyms guide</a> has
+        the exact requirements for the 7.5–10 dot gyms your jump gains eventually depend on.
+      </p>
+
+      <footer>
+        Unofficial fan-made guide · not affiliated with Torn.com ·
+        <a href="/">Torn Training Optimizer</a>
+      </footer>
+    </main>
+  </body>
+</html>

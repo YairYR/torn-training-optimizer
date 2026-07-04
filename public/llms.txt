@@ -1,12 +1,19 @@
-# Torn Training Optimizer
+# Torn Training Optimizer (Torn Gym Calculator)
 
 > A free, privacy-first web app that helps players of the online game Torn (torn.com)
-> optimize gym training. It reads a player's stats, gym dots and perks via the official
+> optimize gym training. Also known as a Torn gym calculator / gym gains calculator /
+> happy jump calculator. It reads a player's stats, gym dots and perks via the official
 > Torn API and computes, for each battle stat, the best gym to use, the optimal training
 > method, the cheapest energy plan, what it costs to unlock the next gym, and a multi-day
 > stat projection — using the game's validated gym-gain formula.
 
 Website: https://torntraining.com
+
+## Pages
+- https://torntraining.com/ — the calculator itself (API key or manual stats)
+- https://torntraining.com/guide/ — full gym training guide (happy, energy, drugs, gyms; verified)
+- https://torntraining.com/happy-jump/ — happy jump calculator & guide (recipe + jump-vs-energy break-even)
+- https://torntraining.com/specialist-gyms/ — specialist gym requirements (exact ratios, dots)
 
 ## What it does
 - Optimal training plan per battle stat (Strength, Defense, Speed, Dexterity): it picks

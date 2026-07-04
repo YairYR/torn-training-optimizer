@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Torn Training Optimizer — Free Gym Training Calculator for Torn</title>
+    <title>Torn Gym Calculator — Gym Gains, Happy Jump & Best Gym Planner</title>
     <meta
       name="description"
-      content="Free gym-training optimizer for the game Torn. Get the best gym, training method, energy plan and unlock targets for every stat — using the validated gym-gain formula. Your API key never leaves your browser."
+      content="Free Torn gym calculator: exact gains per train and per day, happy jump vs energy training break-even, the best gym for every battle stat, unlock targets and energy costs. Use your API key or enter stats manually — nothing leaves your browser."
     />
     <link rel="canonical" href="https://torntraining.com/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -15,16 +15,16 @@
     <meta name="author" content="Torn Training Optimizer" />
     <meta
       name="keywords"
-      content="Torn, Torn City, gym training, gym optimizer, gym calculator, gym gains, best gym Torn, happy jump, energy training, Torn stats, Torn tools, battle stats"
+      content="torn gym calculator, torn gym gains calculator, torn training calculator, torn happy jump calculator, torn stat calculator, torn gym calc, best gym torn, happy jump, energy training, torn city gym calculator, torn battle stats, torn tools"
     />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Torn Training Optimizer" />
-    <meta property="og:title" content="Torn Training Optimizer — Free Gym Training Calculator for Torn" />
+    <meta property="og:title" content="Torn Gym Calculator — Gym Gains, Happy Jump & Best Gym Planner" />
     <meta
       property="og:description"
-      content="The best gym, training method, energy plan and unlock targets for every stat in Torn — using the validated gym-gain formula. Privacy-first: your API key stays in your browser."
+      content="Exact gains per train and per day, happy jump vs energy training break-even, best gym per battle stat, unlock targets and energy costs. Free, privacy-first: your API key stays in your browser."
     />
     <meta property="og:url" content="https://torntraining.com/" />
     <meta property="og:image" content="https://torntraining.com/og-image.png" />
@@ -33,10 +33,10 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Torn Training Optimizer — Free Gym Training Calculator for Torn" />
+    <meta name="twitter:title" content="Torn Gym Calculator — Gym Gains, Happy Jump & Best Gym Planner" />
     <meta
       name="twitter:description"
-      content="The best gym, training method, energy plan and unlock targets for every stat in Torn. Your API key stays in your browser."
+      content="Exact gains per train, happy jump vs energy training break-even, and the best gym for every battle stat in Torn. Your API key stays in your browser."
     />
     <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
 
@@ -62,11 +62,13 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Torn Training Optimizer",
+      "alternateName": ["Torn Gym Calculator", "Torn Gym Gains Calculator", "Torn Training Calculator", "Torn Happy Jump Calculator"],
       "url": "https://torntraining.com/",
       "applicationCategory": "GameApplication",
       "operatingSystem": "Any (web browser)",
-      "browserRequirements": "Requires JavaScript and a Torn API key.",
-      "description": "Free gym-training optimizer for the game Torn. It computes the best gym, training method, energy plan and unlock targets for every battle stat using the validated gym-gain formula. The player's API key stays in their browser.",
+      "browserRequirements": "Requires JavaScript. Works with a Torn API key or manual stat entry.",
+      "description": "Free gym calculator for the game Torn. It computes exact gains per train and per day, the happy jump vs energy training break-even, the best gym for every battle stat, unlock targets and energy costs — using the validated gym-gain formula. The player's API key stays in their browser.",
+      "featureList": "Gym gains calculator per train and per day; happy jump vs energy training decision; best usable gym per battle stat; gym unlock planner with energy, money and day estimates; daily energy capacity (Xanax cooldown-aware); budget optimizer; multi-day stat projection; stats history chart with TornStats import",
       "isAccessibleForFree": true,
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
     }
@@ -78,6 +80,16 @@
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I calculate my gym gains in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Gym gains follow a known formula with five inputs: the gym's dots for the stat, energy per train, your happy at the moment you train, the stat's current value, and your gym-gain perk modifier. This calculator applies that formula to your real stats — via your API key or manual entry — and shows exact gains per train and per day for every battle stat." }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the best gym in Torn?",
+          "acceptedAnswer": { "@type": "Answer", "text": "For most players it is George's (7.3 dots in every stat), the last standard gym. Specialist gyms go higher — 7.5-dot paired gyms, 8.0-dot single-stat gyms that require the stat to be 25% above your second-highest, the 9.0-dot Sports Science Lab with strict conditions, and the invite-only 10.0-dot Fight Club. The best gym you can actually use depends on your unlocks and stat ratios, which is exactly what the calculator works out." }
+        },
         {
           "@type": "Question",
           "name": "What is the Torn Training Optimizer?",
@@ -123,6 +135,11 @@
         <p>
           Your Torn API key stays in your browser and is only ever sent to api.torn.com. There is no
           server, no database and no account. Free, no ads, not affiliated with Torn.
+        </p>
+        <p>
+          Guides: <a href="/guide/">Torn gym training guide</a> ·
+          <a href="/happy-jump/">Happy jump calculator &amp; guide</a> ·
+          <a href="/specialist-gyms/">Specialist gym requirements</a>
         </p>
       </noscript>
     </div>

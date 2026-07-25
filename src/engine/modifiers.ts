@@ -1,8 +1,14 @@
 import { StatKey, STAT_KEYS } from './types';
 
 // Computes the gym-gain modifier M per stat from the API perk strings.
-// Gym-gain bonuses are summed (additive) and applied as M = 1 + Σ%, which
-// matches how the community and the validated single-train (M≈1.186) behave.
+//
+// Perks COMPOUND: M = Π(1 + perkᵢ), not 1 + Σperkᵢ. This is explicit in the
+// community reference (Vladar, "Training Formula V2.0"): the formula ends in
+// `(1+PERK%A) * (1+PERK%B) * (Etc)`, and the thread spells out that +2%, +15%
+// and +1% together give +19.65%, not +18%. The difference is small per train
+// but compounds across a multi-day projection, and it is exactly the kind of
+// detail an end-game player will check.
+//
 // The parser is heuristic over free-text perks ("...gym gains"); anything it
 // misses can be corrected in the editable M fields.
 
@@ -22,12 +28,13 @@ export interface ModifierContribution {
 }
 
 export interface ModifierResult {
-  perStat: Record<StatKey, number>; // M = 1 + Σ%/100
+  perStat: Record<StatKey, number>; // M = Π(1 + %/100)
   contributions: ModifierContribution[];
 }
 
 export function parseGymGainModifiers(perksBySource: Record<string, string[] | undefined>): ModifierResult {
-  const sums: Record<StatKey, number> = { strength: 0, defense: 0, speed: 0, dexterity: 0 };
+  // Running product per stat, one factor per matched perk.
+  const products: Record<StatKey, number> = { strength: 1, defense: 1, speed: 1, dexterity: 1 };
   const contributions: ModifierContribution[] = [];
 
   for (const [source, arr] of Object.entries(perksBySource)) {
@@ -46,17 +53,18 @@ export function parseGymGainModifiers(perksBySource: Record<string, string[] | u
         }
       }
 
+      const factor = 1 + percent / 100;
       if (stat === 'all') {
-        for (const s of STAT_KEYS) sums[s] += percent;
+        for (const s of STAT_KEYS) products[s] *= factor;
       } else {
-        sums[stat] += percent;
+        products[stat] *= factor;
       }
       contributions.push({ source, stat, percent, text: text.trim() });
     }
   }
 
   const perStat = {} as Record<StatKey, number>;
-  for (const s of STAT_KEYS) perStat[s] = 1 + sums[s] / 100;
+  for (const s of STAT_KEYS) perStat[s] = products[s];
   return { perStat, contributions };
 }
 

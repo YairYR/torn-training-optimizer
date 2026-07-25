@@ -28,6 +28,10 @@ import { Projector } from './components/Projector';
 import { ProgressTracker } from './components/ProgressTracker';
 import { AboutSection } from './components/AboutSection';
 import { ManualEntry, ManualData } from './components/ManualEntry';
+import { BuildCompare } from './components/BuildCompare';
+import { ShareBar } from './components/ShareBar';
+import { readSharedState, syncUrl, SharedState } from './url-state';
+import { dailyEnergyCapacity } from './engine/energy-capacity';
 import { STATIC_GYMS } from './data/gyms';
 import './styles.css';
 
@@ -59,6 +63,22 @@ export default function App() {
   const [unlockedGymId, setUnlockedGymId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Manual inputs are kept so the share link can reproduce them exactly.
+  const [manual, setManual] = useState<ManualData | null>(null);
+  // A stat/gym from the URL has to survive until a player is loaded — a visitor
+  // from an SEO landing page arrives with a gym selected but no stats yet.
+  const [pendingConfig, setPendingConfig] = useState<Partial<SessionConfig> | null>(null);
+
+  // A shared link (or an SEO landing page) fills the tool in before first paint,
+  // so a visitor from search lands on real numbers instead of an empty form.
+  useEffect(() => {
+    const shared = readSharedState();
+    if (!shared) return;
+    if (shared.modifiers) setModifiers(shared.modifiers);
+    if (shared.config) setPendingConfig(shared.config);
+    if (shared.manual) loadManual(shared.manual);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => localStorage.setItem(KEY_STORE, apiKey), [apiKey]);
   useEffect(() => localStorage.setItem(MOD_STORE, JSON.stringify(modifiers)), [modifiers]);
@@ -105,7 +125,9 @@ export default function App() {
         gymId: bestUsableGymIdForStat(g, 'defense', p.stats, p.xanaxEcstasyTaken, localGate),
         energy: p.energy.current,
         happy: p.happy.current,
+        ...pendingConfig,
       });
+      setPendingConfig(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error.');
     } finally {
@@ -116,6 +138,7 @@ export default function App() {
   function loadManual(data: ManualData) {
     setError(null);
     setPrices(null);
+    setManual(data);
     const ps: PlayerState = {
       stats: data.stats,
       happy: { current: data.maxHappy, maximum: data.maxHappy },
@@ -137,7 +160,9 @@ export default function App() {
       gymId: bestUsableGymIdForStat(STATIC_GYMS, 'defense', ps.stats, ps.xanaxEcstasyTaken, localGate),
       energy: ps.energy.current,
       happy: ps.happy.current,
+      ...pendingConfig,
     });
+    setPendingConfig(null);
   }
 
   const patchConfig = (patch: Partial<SessionConfig>) =>
@@ -155,6 +180,41 @@ export default function App() {
       }
       return next;
     });
+
+  const energyPerDay = useMemo(() => {
+    if (!player) return 0;
+    const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax');
+    if (!xan?.cooldownMinutes) return player.energy.maximum;
+    return dailyEnergyCapacity({
+      maxEnergy: player.energy.maximum,
+      drugEnergyPerDose: xan.energyGain,
+      drugCooldownMinutes: xan.cooldownMinutes,
+    }).total;
+  }, [player]);
+
+  const shared: SharedState = useMemo(
+    () => ({
+      manual:
+        manual ??
+        (player
+          ? {
+              stats: player.stats,
+              maxHappy: player.happy.maximum,
+              maxEnergy: player.energy.maximum,
+              xanaxEcstasy: player.xanaxEcstasyTaken ?? null,
+              unlockedGymId: unlockedGymId ?? 24,
+            }
+          : undefined),
+      config: config ?? undefined,
+      modifiers,
+    }),
+    [manual, player, config, modifiers, unlockedGymId],
+  );
+
+  // Keep the address bar pasteable at all times, without polluting history.
+  useEffect(() => {
+    if (player) syncUrl(shared);
+  }, [player, shared]);
 
   const setMod = (stat: StatKey, value: number) => setModifiers((m) => ({ ...m, [stat]: value }));
   const detectMods = () => {
@@ -187,6 +247,14 @@ export default function App() {
       {player && gyms && config && (
         <>
           <SummaryCard gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+          <ShareBar
+            gyms={gyms}
+            player={player}
+            modifiers={modifiers}
+            gate={gate}
+            energyPerDay={energyPerDay}
+            shared={shared}
+          />
           <Modifiers
             modifiers={modifiers}
             detected={player.detectedModifiers}
@@ -237,6 +305,13 @@ export default function App() {
             gate={gate}
           />
           <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+          <BuildCompare
+            gyms={gyms}
+            player={player}
+            modifiers={modifiers}
+            gate={gate}
+            energyPerDay={energyPerDay}
+          />
           <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
           <HistoryChart player={player} />
         </>
@@ -247,6 +322,9 @@ export default function App() {
           <a href="/guide/">Gym Training Guide</a>
           <a href="/happy-jump/">Happy Jump Calculator</a>
           <a href="/specialist-gyms/">Specialist Gyms</a>
+          <a href="/gym-dots/">Gym Dots Chart</a>
+          <a href="/stat-cap/">The 50M Stat Cap</a>
+          <a href="/gyms/">All Gyms</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
         and is sent only to api.torn.com — nothing is stored on any server.

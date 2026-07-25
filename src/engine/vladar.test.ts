@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { gainPerTrain } from './vladar';
+import { effectiveStat, gainPerTrain } from './vladar';
+import { STAT_SOFT_CAP } from './constants';
 
 describe('gainPerTrain', () => {
   // Pinned value, hand-computed from the formula (spec §4.1):
@@ -37,4 +38,45 @@ describe('gainPerTrain', () => {
   it('returns 0 when the gym does not train the stat (dots = 0)', () => {
     expect(gainPerTrain({ modifiers: 1, dots: 0, energyPerTrain: 50, happy: 5000, statValue: 50_000 })).toBe(0);
   });
+});
+
+describe('effectiveStat (post-2022 cap removal)', () => {
+  it('is the identity below the 50M soft cap', () => {
+    expect(effectiveStat(10_000)).toBe(10_000);
+    expect(effectiveStat(STAT_SOFT_CAP)).toBe(STAT_SOFT_CAP);
+  });
+
+  it('keeps growing above the cap, but sub-linearly', () => {
+    const at100m = effectiveStat(100e6);
+    const at1b = effectiveStat(1e9);
+    expect(at100m).toBeGreaterThan(STAT_SOFT_CAP);
+    expect(at1b).toBeGreaterThan(at100m);
+    // 10x the raw stat must NOT give 10x the effective stat.
+    expect(at1b / at100m).toBeLessThan(10);
+  });
+
+  // Torn published monthly-growth figures for a fixed heavy-training regime
+  // (1500E/day, George's, PI happy) before and after removing the cap. Because
+  // gain-per-train is affine in S_eff, the ratio of those two figures at the
+  // same stat equals the ratio of the gain terms — which pins the curve.
+  const OFFICIAL = [
+    { stat: 1e9, before: 10.33, after: 12.87 },
+    { stat: 5e9, before: 2.07, after: 4.47 },
+    { stat: 1e10, before: 1.03, after: 3.37 },
+    { stat: 5e10, before: 0.21, after: 2.4 },
+    { stat: 1e11, before: 0.1, after: 2.24 },
+    { stat: 1e12, before: 0.01, after: 1.97 },
+  ];
+
+  it.each(OFFICIAL)(
+    'reproduces Torn\'s published growth ratio at $stat',
+    ({ stat, before, after }) => {
+      const regime = { modifiers: 1, dots: 7.3, energyPerTrain: 10, happy: 9192 };
+      const capped = gainPerTrain({ ...regime, statValue: STAT_SOFT_CAP });
+      const uncapped = gainPerTrain({ ...regime, statValue: stat });
+      // Torn rounded the published percentages to 2 dp, so tiny stats-side
+      // figures (0.01%) carry a lot of rounding noise — allow 12%.
+      expect(uncapped / capped).toBeCloseTo(after / before, -Math.log10(0.12 * (after / before)));
+    },
+  );
 });

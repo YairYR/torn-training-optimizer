@@ -147,3 +147,64 @@ export function clearHistory(): void {
     /* non-fatal */
   }
 }
+
+// ---- Portable history (no account, no server) --------------------------------
+//
+// The import above depends on a competitor's export format. These two functions
+// give the tool its own: a small JSON file the player owns, can back up, and can
+// carry to another browser or device. It is the "account" of an app that
+// deliberately has no accounts.
+
+const EXPORT_VERSION = 1;
+
+export interface HistoryExport {
+  format: 'torntraining.history';
+  version: number;
+  exportedAt: string;
+  points: HistoryPoint[];
+}
+
+export function exportHistory(history: HistoryPoint[]): string {
+  const payload: HistoryExport = {
+    format: 'torntraining.history',
+    version: EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    points: history,
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+/**
+ * Parse a previously exported file. Returns null when the text is not one of
+ * ours, so the caller can fall back to the TornStats parser.
+ */
+export function parseHistoryExport(text: string): HistoryPoint[] | null {
+  try {
+    const parsed = JSON.parse(text) as HistoryExport;
+    if (parsed?.format !== 'torntraining.history' || !Array.isArray(parsed.points)) return null;
+    const points = parsed.points
+      .filter(
+        (p) =>
+          p &&
+          Number.isFinite(p.t) &&
+          STAT_ORDER.every((k) => Number.isFinite(p[k])),
+      )
+      .map((p) => ({
+        t: Number(p.t),
+        strength: Number(p.strength),
+        defense: Number(p.defense),
+        speed: Number(p.speed),
+        dexterity: Number(p.dexterity),
+      }));
+    return points.sort((a, b) => a.t - b.t);
+  } catch {
+    return null;
+  }
+}
+
+/** Merge two timelines, newest value winning on a collision. */
+export function mergeHistories(a: HistoryPoint[], b: HistoryPoint[]): HistoryPoint[] {
+  const byTime = new Map<number, HistoryPoint>();
+  for (const p of [...a, ...b]) byTime.set(p.t, p);
+  return [...byTime.values()].sort((x, y) => x.t - y.t);
+}

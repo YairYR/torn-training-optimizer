@@ -256,9 +256,9 @@ export function ProgressTracker({ player, gyms, modifiers, gate }: Props) {
           )}
           {validation?.capped && (
             <p className="plan-cap-note">
-              ⚠ This stat is above {fmtInt(50_000_000)}. Torn removed the old 50M cap in 2022 — above
-              it, real gains grow at a decreasing rate, so the engine's linear prediction tends to run
-              a bit high here.
+              This stat is above {fmtInt(50_000_000)}, where Torn's 2022 cap removal replaced the old
+              hard ceiling with decelerating growth. The prediction models that curve, so a large gap
+              against your real gains here is worth reporting rather than expected.
             </p>
           )}
           <p className="footnote">

@@ -17,6 +17,9 @@ import {
   clearHistory,
   parseTornStatsHistory,
   withLivePoint,
+  exportHistory,
+  parseHistoryExport,
+  mergeHistories,
 } from '../engine/history';
 import { fmtInt, fmtGain } from '../format';
 
@@ -97,16 +100,36 @@ export function HistoryChart({ player }: Props) {
   }
 
   function doImport() {
-    const parsed = parseTornStatsHistory(draft);
+    // Our own export first, TornStats paste as the fallback — so a returning
+    // player never has to go back to a competitor to restore their own data.
+    const own = parseHistoryExport(draft);
+    const parsed = own ?? parseTornStatsHistory(draft);
     if (!parsed.length) {
-      setImportMsg('No stat history found in that text. Paste the full TornStats page.');
+      setImportMsg(
+        'No stat history found in that text. Paste an exported .json from this tool, or the full TornStats page.',
+      );
       return;
     }
-    setHistory(parsed);
-    saveHistory(parsed);
+    const merged = own ? mergeHistories(history, parsed) : parsed;
+    setHistory(merged);
+    saveHistory(merged);
     setDraft('');
     setImportOpen(false);
-    setImportMsg(`Imported ${parsed.length} snapshots (${fmtDate(parsed[0].t)} → today).`);
+    setImportMsg(
+      `Imported ${parsed.length} snapshots (${fmtDate(merged[0].t)} → today)${own ? ', merged with what you had' : ''}.`,
+    );
+  }
+
+  function doExport() {
+    const rowsToSave = withLivePoint(history, player.stats);
+    const blob = new Blob([exportHistory(rowsToSave)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `torn-stats-history-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setImportMsg(`Exported ${rowsToSave.length} snapshots. Keep the file — it restores on any device.`);
   }
 
   function doClear() {
@@ -133,6 +156,9 @@ export function HistoryChart({ player }: Props) {
           <button type="button" className="toggle-btn" onClick={() => setImportOpen((v) => !v)}>
             Import
           </button>
+          <button type="button" className="toggle-btn" onClick={doExport} disabled={!rows.length}>
+            Export
+          </button>
         </div>
       </div>
 
@@ -153,9 +179,9 @@ export function HistoryChart({ player }: Props) {
 
       {rows.length < 2 ? (
         <p className="history-empty">
-          Only your current stats are on record. Import your TornStats history below to backfill the
-          full curve — the Torn API only exposes current stats, so this is the one way to chart the
-          past.
+          Only your current stats are on record. The Torn API exposes current stats and nothing
+          else, so the curve builds from here: come back and your snapshots accumulate. To backfill
+          the past, import a TornStats page — or an export from this tool if you have one.
         </p>
       ) : (
         <div className="history-chart">
@@ -228,9 +254,10 @@ export function HistoryChart({ player }: Props) {
       {importOpen && (
         <div className="import-box">
           <p className="import-hint">
-            On <strong>tornstats.com</strong>, open your <em>Battle Stats</em> page, select all
-            (Ctrl/Cmd+A), copy, and paste it here. Only the stat numbers are read; nothing is sent
-            anywhere — it's stored locally in your browser.
+            Paste a <strong>.json exported from this tool</strong> to restore or merge your history
+            on a new device. A full <strong>tornstats.com</strong> <em>Battle Stats</em> page also
+            works for a one-time backfill. Only stat numbers are read; nothing is sent anywhere —
+            it stays in your browser.
           </p>
           <textarea
             className="import-textarea"

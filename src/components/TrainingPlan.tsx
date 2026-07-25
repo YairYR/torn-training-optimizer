@@ -186,8 +186,9 @@ export function TrainingPlan({
                 )}
                 {p.capped && (
                   <div className="plan-cap-note">
-                    ⚠ Above {fmtInt(STAT_GROWTH_CAP)}, real gains grow at a decreasing rate (Torn
-                    removed the old 50M cap in 2022), so this linear estimate runs slightly optimistic.
+                    Above {fmtInt(STAT_GROWTH_CAP)} the stat term compresses logarithmically — Torn
+                    removed the hard cap in 2022 and replaced it with decelerating growth. These
+                    numbers already model that curve.
                   </div>
                 )}
                 {p.upgrade && (

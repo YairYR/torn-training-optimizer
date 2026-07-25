@@ -800,3 +800,70 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   text-transform: uppercase;
 }
 .footer-nav a:hover { text-decoration: underline; }
+
+/* ---- Share bar ---- */
+.sharebar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: -6px 0 18px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.sharebar-hint {
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 1.2em;
+}
+
+/* ---- Build comparator ---- */
+.cmp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+.cmp-col {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+.cmp-col h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+.cmp-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.cmp-field > span { color: var(--muted); white-space: nowrap; }
+.cmp-field > select,
+.cmp-field > input { max-width: 62%; }
+.cmp-out {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.cmp-verdict {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border-left: 2px solid var(--best);
+  border-radius: 4px;
+  font-size: 13px;
+}

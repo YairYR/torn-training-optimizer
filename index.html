@@ -122,26 +122,64 @@
     />
   </head>
   <body>
+    <!--
+      Server-rendered shell. This is a client-rendered SPA, so without this a
+      crawler that does not execute JavaScript — Bing, and most AI answer
+      engines — sees an empty div on the site's most important URL. React
+      replaces these children on mount, so users never see them twice.
+    -->
     <div id="root">
-      <noscript>
-        <h1>Torn Training Optimizer</h1>
+      <header>
+        <h1>Torn Training Optimizer — the free Torn gym calculator</h1>
         <p>
-          A free, privacy-first gym-training planner for the online game
-          <a href="https://www.torn.com/">Torn</a>. Enable JavaScript and load your Torn API key to
-          get, for every battle stat, the best gym to use, the optimal training method
-          (happy jump vs energy training by stat level), the cheapest energy plan, a budget
-          optimizer, an unlock planner and multi-day projections.
+          Exact gains per train and per day, happy jump vs energy training break-even, the best gym
+          for every battle stat, unlock targets and energy costs — for the online game
+          <a href="https://www.torn.com/">Torn</a>. Load your Torn API key or enter your stats by
+          hand. Free, no ads, no account.
         </p>
-        <p>
-          Your Torn API key stays in your browser and is only ever sent to api.torn.com. There is no
-          server, no database and no account. Free, no ads, not affiliated with Torn.
-        </p>
-        <p>
-          Guides: <a href="/guide/">Torn gym training guide</a> ·
-          <a href="/happy-jump/">Happy jump calculator &amp; guide</a> ·
-          <a href="/specialist-gyms/">Specialist gym requirements</a>
-        </p>
-      </noscript>
+      </header>
+
+      <h2>What it does</h2>
+      <ul>
+        <li><strong>Optimal training plan per stat.</strong> It picks the method by stat level: 99k happy jumps win at low stats, plain energy training wins once stats are high.</li>
+        <li><strong>Best usable gym per stat.</strong> Respects the gyms you have unlocked (gym EXP) and the specialist ratio requirements for Balboas, Frontline, Gym 3000, Mr. Isoyamas, Total Rebound, The Elites and the Sports Science Lab.</li>
+        <li><strong>Correct post-50M maths.</strong> Torn removed the 50,000,000 stat cap in 2022; gains above it keep growing at a decreasing rate. This calculator models that curve instead of clamping.</li>
+        <li><strong>Auto-detected gym-gain modifier (M).</strong> Read from your perks per stat, compounded multiplicatively, with an editable breakdown.</li>
+        <li><strong>Economics and daily energy capacity.</strong> Cheapest energy by cost, plus a cooldown-aware daily budget — so it never calls LSD "cheaper" when Xanax gives five times the energy per cooldown slot.</li>
+        <li><strong>Budget optimizer, unlock planner, multi-day projections</strong> and a progress tracker that compares your real gains against the formula.</li>
+      </ul>
+
+      <h2>How to use it</h2>
+      <ol>
+        <li>Get a Torn API key — a read-only "Limited" key is enough.</li>
+        <li>Paste it in and press Load, or skip the key and type your stats in manually.</li>
+        <li>Read the per-stat plan. Every panel below fills in automatically.</li>
+      </ol>
+
+      <h2>Is my API key safe?</h2>
+      <p>
+        Yes. Your key stays in your browser and is only ever sent to api.torn.com. There is no
+        server, no database and no account, so nothing is stored remotely.
+      </p>
+
+      <h2>Reference pages</h2>
+      <p>
+        <a href="/guide/">Gym training guide</a> ·
+        <a href="/happy-jump/">Happy jump calculator</a> ·
+        <a href="/specialist-gyms/">Specialist gym requirements</a> ·
+        <a href="/gym-dots/">Gym dots chart</a> ·
+        <a href="/gyms/">All gyms</a> ·
+        <a href="/gym-unlock-order/">Gym unlock order</a> ·
+        <a href="/stat-cap/">The 50M stat cap</a> ·
+        <a href="/training-ratios/">Training ratios</a> ·
+        <a href="/xanax-vs-lsd/">Xanax vs LSD</a> ·
+        <a href="/best-gym-for-strength/">Best gym for Strength</a> ·
+        <a href="/best-gym-for-defense/">Best gym for Defense</a> ·
+        <a href="/best-gym-for-speed/">Best gym for Speed</a> ·
+        <a href="/best-gym-for-dexterity/">Best gym for Dexterity</a>
+      </p>
+
+      <p>Unofficial fan-made tool, not affiliated with Torn.com.</p>
     </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

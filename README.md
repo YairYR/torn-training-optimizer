@@ -70,6 +70,56 @@ This is a static SPA, so GitHub Pages is the natural host.
 The API key is never committed and never leaves the user's browser, so a public
 Pages site is safe.
 
+## Accuracy: what this build fixes
+
+Two corrections that separate this from every other Torn gym calculator.
+
+**1. The 50M stat cap is gone, and the curve that replaced it is modelled.**
+Torn removed the hard 50,000,000 cap on 02/08/2022; above it, gains keep growing
+at a steadily decreasing rate. The effective stat the formula sees is now
+
+```
+S_eff = 50,000,000 + (S - 50,000,000) / (8.77635 * log10(S))      [src/engine/vladar.ts]
+```
+
+This was **derived, not guessed**. The cap-removal announcement published monthly
+growth figures before and after the change for a fixed regime (1500E/day,
+George's, PI happy, no Steadfast). The "before" figures scale exactly as 1/S,
+which proves gain-per-train was flat above the cap and pins the formula's S
+coefficient; inverting the "after" figures yields S_eff at each published point.
+The expression above reproduces all of them from 1b to 1t within 0.5%, and
+`src/engine/vladar.test.ts` asserts each one. A calculator that still clamps at
+50M under-predicts a 200M player by ~5% and an end-game player by far more.
+
+**2. Gym-gain perks compound, they do not add.**
+`M = Π(1 + perk)`, not `1 + Σperk` — +2%, +15% and +1% give +19.65%, not +18%
+(Vladar, "Training Formula V2.0"). `src/engine/modifiers.ts` was summing them.
+
+> If you previously validated a single train in-game against this tool and it
+> matched, re-run that check: the modifier change shifts M by roughly +0.8% on a
+> typical perk set. The Progress tracker panel does exactly this comparison.
+
+## Distribution features
+
+- **Shareable URLs** (`src/url-state.ts`). Every input lives in the query
+  string, so a result can be pasted into a forum thread or Discord and
+  reproduces exactly. Never includes the API key. Also how the generated SEO
+  pages deep-link into a pre-filled calculator.
+- **BBCode export** (`src/bbcode.ts`). One click turns the per-stat plan into a
+  Torn-forum-ready block with a link back. Players already post these numbers by
+  hand.
+- **Portable history** (`exportHistory` / `parseHistoryExport` in
+  `src/engine/history.ts`). Export the stat timeline as JSON and re-import or
+  merge it on another device — the "account" of an app with no accounts, and the
+  end of depending on a competitor's export format.
+- **Build comparator** (`src/components/BuildCompare.tsx`). Two setups side by
+  side off the same engine.
+- **Offline PWA** (`public/sw.js`). The maths is client-side, so the tool works
+  with no connection once cached.
+- **In-game overlay** (`extension/src/content.ts`). The extension now injects
+  the best-train recommendation directly into `torn.com/gym.php`, reusing the
+  same engine. Read-only — it never performs a train.
+
 ## SEO &amp; GEO (discoverability)
 
 Because this is a client-rendered SPA, crawlers and AI/answer engines (which
@@ -78,14 +128,26 @@ usually don't run JS) would otherwise see an empty page. The build ships:
 - **`index.html` head**: descriptive `<title>` + meta description, canonical,
   Open Graph + Twitter Card (with `public/og-image.png`), theme-color, icons,
   and two JSON-LD blocks (`WebApplication` + `FAQPage`).
-- **Static content for crawlers**: a `<noscript>` summary in `index.html`, plus
-  an `AboutSection` (features, how-to, FAQ) rendered whenever no player is loaded
-  — so the page a crawler sees (no API key) is full of real, indexable text.
+- **Static shell in `index.html`**: the home page ships real HTML inside
+  `#root` (headings, feature list, how-to, FAQ, and a link block to every
+  generated page). React replaces it on mount, so users never see it twice,
+  but a crawler that does not run JavaScript — Bing, and most AI answer engines
+  — sees a full page instead of an empty div. The in-app `AboutSection` still
+  renders for humans who arrive without a key.
 - **`public/robots.txt`**: allows everything and explicitly welcomes AI crawlers
   (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended, …) for GEO;
   links the sitemap.
-- **`public/sitemap.xml`** and **`public/llms.txt`** (a plain-language summary of
-  the tool for LLMs).
+- **Programmatic pages** (`scripts/gen-seo.mjs`, run automatically by
+  `npm run build`). Generates ~42 static pages from `src/data/gyms.ts` — one per
+  gym (`/gyms/<slug>/`), the dots chart (`/gym-dots/`), a ranked page per battle
+  stat (`/best-gym-for-<stat>/`), plus `/stat-cap/`, `/gym-unlock-order/`,
+  `/training-ratios/` and `/xanax-vs-lsd/`. Each carries its own title, meta
+  description, canonical, breadcrumb + FAQ structured data, internal links, and
+  a CTA that deep-links into the calculator with the relevant stat and gym
+  pre-selected. Gym data is parsed from the TypeScript source, never retyped, so
+  the pages cannot drift from the app.
+- **`public/sitemap.xml`** — regenerated on every build with a live `lastmod`,
+  so it can no longer rot. **`public/llms.txt`** summarises the tool for LLMs.
 - **`public/CNAME`** pins the custom domain into the build.
 
 After deploying: submit the site in Google Search Console, request indexing for
@@ -229,3 +291,6 @@ drug cooldown clear (on by default); low-happy/high-energy and education idle
 | 2.1 | Budget optimizer: max-gain buy-list, stacked happy jump | done |
 | 3 | Multi-day projector: compounding, scenarios, chart, days-to-goal | done |
 | 4 | Anti-waste alerts (MV3 extension) | done |
+| 5 | Post-cap formula, multiplicative perks | done — derived from Torn's published figures |
+| 6 | Shareable URLs, BBCode, portable history, build comparator, PWA | done |
+| 7 | Programmatic SEO (~42 pages) + in-game gym overlay | done |

@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+extension/dist/
+
+# Generated SEO pages.
+# scripts/gen-seo.mjs writes these from src/data/gyms.ts on every `npm run build`
+# (and on `npm run dev`), and the Pages workflow runs that build before deploying.
+# Committing them would mean two sources of truth for the same gym data — and it
+# is what pushes the repo past GitHub's 100-file web-upload limit.
+public/gyms/
+public/gym-dots/
+public/gym-unlock-order/
+public/stat-cap/
+public/training-ratios/
+public/xanax-vs-lsd/
+public/best-gym-for-*/
+public/sitemap.xml
+
+# Local
+.DS_Store
+*.log
+.env
+.env.local

@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Torn 50M Stat Cap — Removed in 2022, and What Replaced It</title>
+    <meta name="description" content="Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate. Here is what actually happens now, with the official growth figures and the curve derived from them." />
+    <link rel="canonical" href="https://torntraining.com/stat-cap/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#14161b" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Torn Training Optimizer" />
+    <meta property="og:title" content="The Torn 50M Stat Cap — Removed in 2022, and What Replaced It" />
+    <meta property="og:description" content="Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate. Here is what actually happens now, with the official growth figures and the curve derived from them." />
+    <meta property="og:url" content="https://torntraining.com/stat-cap/" />
+    <meta property="og:image" content="https://torntraining.com/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-VXBFXDRGL2');
+    </script>
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Torn Training Optimizer",
+      "item": "https://torntraining.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "The 50M stat cap",
+      "item": "https://torntraining.com/stat-cap/"
+    }
+  ]
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is there still a stat cap in Torn?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Torn removed the 50,000,000 gym stat cap on 2 August 2022. Gym gains above 50M no longer freeze — they keep increasing, but at a steadily decreasing rate, so growth slows without ever stopping."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens to gym gains above 50 million in Torn?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Above 50M, the stat term in the gain formula is compressed logarithmically instead of frozen. A 1 billion stat behaves roughly like a 62 million one, and a 1 trillion stat like a 9.5 billion one, so gains keep rising while monthly percentage growth flattens toward about 2%."
+      }
+    }
+  ]
+}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+      :root {
+        --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
+        --text: #e9ecf1; --muted: #8c95a4; --accent: #d99a4e; --best: #5ec0a8;
+        --display: 'Oswald', sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.7; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 64px; }
+      a { color: var(--accent); }
+      .crumb { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 18px; }
+      h1 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.2; letter-spacing: 0.02em; margin: 0 0 8px; }
+      .sub { color: var(--muted); font-size: 16px; margin: 0 0 24px; }
+      h2 { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; margin: 34px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+      h3 { font-size: 17px; margin: 20px 0 6px; }
+      p, li { font-size: 15.5px; }
+      ul, ol { padding-left: 22px; }
+      li { margin-bottom: 7px; }
+      .toc { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 0 0 8px; }
+      .toc strong { font-family: var(--display); letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+      .toc ol { margin: 8px 0 0; }
+      .toc a { text-decoration: none; }
+      .callout { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 16px 0; font-size: 14.5px; }
+      .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
+      .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
+      .cta b { color: var(--accent); }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+      td.num { font-family: var(--mono); }
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="crumb"><a href="/">Torn Training Optimizer</a> › The 50M stat cap</div>
+
+      <h1>The Torn 50M stat cap</h1>
+      <p class="sub">It is gone. Torn removed the hard cap on 2 August 2022, and most calculators still have not caught up — which is why they under-predict end-game gains.</p>
+
+      <h2>What changed</h2>
+      <p>
+        Before August 2022, the gain formula clamped your stat at 50,000,000. Training a 50M stat and
+        a 5B stat produced exactly the same gain per train, which is why end-game players abandoned
+        the gym for stat enhancers. Torn removed that clamp: past 50M the stat still counts, just
+        with sharply diminishing weight.
+      </p>
+
+      <h2>The official numbers</h2>
+      <p>
+        Torn published monthly-growth figures for a fixed regime — 1,500 energy a day, George's, a
+        fully upgraded private island, no Steadfast — before and after the change:
+      </p>
+      <table>
+        <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
+        <tbody>
+          <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
+          <tr><td class="num">100M</td><td class="num">103.35%</td><td class="num">108.05%</td></tr>
+          <tr><td class="num">1B</td><td class="num">10.33%</td><td class="num">12.87%</td></tr>
+          <tr><td class="num">5B</td><td class="num">2.07%</td><td class="num">4.47%</td></tr>
+          <tr><td class="num">10B</td><td class="num">1.03%</td><td class="num">3.37%</td></tr>
+          <tr><td class="num">50B</td><td class="num">0.21%</td><td class="num">2.40%</td></tr>
+          <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
+          <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
+        </tbody>
+      </table>
+
+      <h2>The curve behind them</h2>
+      <p>
+        Those old figures scale exactly as 1/stat, which proves gain per train was flat above the cap
+        and pins down the formula's stat coefficient. Inverting the new figures then gives the
+        effective stat the game now uses:
+      </p>
+      <div class="callout">
+        <code>S_eff = 50,000,000 + (S − 50,000,000) ÷ (8.77635 × log₁₀ S)</code>
+      </div>
+      <p>
+        That reproduces every published figure from 1B to 1T within half a percent. In practice a 1B
+        stat trains like a 62M one, a 10B stat like 163M, and a 1T stat like 9.5B — gains keep
+        climbing, percentage growth flattens toward roughly 2% a month.
+      </p>
+
+      <div class="flag">
+        Why it matters: a calculator that still clamps at 50M under-predicts a 200M player by about
+        5%, and an end-game player by far more. One that ignores the cap entirely over-predicts
+        wildly. This tool implements the curve above.
+      </div>
+
+      <a class="cta" href="/"><b>Run your own post-cap numbers →</b></a>
+
+      <footer>
+        <p><a href="/gym-dots/">Gym dots chart</a> · <a href="/gyms/">All gyms</a> · <a href="/gym-unlock-order/">Unlock order</a> · <a href="/training-ratios/">Training ratios</a> · <a href="/xanax-vs-lsd/">Xanax vs LSD</a> · <a href="/guide/">Training guide</a></p>
+        <p>
+          Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
+          and is sent only to api.torn.com.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

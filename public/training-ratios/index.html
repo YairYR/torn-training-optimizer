@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torn Training Ratios — Hank’s Ratio and Specialist Access</title>
+    <meta name="description" content="How stat ratios in Torn gate the 7.5, 8.0 and 9.0-dot specialist gyms, why the 1.25:1:1:0 build exists, and what leaving a stat behind actually buys you." />
+    <link rel="canonical" href="https://torntraining.com/training-ratios/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#14161b" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Torn Training Optimizer" />
+    <meta property="og:title" content="Torn Training Ratios — Hank’s Ratio and Specialist Access" />
+    <meta property="og:description" content="How stat ratios in Torn gate the 7.5, 8.0 and 9.0-dot specialist gyms, why the 1.25:1:1:0 build exists, and what leaving a stat behind actually buys you." />
+    <meta property="og:url" content="https://torntraining.com/training-ratios/" />
+    <meta property="og:image" content="https://torntraining.com/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-VXBFXDRGL2');
+    </script>
+
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Torn Training Optimizer",
+      "item": "https://torntraining.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Training ratios",
+      "item": "https://torntraining.com/training-ratios/"
+    }
+  ]
+}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+      :root {
+        --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
+        --text: #e9ecf1; --muted: #8c95a4; --accent: #d99a4e; --best: #5ec0a8;
+        --display: 'Oswald', sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.7; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 64px; }
+      a { color: var(--accent); }
+      .crumb { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 18px; }
+      h1 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.2; letter-spacing: 0.02em; margin: 0 0 8px; }
+      .sub { color: var(--muted); font-size: 16px; margin: 0 0 24px; }
+      h2 { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; margin: 34px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+      h3 { font-size: 17px; margin: 20px 0 6px; }
+      p, li { font-size: 15.5px; }
+      ul, ol { padding-left: 22px; }
+      li { margin-bottom: 7px; }
+      .toc { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 0 0 8px; }
+      .toc strong { font-family: var(--display); letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+      .toc ol { margin: 8px 0 0; }
+      .toc a { text-decoration: none; }
+      .callout { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 16px 0; font-size: 14.5px; }
+      .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
+      .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
+      .cta b { color: var(--accent); }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+      td.num { font-family: var(--mono); }
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="crumb"><a href="/">Torn Training Optimizer</a> › Training ratios</div>
+
+      <h1>Torn training ratios</h1>
+      <p class="sub">Specialist gyms do not care how big your stats are — they care how lopsided they are. That single rule shapes every serious Torn build.</p>
+
+      <h2>Why ratios exist</h2>
+      <p>
+        Two-stat specialists need a pair of stats 25% above the other pair. Single-stat specialists
+        need one stat 25% above your second highest. So access is bought with imbalance, and the
+        cost of that imbalance is a stat you deliberately never train.
+      </p>
+
+      <h2>The common builds</h2>
+      <ul>
+        <li><strong>1.25 : 1 : 1 : 0</strong> — the classic. Three stats trained, one abandoned, primary held a quarter above the rest. Unlocks an 8.0-dot single-stat gym for the primary.</li>
+        <li><strong>Balanced</strong> — no specialist access, George's at 7.3 forever. Simpler, and much better for defending against attacks.</li>
+        <li><strong>Two-stat</strong> — a pair 25% above the other pair, for the 7.5-dot Balboas or Frontline. A softer commitment than a single-stat build.</li>
+      </ul>
+
+      <div class="flag">
+        Ratios are checked continuously. Train the wrong stat and you fall out of the gym you built
+        the whole ratio for, keeping the membership but losing access until you climb back.
+      </div>
+
+      <h2>Is the imbalance worth it?</h2>
+      <p>
+        Going from George's 7.3 to an 8.0-dot specialist is about 9.6% more gain per energy on that
+        one stat — while the abandoned stat contributes nothing to your battle score. Whether that
+        trades well depends on what you want the stats for.
+      </p>
+
+      <a class="cta" href="/"><b>Check which specialists you qualify for →</b><br />Enter your four stats and it computes every ratio requirement for you.</a>
+
+      <footer>
+        <p><a href="/gym-dots/">Gym dots chart</a> · <a href="/gyms/">All gyms</a> · <a href="/gym-unlock-order/">Unlock order</a> · <a href="/stat-cap/">The 50M stat cap</a> · <a href="/xanax-vs-lsd/">Xanax vs LSD</a> · <a href="/guide/">Training guide</a></p>
+        <p>
+          Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
+          and is sent only to api.torn.com.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

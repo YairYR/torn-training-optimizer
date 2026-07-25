@@ -18,6 +18,17 @@ await build({
   logLevel: 'info',
 });
 
+// The gym-page overlay ships as a classic script: Chrome does not load content
+// scripts as ES modules, so this one entry point is bundled as an IIFE.
+await build({
+  entryPoints: [resolve(root, 'src/content.ts')],
+  bundle: true,
+  format: 'iife',
+  target: 'chrome111',
+  outdir: dist,
+  logLevel: 'info',
+});
+
 // Copy static assets (manifest, popup.html, icon).
 cpSync(resolve(root, 'public'), dist, { recursive: true });
 

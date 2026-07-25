@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Phase 1 — Vladar gym-gain engine, session simulator and gym comparator for Torn.",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/gen-seo.mjs && vite",
     "build": "tsc --noEmit && node scripts/gen-seo.mjs && vite build",
     "preview": "vite preview",
     "test": "vitest run",

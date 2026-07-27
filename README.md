@@ -120,6 +120,27 @@ The expression above reproduces all of them from 1b to 1t within 0.5%, and
   the best-train recommendation directly into `torn.com/gym.php`, reusing the
   same engine. Read-only — it never performs a train.
 
+## Landing experience
+
+- **Demo player** (`src/demo.ts`). The site used to open on an empty API-key
+  box, which asks a stranger from a search result to go fetch a credential
+  before seeing anything work. It now loads a plausible mid-game player, so
+  every panel is filled in and the ask becomes "swap in your own numbers".
+  Replaced the instant real data arrives; the share bar is hidden while the
+  numbers are fictional, and the URL is not rewritten. `src/demo.test.ts`
+  guards the properties that make it a good demo (usable gym for all four
+  stats, hybrid regime, unlock headroom, lopsided enough for ratio logic) so
+  the figures stay tunable.
+- **Collapsible panels** (`src/components/Fold.tsx`). A dozen stacked panels
+  buried the answer. Native `<details>`: no state, no effects, accessible by
+  default, and collapsed content stays in the DOM so it is still crawlable and
+  findable with in-page search. Only the summary card and the per-stat plan are
+  open on load.
+- **Mobile / TornPDA**. A large share of Torn is played through TornPDA and
+  mobile browsers, so the narrow viewport is a primary target. Single-column
+  grids, full-width tappable controls, horizontally scrolling tables, and 16px
+  inputs (below that, iOS zooms the page on focus).
+
 ## SEO &amp; GEO (discoverability)
 
 Because this is a client-rendered SPA, crawlers and AI/answer engines (which
@@ -294,3 +315,4 @@ drug cooldown clear (on by default); low-happy/high-energy and education idle
 | 5 | Post-cap formula, multiplicative perks | done — derived from Torn's published figures |
 | 6 | Shareable URLs, BBCode, portable history, build comparator, PWA | done |
 | 7 | Programmatic SEO (~42 pages) + in-game gym overlay | done |
+| 8 | Landing conversion: demo player, collapsible panels, mobile | done |

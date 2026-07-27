@@ -30,6 +30,8 @@ import { AboutSection } from './components/AboutSection';
 import { ManualEntry, ManualData } from './components/ManualEntry';
 import { BuildCompare } from './components/BuildCompare';
 import { ShareBar } from './components/ShareBar';
+import { Fold } from './components/Fold';
+import { DEMO } from './demo';
 import { readSharedState, syncUrl, SharedState } from './url-state';
 import { dailyEnergyCapacity } from './engine/energy-capacity';
 import { STATIC_GYMS } from './data/gyms';
@@ -68,15 +70,23 @@ export default function App() {
   // A stat/gym from the URL has to survive until a player is loaded — a visitor
   // from an SEO landing page arrives with a gym selected but no stats yet.
   const [pendingConfig, setPendingConfig] = useState<Partial<SessionConfig> | null>(null);
+  // True while the visitor is looking at the sample player rather than their own.
+  const [isDemo, setIsDemo] = useState(false);
 
   // A shared link (or an SEO landing page) fills the tool in before first paint,
   // so a visitor from search lands on real numbers instead of an empty form.
   useEffect(() => {
     const shared = readSharedState();
-    if (!shared) return;
-    if (shared.modifiers) setModifiers(shared.modifiers);
-    if (shared.config) setPendingConfig(shared.config);
-    if (shared.manual) loadManual(shared.manual);
+    if (shared?.modifiers) setModifiers(shared.modifiers);
+    if (shared?.config) setPendingConfig(shared.config);
+    if (shared?.manual) {
+      loadManual(shared.manual);
+    } else if (!shared) {
+      // Nothing to restore — show the tool working on a sample player instead
+      // of an empty form. Replaced the moment real data arrives.
+      loadManual(DEMO);
+      setIsDemo(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -96,6 +106,7 @@ export default function App() {
   async function load() {
     setLoading(true);
     setError(null);
+    setIsDemo(false);
     try {
       const [p, g, pr] = await Promise.all([
         fetchPlayer(apiKey),
@@ -213,8 +224,8 @@ export default function App() {
 
   // Keep the address bar pasteable at all times, without polluting history.
   useEffect(() => {
-    if (player) syncUrl(shared);
-  }, [player, shared]);
+    if (player && !isDemo) syncUrl(shared);
+  }, [player, shared, isDemo]);
 
   const setMod = (stat: StatKey, value: number) => setModifiers((m) => ({ ...m, [stat]: value }));
   const detectMods = () => {
@@ -232,37 +243,27 @@ export default function App() {
 
       <ApiKeyBar apiKey={apiKey} onApiKey={setApiKey} loading={loading} onLoad={load} error={error} />
 
-      {!player && (
-        <>
-          <p className="getstarted">
-            Two ways to start: paste your Torn <strong>API key</strong> above and everything fills in
-            instantly — your stats, gyms, perks and prices. Or enter your stats by hand below — no key
-            needed.
-          </p>
-          <ManualEntry onSubmit={loadManual} />
-          <AboutSection />
-        </>
+      {isDemo && (
+        <p className="demobar">
+          <strong>Sample player.</strong> Everything below is live — the real formula on made-up
+          stats. Load your API key above, or <a href="#own-numbers">enter your own numbers</a>, to
+          replace it.
+        </p>
       )}
 
       {player && gyms && config && (
         <>
           <SummaryCard gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-          <ShareBar
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers}
-            gate={gate}
-            energyPerDay={energyPerDay}
-            shared={shared}
-          />
-          <Modifiers
-            modifiers={modifiers}
-            detected={player.detectedModifiers}
-            contributions={player.modifierContributions}
-            onChange={setMod}
-            onDetect={detectMods}
-          />
-          <PlayerSummary player={player} />
+          {!isDemo && (
+            <ShareBar
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers}
+              gate={gate}
+              energyPerDay={energyPerDay}
+              shared={shared}
+            />
+          )}
           <TrainingPlan
             gyms={gyms}
             player={player}
@@ -273,47 +274,97 @@ export default function App() {
             unlockedGymId={unlockedGymId}
             onUnlockedGym={setUnlockedGymId}
           />
-          <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-          <Planner gyms={gyms} player={player} modifiers={modifiers} prices={prices} gate={gate} />
-          <SessionSimulator
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers[config.stat]}
-            config={config}
-            onConfig={patchConfig}
+
+          <Fold label="Build roadmap" hint="Which gyms your ratio unlocks next">
+            <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+          </Fold>
+          <Fold label="Reach a target" hint="Energy, cash and days to a stat or a gym">
+            <Planner gyms={gyms} player={player} modifiers={modifiers} prices={prices} gate={gate} />
+          </Fold>
+          <Fold label="Compare every gym" hint="Ranked for the stat you pick">
+            <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+          </Fold>
+          <Fold label="Simulate one session" hint="Train by train, with the happy-loss band">
+            <SessionSimulator
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers[config.stat]}
+              config={config}
+              onConfig={patchConfig}
+            />
+          </Fold>
+          <Fold label="Cost of energy" hint="Cheapest source, and your daily ceiling">
+            <Economics
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers[config.stat]}
+              config={config}
+              prices={prices}
+            />
+          </Fold>
+          <Fold label="Spend a budget" hint="Best items to buy for the most gains">
+            <Optimizer
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers[config.stat]}
+              config={config}
+              prices={prices}
+            />
+          </Fold>
+          <Fold label="Project forward" hint="Multi-day stat growth">
+            <Projector
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers}
+              config={config}
+              prices={prices}
+              gate={gate}
+            />
+          </Fold>
+          <Fold label="Compare two setups" hint="What a gym, happy level or perk is worth">
+            <BuildCompare
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers}
+              gate={gate}
+              energyPerDay={energyPerDay}
+            />
+          </Fold>
+          <Fold label="Gym-gain modifiers (M)" hint="Detected from your perks, editable">
+            <Modifiers
+              modifiers={modifiers}
+              detected={player.detectedModifiers}
+              contributions={player.modifierContributions}
+              onChange={setMod}
+              onDetect={detectMods}
+            />
+          </Fold>
+          <Fold label="Your bars and stats" hint="What was read from the API">
+            <PlayerSummary player={player} />
+          </Fold>
+          <Fold label="Track real vs predicted" hint="Check the formula against your own trains">
+            <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
+          </Fold>
+          <Fold label="Stats history" hint="Your curve over time">
+            <HistoryChart player={player} />
+          </Fold>
+        </>
+      )}
+
+      {(!player || isDemo) && (
+        <>
+          <p className="getstarted" id="own-numbers">
+            Two ways to use your own numbers: paste your Torn <strong>API key</strong> above and
+            everything fills in instantly — stats, gyms, perks and prices. Or type your stats in
+            below; no key needed.
+          </p>
+          <ManualEntry
+            onSubmit={(d) => {
+              setIsDemo(false);
+              loadManual(d);
+            }}
           />
-          <Economics
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers[config.stat]}
-            config={config}
-            prices={prices}
-          />
-          <Optimizer
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers[config.stat]}
-            config={config}
-            prices={prices}
-          />
-          <Projector
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers}
-            config={config}
-            prices={prices}
-            gate={gate}
-          />
-          <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-          <BuildCompare
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers}
-            gate={gate}
-            energyPerDay={energyPerDay}
-          />
-          <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
-          <HistoryChart player={player} />
+          <AboutSection />
         </>
       )}
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Gym, PlayerState, StatKey, STAT_KEYS } from './engine/types';
 import { fetchGyms, fetchPlayer } from './api/client';
 import { fetchPrices } from './api/market';
@@ -14,7 +14,6 @@ import { ENERGY_SOURCES, HAPPY_BOOSTERS } from './data/consumables';
 import { SessionConfig } from './session-config';
 import { ApiKeyBar } from './components/ApiKeyBar';
 import { SummaryCard } from './components/SummaryCard';
-import { HistoryChart } from './components/HistoryChart';
 import { Modifiers } from './components/Modifiers';
 import { PlayerSummary } from './components/PlayerSummary';
 import { TrainingPlan } from './components/TrainingPlan';
@@ -24,8 +23,6 @@ import { GymComparator } from './components/GymComparator';
 import { SessionSimulator } from './components/SessionSimulator';
 import { Economics } from './components/Economics';
 import { Optimizer } from './components/Optimizer';
-import { Projector } from './components/Projector';
-import { ProgressTracker } from './components/ProgressTracker';
 import { AboutSection } from './components/AboutSection';
 import { ManualEntry, ManualData } from './components/ManualEntry';
 import { BuildCompare } from './components/BuildCompare';
@@ -36,6 +33,22 @@ import { readSharedState, syncUrl, SharedState } from './url-state';
 import { dailyEnergyCapacity } from './engine/energy-capacity';
 import { STATIC_GYMS } from './data/gyms';
 import './styles.css';
+
+// Recharts is the single biggest dependency and powers only these three
+// panels, all of which start collapsed. Splitting them out keeps it off the
+// critical path; Fold mounts the subtree the first time a panel is opened, so
+// the import fires on demand rather than on load.
+const Projector = lazy(() =>
+  import('./components/Projector').then((m) => ({ default: m.Projector })),
+);
+const ProgressTracker = lazy(() =>
+  import('./components/ProgressTracker').then((m) => ({ default: m.ProgressTracker })),
+);
+const HistoryChart = lazy(() =>
+  import('./components/HistoryChart').then((m) => ({ default: m.HistoryChart })),
+);
+
+const ChartFallback = () => <p className="footnote">Loading chart…</p>;
 
 const KEY_STORE = 'tto.apiKey';
 const MOD_STORE = 'tto.modifiers';
@@ -98,7 +111,8 @@ export default function App() {
   const gate: GymGate = useMemo(
     () => ({
       unlockedCapId: unlockedGymId,
-      georgesUnlocked: georgesId == null || unlockedGymId == null ? true : unlockedGymId >= georgesId,
+      georgesUnlocked:
+        georgesId == null || unlockedGymId == null ? true : unlockedGymId >= georgesId,
     }),
     [unlockedGymId, georgesId],
   );
@@ -123,8 +137,7 @@ export default function App() {
       const std = standardGyms(g);
       const stdIds = new Set(std.map((x) => Number(x.id)));
       const gId = georgesGymId(g);
-      const defaultCap =
-        p.activeGymId != null && stdIds.has(p.activeGymId) ? p.activeGymId : gId;
+      const defaultCap = p.activeGymId != null && stdIds.has(p.activeGymId) ? p.activeGymId : gId;
       setUnlockedGymId(defaultCap);
 
       const localGate: GymGate = {
@@ -168,7 +181,13 @@ export default function App() {
     };
     setConfig({
       stat: 'defense',
-      gymId: bestUsableGymIdForStat(STATIC_GYMS, 'defense', ps.stats, ps.xanaxEcstasyTaken, localGate),
+      gymId: bestUsableGymIdForStat(
+        STATIC_GYMS,
+        'defense',
+        ps.stats,
+        ps.xanaxEcstasyTaken,
+        localGate,
+      ),
       energy: ps.energy.current,
       happy: ps.happy.current,
       ...pendingConfig,
@@ -238,144 +257,167 @@ export default function App() {
         <h1>
           Torn <span className="mark">Training</span> Optimizer
         </h1>
-        <p className="tagline">The free Torn gym calculator — exact gains per train, happy jump vs energy training, best gym and unlock targets for every battle stat.</p>
+        <p className="tagline">
+          The free Torn gym calculator — exact gains per train, happy jump vs energy training, best
+          gym and unlock targets for every battle stat.
+        </p>
       </header>
 
-      <ApiKeyBar apiKey={apiKey} onApiKey={setApiKey} loading={loading} onLoad={load} error={error} />
+      <main>
+        <ApiKeyBar
+          apiKey={apiKey}
+          onApiKey={setApiKey}
+          loading={loading}
+          onLoad={load}
+          error={error}
+        />
 
-      {isDemo && (
-        <p className="demobar">
-          <strong>Sample player.</strong> Everything below is live — the real formula on made-up
-          stats. Load your API key above, or <a href="#own-numbers">enter your own numbers</a>, to
-          replace it.
-        </p>
-      )}
-
-      {player && gyms && config && (
-        <>
-          <SummaryCard gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-          {!isDemo && (
-            <ShareBar
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers}
-              gate={gate}
-              energyPerDay={energyPerDay}
-              shared={shared}
-            />
-          )}
-          <TrainingPlan
-            gyms={gyms}
-            player={player}
-            modifiers={modifiers}
-            prices={prices}
-            gate={gate}
-            standardGyms={standardGyms(gyms)}
-            unlockedGymId={unlockedGymId}
-            onUnlockedGym={setUnlockedGymId}
-          />
-
-          <Fold label="Build roadmap" hint="Which gyms your ratio unlocks next">
-            <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-          </Fold>
-          <Fold label="Reach a target" hint="Energy, cash and days to a stat or a gym">
-            <Planner gyms={gyms} player={player} modifiers={modifiers} prices={prices} gate={gate} />
-          </Fold>
-          <Fold label="Compare every gym" hint="Ranked for the stat you pick">
-            <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-          </Fold>
-          <Fold label="Simulate one session" hint="Train by train, with the happy-loss band">
-            <SessionSimulator
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers[config.stat]}
-              config={config}
-              onConfig={patchConfig}
-            />
-          </Fold>
-          <Fold label="Cost of energy" hint="Cheapest source, and your daily ceiling">
-            <Economics
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers[config.stat]}
-              config={config}
-              prices={prices}
-            />
-          </Fold>
-          <Fold label="Spend a budget" hint="Best items to buy for the most gains">
-            <Optimizer
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers[config.stat]}
-              config={config}
-              prices={prices}
-            />
-          </Fold>
-          <Fold label="Project forward" hint="Multi-day stat growth">
-            <Projector
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers}
-              config={config}
-              prices={prices}
-              gate={gate}
-            />
-          </Fold>
-          <Fold label="Compare two setups" hint="What a gym, happy level or perk is worth">
-            <BuildCompare
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers}
-              gate={gate}
-              energyPerDay={energyPerDay}
-            />
-          </Fold>
-          <Fold label="Gym-gain modifiers (M)" hint="Detected from your perks, editable">
-            <Modifiers
-              modifiers={modifiers}
-              detected={player.detectedModifiers}
-              contributions={player.modifierContributions}
-              onChange={setMod}
-              onDetect={detectMods}
-            />
-          </Fold>
-          <Fold label="Your bars and stats" hint="What was read from the API">
-            <PlayerSummary player={player} />
-          </Fold>
-          <Fold label="Track real vs predicted" hint="Check the formula against your own trains">
-            <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
-          </Fold>
-          <Fold label="Stats history" hint="Your curve over time">
-            <HistoryChart player={player} />
-          </Fold>
-        </>
-      )}
-
-      {(!player || isDemo) && (
-        <>
-          <p className="getstarted" id="own-numbers">
-            Two ways to use your own numbers: paste your Torn <strong>API key</strong> above and
-            everything fills in instantly — stats, gyms, perks and prices. Or type your stats in
-            below; no key needed.
+        {isDemo && (
+          <p className="demobar">
+            <strong>Sample player.</strong> Everything below is live — the real formula on made-up
+            stats. Load your API key above, or <a href="#own-numbers">enter your own numbers</a>, to
+            replace it.
           </p>
-          <ManualEntry
-            onSubmit={(d) => {
-              setIsDemo(false);
-              loadManual(d);
-            }}
-          />
-          <AboutSection />
-        </>
-      )}
+        )}
+
+        {player && gyms && config && (
+          <>
+            <SummaryCard gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+            {!isDemo && (
+              <ShareBar
+                gyms={gyms}
+                player={player}
+                modifiers={modifiers}
+                gate={gate}
+                energyPerDay={energyPerDay}
+                shared={shared}
+              />
+            )}
+            <TrainingPlan
+              gyms={gyms}
+              player={player}
+              modifiers={modifiers}
+              prices={prices}
+              gate={gate}
+              standardGyms={standardGyms(gyms)}
+              unlockedGymId={unlockedGymId}
+              onUnlockedGym={setUnlockedGymId}
+            />
+
+            <Fold label="Build roadmap" hint="Which gyms your ratio unlocks next">
+              <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+            </Fold>
+            <Fold label="Reach a target" hint="Energy, cash and days to a stat or a gym">
+              <Planner
+                gyms={gyms}
+                player={player}
+                modifiers={modifiers}
+                prices={prices}
+                gate={gate}
+              />
+            </Fold>
+            <Fold label="Compare every gym" hint="Ranked for the stat you pick">
+              <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
+            </Fold>
+            <Fold label="Simulate one session" hint="Train by train, with the happy-loss band">
+              <SessionSimulator
+                gyms={gyms}
+                player={player}
+                modifiers={modifiers[config.stat]}
+                config={config}
+                onConfig={patchConfig}
+              />
+            </Fold>
+            <Fold label="Cost of energy" hint="Cheapest source, and your daily ceiling">
+              <Economics
+                gyms={gyms}
+                player={player}
+                modifiers={modifiers[config.stat]}
+                config={config}
+                prices={prices}
+              />
+            </Fold>
+            <Fold label="Spend a budget" hint="Best items to buy for the most gains">
+              <Optimizer
+                gyms={gyms}
+                player={player}
+                modifiers={modifiers[config.stat]}
+                config={config}
+                prices={prices}
+              />
+            </Fold>
+            <Fold label="Project forward" hint="Multi-day stat growth">
+              <Suspense fallback={<ChartFallback />}>
+                <Projector
+                  gyms={gyms}
+                  player={player}
+                  modifiers={modifiers}
+                  config={config}
+                  prices={prices}
+                  gate={gate}
+                />
+              </Suspense>
+            </Fold>
+            <Fold label="Compare two setups" hint="What a gym, happy level or perk is worth">
+              <BuildCompare
+                gyms={gyms}
+                player={player}
+                modifiers={modifiers}
+                gate={gate}
+                energyPerDay={energyPerDay}
+              />
+            </Fold>
+            <Fold label="Gym-gain modifiers (M)" hint="Detected from your perks, editable">
+              <Modifiers
+                modifiers={modifiers}
+                detected={player.detectedModifiers}
+                contributions={player.modifierContributions}
+                onChange={setMod}
+                onDetect={detectMods}
+              />
+            </Fold>
+            <Fold label="Your bars and stats" hint="What was read from the API">
+              <PlayerSummary player={player} />
+            </Fold>
+            <Fold label="Track real vs predicted" hint="Check the formula against your own trains">
+              <Suspense fallback={<ChartFallback />}>
+                <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
+              </Suspense>
+            </Fold>
+            <Fold label="Stats history" hint="Your curve over time">
+              <Suspense fallback={<ChartFallback />}>
+                <HistoryChart player={player} />
+              </Suspense>
+            </Fold>
+          </>
+        )}
+
+        {(!player || isDemo) && (
+          <>
+            <p className="getstarted" id="own-numbers">
+              Two ways to use your own numbers: paste your Torn <strong>API key</strong> above and
+              everything fills in instantly — stats, gyms, perks and prices. Or type your stats in
+              below; no key needed.
+            </p>
+            <ManualEntry
+              onSubmit={(d) => {
+                setIsDemo(false);
+                loadManual(d);
+              }}
+            />
+            <AboutSection />
+          </>
+        )}
+      </main>
 
       <footer className="site-footer">
         <nav className="footer-nav">
-          <a href="/guide/">Gym Training Guide</a>
-          <a href="/happy-jump/">Happy Jump Calculator</a>
-          <a href="/specialist-gyms/">Specialist Gyms</a>
-          <a href="/gym-dots/">Gym Dots Chart</a>
-          <a href="/stat-cap/">The 50M Stat Cap</a>
-          <a href="/gyms/">All Gyms</a>
+          <a href="/guide">Gym Training Guide</a>
+          <a href="/happy-jump">Happy Jump Calculator</a>
+          <a href="/specialist-gyms">Specialist Gyms</a>
+          <a href="/gym-dots">Gym Dots Chart</a>
+          <a href="/stat-cap">The 50M Stat Cap</a>
+          <a href="/gyms">All Gyms</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
         and is sent only to api.torn.com — nothing is stored on any server.

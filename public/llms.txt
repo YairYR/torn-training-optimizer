@@ -1,60 +1,41 @@
-# Torn Training Optimizer (Torn Gym Calculator)
+# Torn Training Optimizer
 
-> A free, privacy-first web app that helps players of the online game Torn (torn.com)
-> optimize gym training. Also known as a Torn gym calculator / gym gains calculator /
-> happy jump calculator. It reads a player's stats, gym dots and perks via the official
-> Torn API and computes, for each battle stat, the best gym to use, the optimal training
-> method, the cheapest energy plan, what it costs to unlock the next gym, and a multi-day
-> stat projection — using the game's validated gym-gain formula.
+> A free, privacy-first gym calculator for the online game Torn (torn.com). It reads a
+> player's stats, gym dots and perks through the official Torn API and computes, for each
+> battle stat, the best gym to use, the optimal training method, the cheapest energy plan,
+> what it takes to unlock the next gym, and a multi-day stat projection — using the game's
+> validated gym-gain formula. Also searched for as a Torn gym gains calculator, training
+> calculator, or happy jump calculator.
 
-Website: https://torntraining.com
+Everything runs in the browser: no server, no database, no account. The player's API key is
+only ever sent to api.torn.com. A read-only "Limited" key is enough.
 
-## Pages
-- https://torntraining.com/ — the calculator itself (API key or manual stats)
-- https://torntraining.com/guide/ — full gym training guide (happy, energy, drugs, gyms; verified)
-- https://torntraining.com/happy-jump/ — happy jump calculator & guide (recipe + jump-vs-energy break-even)
-- https://torntraining.com/specialist-gyms/ — specialist gym requirements (exact ratios, dots)
-- https://torntraining.com/stat-cap/ — the 50M stat cap: removed in 2022, and the curve that replaced it
-- https://torntraining.com/gym-dots/ — complete gym dots chart (all gyms, all four battle stats)
-- https://torntraining.com/gyms/ — index of all 32 gyms, one detail page each (/gyms/<slug>/)
-- https://torntraining.com/gym-unlock-order/ — the 24 standard gyms in unlock order, with costs
-- https://torntraining.com/best-gym-for-{strength,defense,speed,dexterity}/ — gyms ranked by dots per stat
-- https://torntraining.com/training-ratios/ — how stat ratios gate the specialist gyms
-- https://torntraining.com/xanax-vs-lsd/ — why the shared drug cooldown decides the answer
+## Calculator
 
-## What it does
-- Optimal training plan per battle stat (Strength, Defense, Speed, Dexterity): it picks
-  the method by stat level — happy jumps win at low stats, but plain energy training wins
-  once stats are high (stacking energy for a jump wastes regeneration), so it does not tell
-  high-stat players to chase 99k happy jumps.
-- Auto-detects the player's gym-gain modifier (M) per stat from their perks, with a breakdown.
-- Best gym a player can actually use per stat, respecting unlocked gyms (gym EXP) and the
-  specialist-gym requirements (Balboas, Frontline, Mr. Isoyamas, The Elites, Sports Science Lab, etc.).
-- Economics: cheapest energy by $/energy and a daily energy capacity view that accounts for
-  the shared drug cooldown — so it does not call LSD "cheaper" when Xanax gives 5x the energy
-  per cooldown slot.
-- Budget optimizer: the best items to buy under a money budget for the most gains.
-- Unlock planner: how much energy, money and days to unlock a specific gym or reach a target stat.
-- Multi-day stat projection chart and progress tracking (snapshot stats over time, compare
-  real gains to the formula's prediction).
+- [Torn Training Optimizer](https://torntraining.com/): the calculator itself — load an API key or enter stats by hand
 
-## Key facts
-- Free, no ads, not affiliated with Torn or Torn.com.
-- The player's Torn API key stays in their browser and is only ever sent to api.torn.com.
-  There is no server, no database and no account; nothing is stored remotely.
-- Read-only; a Torn "Limited" access key is sufficient.
-- Uses the standard Torn gym-gain (Vladar) formula, validated against real in-game trains to
-  about 0.1%.
-- Models the post-2022 stat curve. Torn removed the 50,000,000 gym stat cap on 02/08/2022; above it
-  gains keep growing at a steadily decreasing rate. The effective stat used by the formula is
-  S_eff = 50,000,000 + (S - 50,000,000) / (8.77635 * log10(S)), derived by inverting the monthly
-  growth figures Torn published with the change and matching all of them from 1b to 1t within 0.5%.
-  Calculators that still clamp at 50M under-predict end-game gains; this one does not.
-- Gym-gain perks are compounded multiplicatively, M = product of (1 + perk), per the community
-  reference formula — not summed.
+## Guides
 
-## Related / similar tools
-TornStats, YATA, Torn Tools. TornStats is a broad faction platform (spy logs, war hits, company
-tracking) that requires an account. Torn Training Optimizer is narrower and focused specifically on
-gym-training optimization, with a privacy-first (client-side, no server, no account) design, and it
-models the post-2022 stat curve that most gym calculators still get wrong.
+- [Gym training guide](https://torntraining.com/guide): how happy, energy, drugs and gyms interact, with verified mechanics flagged separately from community lore
+- [Happy jump calculator and guide](https://torntraining.com/happy-jump): the jump recipe and the break-even against plain energy training
+- [The 50M stat cap](https://torntraining.com/stat-cap): removed in 2022, the official growth figures, and the curve that replaced it
+- [Training ratios](https://torntraining.com/training-ratios): how stat ratios gate the specialist gyms, and what an imbalanced build costs
+- [Xanax vs LSD](https://torntraining.com/xanax-vs-lsd): why the shared drug cooldown, not the price per energy, decides the answer
+
+## Gym reference
+
+- [Gym dots chart](https://torntraining.com/gym-dots): dot values for all four battle stats across every gym
+- [All gyms](https://torntraining.com/gyms): index of all 32 gyms, each with its own detail page at /gyms/{slug}
+- [Gym unlock order](https://torntraining.com/gym-unlock-order): the 24 standard gyms in order, with costs
+- [Specialist gym requirements](https://torntraining.com/specialist-gyms): exact stat ratios and dots
+- [Best gym for Strength](https://torntraining.com/best-gym-for-strength): every Strength gym ranked by dots
+- [Best gym for Defense](https://torntraining.com/best-gym-for-defense): every Defense gym ranked by dots
+- [Best gym for Speed](https://torntraining.com/best-gym-for-speed): every Speed gym ranked by dots
+- [Best gym for Dexterity](https://torntraining.com/best-gym-for-dexterity): every Dexterity gym ranked by dots
+
+## Optional
+
+- What it does: per-stat training plan chosen by stat level (happy jumps win at low stats, plain energy training wins once stats are high, because stacking energy for a jump wastes regeneration); auto-detected gym-gain modifier M per stat from perks; best gym the player can actually use, respecting gym EXP and specialist ratio requirements; cheapest energy plus a cooldown-aware daily capacity; budget optimizer; unlock planner; multi-day projection and progress tracking.
+- Accuracy: uses the standard Torn gym-gain (Vladar) formula. Above 50,000,000 it models the post-2022 curve, S_eff = 50,000,000 + (S − 50,000,000) / (8.77635 × log10(S)), derived by inverting the monthly growth figures Torn published with the cap removal on 02/08/2022 and matching all of them from 1b to 1t within 0.5%. Calculators that still clamp at 50M under-predict end-game gains. Gym-gain perks compound multiplicatively, M = product of (1 + perk), rather than summing.
+- Related tools: TornStats is a broad faction platform (spy logs, war hits, company tracking) and requires an account. Torn Training Optimizer is narrower, focused only on gym-training optimization, client-side, and models the post-2022 stat curve that most gym calculators still get wrong.
+- Not affiliated with Torn or Torn.com. Free, no ads.

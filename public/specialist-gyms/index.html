@@ -8,7 +8,7 @@
       name="description"
       content="Verified requirements for every Torn specialist gym — Balboas, Frontline, Gym 3000, Mr. Isoyamas, Total Rebound, The Elites, the Sports Science Lab and Fight Club. The exact stat ratios, prerequisites, dots and whether they're worth it."
     />
-    <link rel="canonical" href="https://torntraining.com/specialist-gyms/" />
+    <link rel="canonical" href="https://torntraining.com/specialist-gyms" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#14161b" />
 
@@ -19,7 +19,7 @@
       property="og:description"
       content="The exact stat ratios, prerequisites and dots for every Torn specialist gym — and whether they're worth it. Verified against the wiki and in-game tests."
     />
-    <meta property="og:url" content="https://torntraining.com/specialist-gyms/" />
+    <meta property="og:url" content="https://torntraining.com/specialist-gyms" />
     <meta property="og:image" content="https://torntraining.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -47,7 +47,7 @@
       "image": "https://torntraining.com/og-image.png",
       "author": { "@type": "Organization", "name": "Torn Training Optimizer" },
       "publisher": { "@type": "Organization", "name": "Torn Training Optimizer" },
-      "mainEntityOfPage": "https://torntraining.com/specialist-gyms/"
+      "mainEntityOfPage": "https://torntraining.com/specialist-gyms"
     }
     </script>
     <script type="application/ld+json">
@@ -56,7 +56,7 @@
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Torn Training Optimizer", "item": "https://torntraining.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Specialist Gyms", "item": "https://torntraining.com/specialist-gyms/" }
+        { "@type": "ListItem", "position": 2, "name": "Specialist Gyms", "item": "https://torntraining.com/specialist-gyms" }
       ]
     }
     </script>
@@ -79,14 +79,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Non-blocking: a plain stylesheet link here costs ~1.2s of render time on mobile. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" /></noscript>
     <style>
       :root {
         --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
-        --text: #e9ecf1; --muted: #8c95a4; --accent: #d99a4e; --best: #5ec0a8;
+        --text: #e9ecf1; --muted: #98a1b0; --accent: #d99a4e; --best: #5ec0a8;
         --display: 'Oswald', sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
       }
       * { box-sizing: border-box; }
@@ -237,14 +236,14 @@
         Requirements and prerequisites are confirmed across the Torn wiki, official Torn forum answers
         and community gym guides; the gain comparison is a player's posted in-game test. Dot values
         are the in-game gym figures. The underlying gym-gain maths comes from Vladar's "Training Gains
-        Explained." See also our <a href="/guide/">full gym training guide</a> and the
-        <a href="/happy-jump/">happy jump calculator &amp; guide</a>.
+        Explained." See also our <a href="/guide">full gym training guide</a> and the
+        <a href="/happy-jump">happy jump calculator &amp; guide</a>.
       </p>
 
       <footer>
         Unofficial fan-made guide · not affiliated with Torn.com ·
-        <a href="/">Torn Training Optimizer</a> · <a href="/guide/">Gym training guide</a> ·
-        <a href="/happy-jump/">Happy jump</a>
+        <a href="/">Torn Training Optimizer</a> · <a href="/guide">Gym training guide</a> ·
+        <a href="/happy-jump">Happy jump</a>
       </footer>
     </main>
   </body>

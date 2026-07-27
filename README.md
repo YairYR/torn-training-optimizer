@@ -141,6 +141,37 @@ The expression above reproduces all of them from 1b to 1t within 0.5%, and
   grids, full-width tappable controls, horizontally scrolling tables, and 16px
   inputs (below that, iOS zooms the page on focus).
 
+## Performance and a11y notes
+
+A Lighthouse mobile run (Moto G Power, slow 4G) scored 72 performance / 95
+accessibility before the following. Each item is the fix, not the symptom:
+
+- **Recharts is code-split.** It was ~40% of a 615 kB bundle and powers three
+  panels that all start collapsed. `React.lazy` + `Fold`'s mount-on-open means
+  it is fetched the first time someone opens a chart. Initial JS: **615 kB →
+  217 kB** (180 kB → 69 kB gzipped).
+- **Fonts do not block the first paint.** The Google Fonts stylesheet was on
+  the critical path for ~1.2 s. It now loads as `media="print"` and flips to
+  `all` on load, with a `<noscript>` fallback. Applies to `index.html` and
+  every generated page.
+- **Fold mounts children on first open.** Load-bearing, not cosmetic: recharts
+  measures its container at mount, and inside a closed `<details>` that
+  measurement is zero, so charts could render blank. It also keeps a dozen
+  panels out of the initial DOM.
+- **`<main>` landmark** in the SPA (the generated pages already had one).
+- **Contrast.** `--muted` and `--danger` were at 4.88 and 4.33 against
+  `--surface-2` where AA needs 4.5. Raised to `#98a1b0` / `#e07d72`, both now
+  above 5.6 on the darkest surface they appear on. `--accent-dim` is unchanged:
+  it is only ever a border or a disabled fill, where the 3:1 non-text
+  threshold applies.
+- **Published URLs carry no trailing slash.** The host 301s `/page/` to
+  `/page`, so canonicals, `og:url`, breadcrumbs, the sitemap and every internal
+  link pointed at URLs that immediately redirect. `canon()` in
+  `scripts/gen-seo.mjs` normalises them; files are still written as
+  directories.
+- **`llms.txt` follows the spec**: H1, blockquote summary, then H2 sections of
+  markdown link lists rather than bare URLs.
+
 ## SEO &amp; GEO (discoverability)
 
 Because this is a client-rendered SPA, crawlers and AI/answer engines (which
@@ -316,3 +347,4 @@ drug cooldown clear (on by default); low-happy/high-energy and education idle
 | 6 | Shareable URLs, BBCode, portable history, build comparator, PWA | done |
 | 7 | Programmatic SEO (~42 pages) + in-game gym overlay | done |
 | 8 | Landing conversion: demo player, collapsible panels, mobile | done |
+| 9 | Lighthouse pass: code-split charts, async fonts, contrast, canonical URLs | done |

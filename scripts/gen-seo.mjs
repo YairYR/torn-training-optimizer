@@ -19,7 +19,19 @@ import { fileURLToPath } from 'node:url';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'public');
 const SITE = 'https://torntraining.com';
+
+/**
+ * The host 301s /some-page/ to /some-page, so every URL we publish has to be
+ * the no-slash form. Emitting the trailing slash meant canonical tags, og:url,
+ * breadcrumbs and the sitemap all pointed at URLs that immediately redirect —
+ * which asks a crawler to resolve a redirect before it can trust the canonical
+ * and wastes crawl budget across 42 pages. Directory paths are still used for
+ * writing the files; only what we publish is normalised.
+ */
+const canon = (path) => (path === '/' ? '/' : path.replace(/\/$/, ''));
 const TODAY = new Date().toISOString().slice(0, 10);
+const FONTS =
+  'https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap';
 
 // ---- Data ------------------------------------------------------------------
 
@@ -68,7 +80,7 @@ const STYLE = readFileSync(resolve(OUT, 'guide/index.html'), 'utf8').match(/<sty
  * data and internal links can never drift apart across 40 files.
  */
 function page({ path, title, description, h1, sub, body, crumbs, schema = [], related = [] }) {
-  const url = `${SITE}${path}`;
+  const url = `${SITE}${canon(path)}`;
   const breadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -76,7 +88,7 @@ function page({ path, title, description, h1, sub, body, crumbs, schema = [], re
       '@type': 'ListItem',
       position: i + 1,
       name: c.name,
-      item: `${SITE}${c.path}`,
+      item: `${SITE}${canon(c.path)}`,
     })),
   };
   const blocks = [breadcrumb, ...schema]
@@ -118,13 +130,17 @@ ${blocks}
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+    <!-- Non-blocking: see the comment in index.html. -->
+    <link rel="stylesheet" href="${FONTS}" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="${FONTS}" /></noscript>
 ${STYLE}
   </head>
   <body>
     <main class="wrap">
       <div class="crumb">${crumbs
-        .map((c, i) => (i === crumbs.length - 1 ? esc(c.name) : `<a href="${c.path}">${esc(c.name)}</a>`))
+        .map((c, i) =>
+          i === crumbs.length - 1 ? esc(c.name) : `<a href="${canon(c.path)}">${esc(c.name)}</a>`,
+        )
         .join(' › ')}</div>
 
       <h1>${esc(h1)}</h1>
@@ -135,7 +151,7 @@ ${body}
       <footer>
         ${
           related.length
-            ? `<p>${related.map((r) => `<a href="${r.path}">${esc(r.name)}</a>`).join(' · ')}</p>`
+            ? `<p>${related.map((r) => `<a href="${canon(r.path)}">${esc(r.name)}</a>`).join(' · ')}</p>`
             : ''
         }
         <p>
@@ -188,7 +204,7 @@ const gymTable = (list, highlight) => `      <table>
 ${list
   .map(
     (g) => `          <tr>
-            <td><a href="/gyms/${g.slug}/">${esc(g.name)}</a></td>
+            <td><a href="/gyms/${g.slug}">${esc(g.name)}</a></td>
             <td class="num">${g.energy}E</td>
 ${STATS.map(
   (s) =>
@@ -269,8 +285,8 @@ ${gymTable([g])}
       <p>
         ${
           isSpecialist
-            ? `${g.name} is a specialist gym. It requires the relevant standard gym unlocked plus a stat ratio that you must keep meeting — lose the ratio and you lose access until you regain it. Exact requirements are on the <a href="/specialist-gyms/">specialist gyms page</a>.`
-            : `Standard gyms unlock on gym EXP — the cumulative energy you have spent training, not your level or your stats. You also pay ${money(g.cost)} to join. See the <a href="/gym-unlock-order/">full unlock order</a>.`
+            ? `${g.name} is a specialist gym. It requires the relevant standard gym unlocked plus a stat ratio that you must keep meeting — lose the ratio and you lose access until you regain it. Exact requirements are on the <a href="/specialist-gyms">specialist gyms page</a>.`
+            : `Standard gyms unlock on gym EXP — the cumulative energy you have spent training, not your level or your stats. You also pay ${money(g.cost)} to join. See the <a href="/gym-unlock-order">full unlock order</a>.`
         }
       </p>
 
@@ -287,8 +303,8 @@ ${gymTable([g])}
       </a>
 
       <h2>Compared to every other gym</h2>
-      <p>See the <a href="/gym-dots/">full dots chart</a>${
-        top ? ` or the <a href="/best-gym-for-${top.key}/">best gyms for ${top.label}</a>` : ''
+      <p>See the <a href="/gym-dots">full dots chart</a>${
+        top ? ` or the <a href="/best-gym-for-${top.key}">best gyms for ${top.label}</a>` : ''
       }.</p>`,
       related: related(`/gyms/${g.slug}/`),
     }),
@@ -340,7 +356,7 @@ emit(
         '@type': 'Dataset',
         name: 'Torn gym dots, energy cost and join cost',
         description: 'Dot values per battle stat, energy per train and membership cost for every gym in Torn.',
-        url: `${SITE}/gym-dots/`,
+        url: `${SITE}/gym-dots`,
         creator: { '@type': 'Organization', name: 'Torn Training Optimizer' },
         isAccessibleForFree: true,
       },
@@ -415,9 +431,9 @@ ${gymTable(ranked, s.key)}
 
       <h2>Related</h2>
       <p>
-        <a href="/specialist-gyms/">Specialist gym requirements</a> ·
-        <a href="/training-ratios/">Training ratios explained</a> ·
-        <a href="/gym-dots/">Full dots chart</a>
+        <a href="/specialist-gyms">Specialist gym requirements</a> ·
+        <a href="/training-ratios">Training ratios explained</a> ·
+        <a href="/gym-dots">Full dots chart</a>
       </p>`,
       related: related(`/best-gym-for-${s.key}/`),
     }),
@@ -680,7 +696,7 @@ writeFileSync(
 ${all
   .map(
     (u) => `  <url>
-    <loc>${SITE}${u.path}</loc>
+    <loc>${SITE}${canon(u.path)}</loc>
     <lastmod>${TODAY}</lastmod>
     <changefreq>${u.changefreq ?? 'monthly'}</changefreq>
     <priority>${u.priority.toFixed(1)}</priority>

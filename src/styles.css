@@ -867,3 +867,107 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   border-radius: 4px;
   font-size: 13px;
 }
+
+/* ---- Demo banner ---- */
+.demobar {
+  background: rgba(217, 154, 78, 0.08);
+  border: 1px dashed var(--accent-dim);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.demobar strong { color: var(--accent); }
+
+/* ---- Collapsible sections ---- */
+.fold { margin-bottom: 10px; }
+.fold > summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::before {
+  content: '+';
+  font-family: var(--mono);
+  color: var(--accent);
+  width: 10px;
+}
+.fold[open] > summary::before { content: '−'; }
+.fold[open] > summary {
+  border-bottom-color: transparent;
+  border-radius: 8px 8px 0 0;
+}
+.fold > summary:hover { border-color: var(--accent-dim); }
+.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fold-label {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.fold-hint { font-size: 12px; color: var(--muted); }
+/* The wrapped panel keeps its own chrome; drop the seam and the duplicate title. */
+.fold[open] > .panel {
+  margin-bottom: 0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+.fold > .panel > h2 { display: none; }
+
+/* ---- Mobile / TornPDA ---------------------------------------------------
+   A large share of Torn is played through TornPDA and mobile browsers, so the
+   narrow viewport is a primary target, not a fallback. Three things matter:
+   tables must scroll instead of squeezing, controls must stay tappable, and
+   inputs must be >=16px or iOS zooms the page on focus.                     */
+@media (max-width: 700px) {
+  .app { padding: 16px 12px 56px; }
+  .masthead { gap: 6px; padding-bottom: 12px; margin-bottom: 16px; }
+  .masthead h1 { font-size: 22px; }
+  .panel { padding: 14px 12px; }
+
+  /* Stack anything laid out in columns. */
+  .plan-grid,
+  .cmp-grid,
+  .sim-grid,
+  .statgrid,
+  .planner-tiles { grid-template-columns: 1fr; }
+  .cmp-out { grid-template-columns: 1fr 1fr; }
+
+  /* Full-width, tappable controls. 16px prevents the iOS focus zoom. */
+  .apibar,
+  .plan-controls,
+  .history-controls,
+  .sharebar { flex-direction: column; align-items: stretch; }
+  .apibar input[type='password'],
+  .apibar button,
+  .qty-input,
+  .plan-select select,
+  .cmp-field > input,
+  .cmp-field > select,
+  .btn-primary,
+  .toggle-btn { width: 100%; font-size: 16px; min-height: 40px; }
+  .cmp-field { flex-direction: column; align-items: stretch; gap: 4px; }
+  .cmp-field > select,
+  .cmp-field > input { max-width: none; }
+
+  /* Tables scroll horizontally rather than crushing every column. */
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+  th, td { padding: 7px 9px; font-size: 12.5px; }
+
+  /* Charts are unreadable below ~300px of height on a phone. */
+  .chart-wrap, .history-chart { min-height: 240px; }
+
+  .series-toggles, .summary-chips { gap: 6px; }
+  .fold > summary { padding: 12px 14px; }
+}
+#own-numbers { scroll-margin-top: 12px; }

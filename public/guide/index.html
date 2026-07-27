@@ -8,7 +8,7 @@
       name="description"
       content="A verified guide to gym training in Torn: how happy, energy, drugs and gyms actually work, when to happy-jump vs energy-train, how gyms unlock, and how to plan your build. Mechanics checked against the Torn wiki and in-game testing."
     />
-    <link rel="canonical" href="https://torntraining.com/guide/" />
+    <link rel="canonical" href="https://torntraining.com/guide" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#14161b" />
 
@@ -19,7 +19,7 @@
       property="og:description"
       content="How happy, energy, drugs and gyms actually work in Torn — and when to happy-jump vs energy-train. Verified against the wiki and in-game testing."
     />
-    <meta property="og:url" content="https://torntraining.com/guide/" />
+    <meta property="og:url" content="https://torntraining.com/guide" />
     <meta property="og:image" content="https://torntraining.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -47,7 +47,7 @@
       "image": "https://torntraining.com/og-image.png",
       "author": { "@type": "Organization", "name": "Torn Training Optimizer" },
       "publisher": { "@type": "Organization", "name": "Torn Training Optimizer" },
-      "mainEntityOfPage": "https://torntraining.com/guide/"
+      "mainEntityOfPage": "https://torntraining.com/guide"
     }
     </script>
     <script type="application/ld+json">
@@ -56,7 +56,7 @@
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "Torn Training Optimizer", "item": "https://torntraining.com/" },
-        { "@type": "ListItem", "position": 2, "name": "Gym Training Guide", "item": "https://torntraining.com/guide/" }
+        { "@type": "ListItem", "position": 2, "name": "Gym Training Guide", "item": "https://torntraining.com/guide" }
       ]
     }
     </script>
@@ -77,14 +77,13 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Non-blocking: a plain stylesheet link here costs ~1.2s of render time on mobile. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" /></noscript>
     <style>
       :root {
         --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
-        --text: #e9ecf1; --muted: #8c95a4; --accent: #d99a4e; --best: #5ec0a8;
+        --text: #e9ecf1; --muted: #98a1b0; --accent: #d99a4e; --best: #5ec0a8;
         --display: 'Oswald', sans-serif; --body: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
       }
       * { box-sizing: border-box; }
@@ -206,7 +205,7 @@
       <h2 id="method">Happy jump vs energy training</h2>
       <p>The question everyone asks. The honest answer is: it depends how big the stat already is.
         (For the full jump recipe and break-even analysis, see the dedicated
-        <a href="/happy-jump/">happy jump calculator &amp; guide</a>.)</p>
+        <a href="/happy-jump">happy jump calculator &amp; guide</a>.)</p>
       <ul>
         <li><b>Low stats</b> (roughly under a few hundred thousand): <b>happy dominates</b>. Big happy jumps
           give the best gains per energy — jump, then train a modest amount of energy.</li>
@@ -245,7 +244,7 @@
       <p>
         This ratio system is why experienced players "whore" one stat — pushing a single stat far ahead
         to unlock its specialist gym, which then accelerates that stat even more. See the full
-        <a href="/specialist-gyms/">Torn specialist gyms requirements</a> for the exact ratios.
+        <a href="/specialist-gyms">Torn specialist gyms requirements</a> for the exact ratios.
       </p>
 
       <h2 id="modifiers">Gym-gain modifiers (perks)</h2>
@@ -286,8 +285,8 @@
 
       <footer>
         Unofficial fan-made guide · not affiliated with Torn.com ·
-        <a href="/">Torn Training Optimizer</a> · <a href="/happy-jump/">Happy jump</a> ·
-        <a href="/specialist-gyms/">Specialist gyms</a>
+        <a href="/">Torn Training Optimizer</a> · <a href="/happy-jump">Happy jump</a> ·
+        <a href="/specialist-gyms">Specialist gyms</a>
       </footer>
     </main>
   </body>

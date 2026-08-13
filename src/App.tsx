@@ -53,6 +53,16 @@ const ChartFallback = () => <p className="footnote">Loading chart…</p>;
 const KEY_STORE = 'tto.apiKey';
 const MOD_STORE = 'tto.modifiers';
 
+/** Kept in step with NAV in scripts/gen-seo.mjs, so the nav is the same everywhere. */
+const SITE_NAV = [
+  { label: 'Guide', href: '/guide' },
+  { label: 'Happy jump', href: '/happy-jump' },
+  { label: 'Gym dots', href: '/gym-dots' },
+  { label: 'Specialist gyms', href: '/specialist-gyms' },
+  { label: 'All gyms', href: '/gyms' },
+  { label: '50M stat cap', href: '/stat-cap' },
+];
+
 const PRICED_ITEMS = [
   ...ENERGY_SOURCES.filter((s) => s.itemName).map((s) => s.itemName!),
   ...HAPPY_BOOSTERS.map((b) => b.itemName),
@@ -253,6 +263,9 @@ export default function App() {
 
   return (
     <div className="app">
+      <a className="skip" href="#main">
+        Skip to content
+      </a>
       <header className="masthead">
         <h1>
           Torn <span className="mark">Training</span> Optimizer
@@ -263,7 +276,18 @@ export default function App() {
         </p>
       </header>
 
-      <main>
+      {/* The reference pages used to be reachable only from the footer, below a
+          dozen panels. They are the pages search traffic arrives on, so they get
+          a route back and forth at the top instead. */}
+      <nav className="sitenav" aria-label="Primary">
+        {SITE_NAV.map((n) => (
+          <a key={n.href} href={n.href}>
+            {n.label}
+          </a>
+        ))}
+      </nav>
+
+      <main id="main">
         <ApiKeyBar
           apiKey={apiKey}
           onApiKey={setApiKey}

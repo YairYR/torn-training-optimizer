@@ -10,16 +10,23 @@
     <meta name="theme-color" content="#14161b" />
 
     <meta property="og:type" content="article" />
+    <meta property="og:locale" content="en" />
     <meta property="og:site_name" content="Torn Training Optimizer" />
     <meta property="og:title" content="Best Gym for Dexterity in Torn (Ranked by Dots)" />
     <meta property="og:description" content="Every Torn gym that trains Dexterity, ranked by dots. The Sports Science Lab leads the obtainable gyms at 9.0; George's is the best without specialist requirements. Work out which one you can actually use." />
     <meta property="og:url" content="https://torntraining.com/best-gym-for-dexterity" />
     <meta property="og:image" content="https://torntraining.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
+    <meta property="article:modified_time" content="2026-08-13" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
+    <meta name="twitter:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" type="text/plain" href="https://torntraining.com/llms.txt" title="llms.txt" />
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
     <script>
@@ -47,6 +54,36 @@
       "item": "https://torntraining.com/best-gym-for-dexterity"
     }
   ]
+}
+    </script>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://torntraining.com/best-gym-for-dexterity#page",
+  "url": "https://torntraining.com/best-gym-for-dexterity",
+  "name": "Best Gym for Dexterity in Torn (Ranked by Dots)",
+  "description": "Every Torn gym that trains Dexterity, ranked by dots. The Sports Science Lab leads the obtainable gyms at 9.0; George's is the best without specialist requirements. Work out which one you can actually use.",
+  "inLanguage": "en",
+  "dateModified": "2026-08-13",
+  "isPartOf": {
+    "@type": "WebSite",
+    "@id": "https://torntraining.com/#website",
+    "name": "Torn Training Optimizer",
+    "url": "https://torntraining.com/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "@id": "https://torntraining.com/#org",
+    "name": "Torn Training Optimizer",
+    "url": "https://torntraining.com/",
+    "logo": "https://torntraining.com/icon-512.png"
+  },
+  "about": {
+    "@type": "VideoGame",
+    "name": "Torn",
+    "url": "https://www.torn.com/"
+  }
 }
     </script>
     <script type="application/ld+json">
@@ -102,266 +139,316 @@
       th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
       td.num { font-family: var(--mono); }
       footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+      /* Keyboard affordances. Links inherited only the browser default outline,
+         which is near-invisible on this background. */
+      a:focus-visible, .cta:focus-visible, .table-wrap:focus-visible, .skip:focus {
+        outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px;
+      }
+      .skip {
+        position: absolute; left: 8px; top: -48px; z-index: 10;
+        background: var(--surface-2); color: var(--text); border: 1px solid var(--accent);
+        border-radius: 6px; padding: 8px 14px; text-decoration: none; font-size: 14px;
+        transition: top 120ms ease;
+      }
+      .skip:focus { top: 8px; }
+
+      /* Search traffic lands deep; the breadcrumb only goes back up, so these
+         six give every page a way sideways without hunting in the footer. */
+      .navwrap { padding: 16px 20px 0; }
+      .sitenav { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13.5px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+      .sitenav a { color: var(--muted); text-decoration: none; }
+      .sitenav a:hover { color: var(--accent); }
+      .sitenav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+      .navwrap + main.wrap { padding-top: 18px; }
+
+      /* The gym table is 7 columns and needs ~584px; a 375px phone gives 335px,
+         which used to scroll the whole page sideways. Confine it to the table
+         and pin the gym name so the dots stay readable while panning. */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 12px 0; }
+      .table-wrap > table { margin: 0; min-width: 520px; }
+      .table-wrap th:first-child, .table-wrap td:first-child {
+        position: sticky; left: 0; background: var(--bg);
+      }
+      @media (max-width: 640px) {
+        .wrap { padding-left: 16px; padding-right: 16px; }
+        .navwrap { padding-left: 16px; padding-right: 16px; }
+        h1 { font-size: 27px; }
+        h2 { font-size: 20px; }
+      }
     </style>
   </head>
   <body>
-    <main class="wrap">
+    <a class="skip" href="#content">Skip to content</a>
+    <div class="wrap navwrap">
+      <nav class="sitenav" aria-label="Primary">
+        <a href="/">Calculator</a>
+        <a href="/guide">Guide</a>
+        <a href="/happy-jump">Happy jump</a>
+        <a href="/gym-dots">Gym dots</a>
+        <a href="/specialist-gyms">Specialist gyms</a>
+        <a href="/gyms">All gyms</a>
+      </nav>
+    </div>
+    <main class="wrap" id="content">
       <div class="crumb"><a href="/">Torn Training Optimizer</a> › Best gym for Dexterity</div>
 
       <h1>Best gym for Dexterity in Torn</h1>
       <p class="sub">The Sports Science Lab has the highest obtainable Dexterity dots at 9.0 — only the invite-only Fight Club goes higher. The best gym you can <em>use</em> is a different question: it depends on your unlocks and stat ratios.</p>
 
       <h2>Ranked by Dexterity dots</h2>
-      <table>
-        <thead>
-          <tr><th>Gym</th><th>Energy</th><th>Strength</th><th>Defense</th><th>Speed</th><th>Dexterity</th><th>Cost</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><a href="/gyms/fight-club">Fight Club</a></td>
-            <td class="num">10E</td>
-            <td class="num">10.0</td>
-            <td class="num">10.0</td>
-            <td class="num">10.0</td>
-            <td class="num" style="color:var(--best)">10.0</td>
-            <td class="num">Invite only</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/the-sports-science-lab">The Sports Science Lab</a></td>
-            <td class="num">25E</td>
-            <td class="num">9.0</td>
-            <td class="num">9.0</td>
-            <td class="num">9.0</td>
-            <td class="num">9.0</td>
-            <td class="num">$500,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/the-elites">The Elites</a></td>
-            <td class="num">50E</td>
-            <td class="num">—</td>
-            <td class="num">—</td>
-            <td class="num">—</td>
-            <td class="num">8.0</td>
-            <td class="num">$100,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/balboas-gym">Balboas Gym</a></td>
-            <td class="num">25E</td>
-            <td class="num">—</td>
-            <td class="num">7.5</td>
-            <td class="num">—</td>
-            <td class="num">7.5</td>
-            <td class="num">$50,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/georges">George's</a></td>
-            <td class="num">10E</td>
-            <td class="num">7.3</td>
-            <td class="num">7.3</td>
-            <td class="num">7.3</td>
-            <td class="num">7.3</td>
-            <td class="num">$100,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/cha-chas">Cha Cha's</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.4</td>
-            <td class="num">6.8</td>
-            <td class="num">6.4</td>
-            <td class="num">7.0</td>
-            <td class="num">$20,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/force-training">Force Training</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.4</td>
-            <td class="num">6.4</td>
-            <td class="num">6.6</td>
-            <td class="num">6.8</td>
-            <td class="num">$15,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/the-edge">The Edge</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.8</td>
-            <td class="num">7.0</td>
-            <td class="num">7.0</td>
-            <td class="num">6.8</td>
-            <td class="num">$75,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/atlas">Atlas</a></td>
-            <td class="num">10E</td>
-            <td class="num">7.0</td>
-            <td class="num">6.4</td>
-            <td class="num">6.4</td>
-            <td class="num">6.6</td>
-            <td class="num">$30,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/last-round">Last Round</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.8</td>
-            <td class="num">7.0</td>
-            <td class="num">6.6</td>
-            <td class="num">6.6</td>
-            <td class="num">$50,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/apollo-gym">Apollo Gym</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.0</td>
-            <td class="num">6.4</td>
-            <td class="num">6.2</td>
-            <td class="num">6.2</td>
-            <td class="num">$7,500,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/gun-shop">Gun Shop</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.6</td>
-            <td class="num">6.2</td>
-            <td class="num">6.4</td>
-            <td class="num">6.2</td>
-            <td class="num">$10,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/deep-burn">Deep Burn</a></td>
-            <td class="num">10E</td>
-            <td class="num">6.0</td>
-            <td class="num">6.0</td>
-            <td class="num">6.0</td>
-            <td class="num">6.0</td>
-            <td class="num">$5,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/legs-bums-and-tums">Legs, Bums and Tums</a></td>
-            <td class="num">10E</td>
-            <td class="num">—</td>
-            <td class="num">5.6</td>
-            <td class="num">5.6</td>
-            <td class="num">5.8</td>
-            <td class="num">$3,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/racing-fitness">Racing Fitness</a></td>
-            <td class="num">10E</td>
-            <td class="num">5.0</td>
-            <td class="num">4.8</td>
-            <td class="num">5.4</td>
-            <td class="num">5.2</td>
-            <td class="num">$1,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/complete-cardio">Complete Cardio</a></td>
-            <td class="num">10E</td>
-            <td class="num">5.5</td>
-            <td class="num">5.5</td>
-            <td class="num">5.8</td>
-            <td class="num">5.2</td>
-            <td class="num">$2,000,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/core">Core</a></td>
-            <td class="num">10E</td>
-            <td class="num">5.0</td>
-            <td class="num">5.0</td>
-            <td class="num">5.2</td>
-            <td class="num">5.0</td>
-            <td class="num">$500,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/anabolic-anomalies">Anabolic Anomalies</a></td>
-            <td class="num">10E</td>
-            <td class="num">5.0</td>
-            <td class="num">5.2</td>
-            <td class="num">4.5</td>
-            <td class="num">4.5</td>
-            <td class="num">$250,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/pioneer-fitness">Pioneer Fitness</a></td>
-            <td class="num">10E</td>
-            <td class="num">4.4</td>
-            <td class="num">4.8</td>
-            <td class="num">4.5</td>
-            <td class="num">4.4</td>
-            <td class="num">$100,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/knuckle-heads">Knuckle Heads</a></td>
-            <td class="num">10E</td>
-            <td class="num">4.8</td>
-            <td class="num">4.0</td>
-            <td class="num">4.4</td>
-            <td class="num">4.2</td>
-            <td class="num">$50,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/global-gym">Global Gym</a></td>
-            <td class="num">5E</td>
-            <td class="num">4.0</td>
-            <td class="num">4.0</td>
-            <td class="num">4.0</td>
-            <td class="num">4.0</td>
-            <td class="num">$10,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/pour-femme">Pour Femme</a></td>
-            <td class="num">5E</td>
-            <td class="num">3.4</td>
-            <td class="num">3.6</td>
-            <td class="num">3.6</td>
-            <td class="num">3.8</td>
-            <td class="num">$2,500</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/davies-den">Davies Den</a></td>
-            <td class="num">5E</td>
-            <td class="num">3.7</td>
-            <td class="num">3.7</td>
-            <td class="num">—</td>
-            <td class="num">3.7</td>
-            <td class="num">$5,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/silver-gym">Silver Gym</a></td>
-            <td class="num">5E</td>
-            <td class="num">3.4</td>
-            <td class="num">3.4</td>
-            <td class="num">3.6</td>
-            <td class="num">3.2</td>
-            <td class="num">$1,000</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/woodys-workout">Woody's Workout</a></td>
-            <td class="num">5E</td>
-            <td class="num">2.8</td>
-            <td class="num">3.0</td>
-            <td class="num">3.2</td>
-            <td class="num">2.8</td>
-            <td class="num">$250</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/average-joes">Average Joes</a></td>
-            <td class="num">5E</td>
-            <td class="num">2.4</td>
-            <td class="num">2.8</td>
-            <td class="num">2.4</td>
-            <td class="num">2.4</td>
-            <td class="num">$100</td>
-          </tr>
-          <tr>
-            <td><a href="/gyms/premier-fitness">Premier Fitness</a></td>
-            <td class="num">5E</td>
-            <td class="num">2.0</td>
-            <td class="num">2.0</td>
-            <td class="num">2.0</td>
-            <td class="num">2.0</td>
-            <td class="num">$10</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrap" role="region" aria-label="Gyms ranked by Dexterity dots" tabindex="0">
+        <table>
+          <thead>
+            <tr><th>Gym</th><th>Energy</th><th>Strength</th><th>Defense</th><th>Speed</th><th>Dexterity</th><th>Cost</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="/gyms/fight-club">Fight Club</a></td>
+              <td class="num">10E</td>
+              <td class="num">10.0</td>
+              <td class="num">10.0</td>
+              <td class="num">10.0</td>
+              <td class="num" style="color:var(--best)">10.0</td>
+              <td class="num">Invite only</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/the-sports-science-lab">The Sports Science Lab</a></td>
+              <td class="num">25E</td>
+              <td class="num">9.0</td>
+              <td class="num">9.0</td>
+              <td class="num">9.0</td>
+              <td class="num">9.0</td>
+              <td class="num">$500,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/the-elites">The Elites</a></td>
+              <td class="num">50E</td>
+              <td class="num">—</td>
+              <td class="num">—</td>
+              <td class="num">—</td>
+              <td class="num">8.0</td>
+              <td class="num">$100,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/balboas-gym">Balboas Gym</a></td>
+              <td class="num">25E</td>
+              <td class="num">—</td>
+              <td class="num">7.5</td>
+              <td class="num">—</td>
+              <td class="num">7.5</td>
+              <td class="num">$50,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/georges">George's</a></td>
+              <td class="num">10E</td>
+              <td class="num">7.3</td>
+              <td class="num">7.3</td>
+              <td class="num">7.3</td>
+              <td class="num">7.3</td>
+              <td class="num">$100,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/cha-chas">Cha Cha's</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.4</td>
+              <td class="num">6.8</td>
+              <td class="num">6.4</td>
+              <td class="num">7.0</td>
+              <td class="num">$20,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/force-training">Force Training</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.4</td>
+              <td class="num">6.4</td>
+              <td class="num">6.6</td>
+              <td class="num">6.8</td>
+              <td class="num">$15,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/the-edge">The Edge</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.8</td>
+              <td class="num">7.0</td>
+              <td class="num">7.0</td>
+              <td class="num">6.8</td>
+              <td class="num">$75,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/atlas">Atlas</a></td>
+              <td class="num">10E</td>
+              <td class="num">7.0</td>
+              <td class="num">6.4</td>
+              <td class="num">6.4</td>
+              <td class="num">6.6</td>
+              <td class="num">$30,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/last-round">Last Round</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.8</td>
+              <td class="num">7.0</td>
+              <td class="num">6.6</td>
+              <td class="num">6.6</td>
+              <td class="num">$50,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/apollo-gym">Apollo Gym</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.0</td>
+              <td class="num">6.4</td>
+              <td class="num">6.2</td>
+              <td class="num">6.2</td>
+              <td class="num">$7,500,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/gun-shop">Gun Shop</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.6</td>
+              <td class="num">6.2</td>
+              <td class="num">6.4</td>
+              <td class="num">6.2</td>
+              <td class="num">$10,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/deep-burn">Deep Burn</a></td>
+              <td class="num">10E</td>
+              <td class="num">6.0</td>
+              <td class="num">6.0</td>
+              <td class="num">6.0</td>
+              <td class="num">6.0</td>
+              <td class="num">$5,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/legs-bums-and-tums">Legs, Bums and Tums</a></td>
+              <td class="num">10E</td>
+              <td class="num">—</td>
+              <td class="num">5.6</td>
+              <td class="num">5.6</td>
+              <td class="num">5.8</td>
+              <td class="num">$3,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/racing-fitness">Racing Fitness</a></td>
+              <td class="num">10E</td>
+              <td class="num">5.0</td>
+              <td class="num">4.8</td>
+              <td class="num">5.4</td>
+              <td class="num">5.2</td>
+              <td class="num">$1,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/complete-cardio">Complete Cardio</a></td>
+              <td class="num">10E</td>
+              <td class="num">5.5</td>
+              <td class="num">5.5</td>
+              <td class="num">5.8</td>
+              <td class="num">5.2</td>
+              <td class="num">$2,000,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/core">Core</a></td>
+              <td class="num">10E</td>
+              <td class="num">5.0</td>
+              <td class="num">5.0</td>
+              <td class="num">5.2</td>
+              <td class="num">5.0</td>
+              <td class="num">$500,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/anabolic-anomalies">Anabolic Anomalies</a></td>
+              <td class="num">10E</td>
+              <td class="num">5.0</td>
+              <td class="num">5.2</td>
+              <td class="num">4.5</td>
+              <td class="num">4.5</td>
+              <td class="num">$250,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/pioneer-fitness">Pioneer Fitness</a></td>
+              <td class="num">10E</td>
+              <td class="num">4.4</td>
+              <td class="num">4.8</td>
+              <td class="num">4.5</td>
+              <td class="num">4.4</td>
+              <td class="num">$100,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/knuckle-heads">Knuckle Heads</a></td>
+              <td class="num">10E</td>
+              <td class="num">4.8</td>
+              <td class="num">4.0</td>
+              <td class="num">4.4</td>
+              <td class="num">4.2</td>
+              <td class="num">$50,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/global-gym">Global Gym</a></td>
+              <td class="num">5E</td>
+              <td class="num">4.0</td>
+              <td class="num">4.0</td>
+              <td class="num">4.0</td>
+              <td class="num">4.0</td>
+              <td class="num">$10,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/pour-femme">Pour Femme</a></td>
+              <td class="num">5E</td>
+              <td class="num">3.4</td>
+              <td class="num">3.6</td>
+              <td class="num">3.6</td>
+              <td class="num">3.8</td>
+              <td class="num">$2,500</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/davies-den">Davies Den</a></td>
+              <td class="num">5E</td>
+              <td class="num">3.7</td>
+              <td class="num">3.7</td>
+              <td class="num">—</td>
+              <td class="num">3.7</td>
+              <td class="num">$5,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/silver-gym">Silver Gym</a></td>
+              <td class="num">5E</td>
+              <td class="num">3.4</td>
+              <td class="num">3.4</td>
+              <td class="num">3.6</td>
+              <td class="num">3.2</td>
+              <td class="num">$1,000</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/woodys-workout">Woody's Workout</a></td>
+              <td class="num">5E</td>
+              <td class="num">2.8</td>
+              <td class="num">3.0</td>
+              <td class="num">3.2</td>
+              <td class="num">2.8</td>
+              <td class="num">$250</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/average-joes">Average Joes</a></td>
+              <td class="num">5E</td>
+              <td class="num">2.4</td>
+              <td class="num">2.8</td>
+              <td class="num">2.4</td>
+              <td class="num">2.4</td>
+              <td class="num">$100</td>
+            </tr>
+            <tr>
+              <td><a href="/gyms/premier-fitness">Premier Fitness</a></td>
+              <td class="num">5E</td>
+              <td class="num">2.0</td>
+              <td class="num">2.0</td>
+              <td class="num">2.0</td>
+              <td class="num">2.0</td>
+              <td class="num">$10</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <h2>The catch</h2>
       <p>
@@ -385,7 +472,7 @@
       </p>
 
       <footer>
-        <p><a href="/gym-dots">Gym dots chart</a> · <a href="/gyms">All gyms</a> · <a href="/gym-unlock-order">Unlock order</a> · <a href="/stat-cap">The 50M stat cap</a> · <a href="/training-ratios">Training ratios</a> · <a href="/xanax-vs-lsd">Xanax vs LSD</a></p>
+        <p><a href="/gyms">All gyms</a> · <a href="/gym-unlock-order">Unlock order</a> · <a href="/stat-cap">The 50M stat cap</a> · <a href="/training-ratios">Training ratios</a> · <a href="/xanax-vs-lsd">Xanax vs LSD</a> · <a href="/guide">Training guide</a></p>
         <p>
           Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
           and is sent only to api.torn.com.

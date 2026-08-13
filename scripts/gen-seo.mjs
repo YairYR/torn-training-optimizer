@@ -22,12 +22,19 @@ const OUT = resolve(ROOT, 'public');
 const SITE = 'https://torntraining.com';
 
 /**
- * The host 301s /some-page/ to /some-page, so every URL we publish has to be
- * the no-slash form. Emitting the trailing slash meant canonical tags, og:url,
- * breadcrumbs and the sitemap all pointed at URLs that immediately redirect —
- * which asks a crawler to resolve a redirect before it can trust the canonical
- * and wastes crawl budget across 42 pages. Directory paths are still used for
- * writing the files; only what we publish is normalised.
+ * Every URL we publish is the no-slash form: canonical tags, og:url,
+ * breadcrumbs, internal links and the sitemap.
+ *
+ * This used to be justified by "the host 301s /some-page/ to /some-page", which
+ * was not true. The site is served by Vercel, and both forms returned 200 —
+ * genuine duplicate content on 42 URL pairs. Search Console had them indexed
+ * separately and splitting signals: /training-ratios drew 246 impressions while
+ * /training-ratios/ drew 7, and /gyms/core/ ranked five positions worse than
+ * /gyms/core. The redirect the comment assumed now actually exists, declared as
+ * `trailingSlash: false` in vercel.json — so keep this and that file in step.
+ *
+ * Directory paths are still used for writing the files; only what we publish is
+ * normalised.
  */
 const canon = (path) => (path === '/' ? '/' : path.replace(/\/$/, ''));
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -109,6 +116,10 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 const STYLE = readFileSync(resolve(OUT, 'guide/index.html'), 'utf8').match(/<style>[\s\S]*?<\/style>/)[0];
 
+/** Snippet limits Google actually renders. Enforced in page(). */
+const DESC_MAX = 158;
+const TITLE_MAX = 62;
+
 /** One publisher entity, referenced by @id from every page's schema. */
 const PUBLISHER = {
   '@type': 'Organization',
@@ -162,6 +173,20 @@ function page({
   robots = 'index, follow, max-image-preview:large',
 }) {
   const url = `${SITE}${canon(path)}`;
+
+  // Google renders ~158 characters of a description on desktop and fewer on
+  // mobile. Every page on this site used to run past that — the homepage by 85
+  // characters — which meant the differentiator was always the part that got
+  // cut: "nothing leaves your browser" never reached a searcher. Failing the
+  // build is the only thing that keeps 42 generated descriptions honest.
+  if (description.length > DESC_MAX) {
+    throw new Error(
+      `${path}: description is ${description.length} chars, ${description.length - DESC_MAX} over the ${DESC_MAX} limit.\n  ${description}`,
+    );
+  }
+  if (title.length > TITLE_MAX) {
+    console.warn(`  warn ${path}: title is ${title.length} chars (soft limit ${TITLE_MAX}).`);
+  }
 
   // Date the page by what it says, not by when the build ran. Hashing the
   // semantic payload (and not the rendered HTML) keeps this out of the circular
@@ -381,8 +406,15 @@ for (const g of gyms) {
     `/gyms/${g.slug}/`,
     page({
       path: `/gyms/${g.slug}/`,
-      title: `${g.name} (Torn Gym): Dots, Energy Cost & Gains`,
-      description: `${g.name} in Torn costs ${g.energy} energy per train and ${money(g.cost)} to join. Full dot values per battle stat, how it compares to every other gym, and what you actually gain per train.`,
+      // A navigational query like "frontline fitness torn" wants the entry
+      // requirements, not a dots table — Frontline drew 80 impressions and zero
+      // clicks with the old generic title. Specialists lead with the ratio.
+      title: isSpecialist
+        ? `${g.name} (Torn): Requirements, Ratio & ${dot(g.dots[top?.key ?? 'strength'])} Dots`
+        : `${g.name} (Torn Gym): Dots, Energy Cost & Gains`,
+      description: isSpecialist
+        ? `How to unlock ${g.name} in Torn: the exact stat ratio, the prerequisite gym, and what ${dot(g.dots[top?.key ?? 'strength'])} dots at ${g.energy}E per train is really worth.`
+        : `${g.name} in Torn: ${g.energy}E per train, ${money(g.cost)} to join. Dot values for every battle stat, and what you actually gain per train.`,
       h1: `${g.name}`,
       sub: `${g.energy} energy per train · ${money(g.cost)} to join · ${
         top ? `best for ${top.label} at ${dot(g.dots[top.key])} dots` : 'no trainable stats'
@@ -466,9 +498,9 @@ emit(
   '/gyms/',
   page({
     path: '/gyms/',
-    title: 'All Torn Gyms: Dots, Energy and Unlock Costs',
+    title: 'Torn Gym List — All 32 Gyms, Dots, Energy and Unlock Costs',
     description:
-      'Every gym in Torn — 24 standard gyms and the specialists — with dot values for all four battle stats, energy per train and cost to join. One page per gym with full detail.',
+      'The complete Torn gym list: 24 standard gyms and 8 specialists, with dots for all four battle stats, energy per train and cost to join.',
     h1: 'All Torn gyms',
     sub: `${gyms.length} gyms: ${standard.length} standard ones you progress through with gym EXP, and ${specialist.length} specialists gated on stat ratios.`,
     crumbs: [
@@ -490,11 +522,14 @@ emit(
   '/gym-dots/',
   page({
     path: '/gym-dots/',
-    title: 'Torn Gym Dots Chart — All Gyms, All Stats',
+    // "torn gym wiki", "torn gyms wiki" and friends drew 97 impressions and
+    // zero clicks: people want a reference table and could not tell from the
+    // snippet that this is one. Say so.
+    title: 'Torn Gym Dots Chart — All 32 Gyms, All Stats (Wiki Data)',
     description:
-      'The complete Torn gym dots chart: strength, speed, defense and dexterity values for all 32 gyms, plus energy per train and cost. Verified against the Torn wiki.',
+      'Every Torn gym in one reference table: strength, speed, defense and dexterity dots for all 32 gyms, plus energy per train and join cost. Wiki-verified.',
     h1: 'Torn gym dots chart',
-    sub: 'Every gym, every stat, in one table. Dots are the gym multiplier in the gain formula — double the dots, double the gain for the same energy.',
+    sub: 'Every gym, every stat, in one table — the full reference, verified against the Torn wiki. Dots are the gym multiplier in the gain formula: double the dots, double the gain for the same energy.',
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Gym dots chart', path: '/gym-dots/' },
@@ -538,7 +573,7 @@ for (const s of STATS) {
     page({
       path: `/best-gym-for-${s.key}/`,
       title: `Best Gym for ${s.label} in Torn (Ranked by Dots)`,
-      description: `Every Torn gym that trains ${s.label}, ranked by dots. ${top.name} leads the obtainable gyms at ${dot(top.dots[s.key])}; ${bestStandard.name} is the best without specialist requirements. Work out which one you can actually use.`,
+      description: `Every Torn gym that trains ${s.label}, ranked by dots. ${top.name} leads at ${dot(top.dots[s.key])}; ${bestStandard.name} is the best with no ratio requirement.`,
       h1: `Best gym for ${s.label} in Torn`,
       sub: `${top.name} has the highest obtainable ${s.label} dots at ${dot(top.dots[s.key])} — only the invite-only Fight Club goes higher. The best gym you can <em>use</em> is a different question: it depends on your unlocks and stat ratios.`,
       crumbs: [
@@ -597,7 +632,7 @@ emit(
     path: '/stat-cap/',
     title: 'The Torn 50M Stat Cap — Removed in 2022, and What Replaced It',
     description:
-      'Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate. Here is what actually happens now, with the official growth figures and the curve derived from them.',
+      'Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate — here is the curve that replaced it.',
     h1: 'The Torn 50M stat cap',
     sub: 'It is gone. Torn removed the hard cap on 2 August 2022, and most calculators still have not caught up — which is why they under-predict end-game gains.',
     crumbs: [
@@ -728,49 +763,147 @@ ${gymTableBlock('Standard gyms in unlock order', standard)}
 );
 
 // --- /training-ratios/
+//
+// Search Console showed 60 impressions and zero clicks for "hank's ratio" /
+// "baldr's ratio" variants at position ~8.9. The old page named Hank’s Ratio in
+// its <title> and then never mentioned it in the body, and never mentioned
+// Baldr’s at all — it ranked on the promise and had nothing to deliver.
+//
+// The ratios below are community conventions, not game rules, so they are
+// labelled as such. What they *unlock* is a game rule, and the arithmetic is
+// pinned to the real requirement code by src/engine/ratios.test.ts.
 emit(
   '/training-ratios/',
   page({
     path: '/training-ratios/',
-    title: 'Torn Training Ratios — Hank\u2019s Ratio and Specialist Access',
-    description:
-      'How stat ratios in Torn gate the 7.5, 8.0 and 9.0-dot specialist gyms, why the 1.25:1:1:0 build exists, and what leaving a stat behind actually buys you.',
-    h1: 'Torn training ratios',
-    sub: 'Specialist gyms do not care how big your stats are — they care how lopsided they are. That single rule shapes every serious Torn build.',
+    title: `Hank’s Ratio vs Baldr’s Ratio — Torn Training Ratios Explained`,
+    description: `Hank’s Ratio is high : 80% : 80% : 28%. Baldr’s is high : 80% : 72% : 72%. Both unlock the same two specialist gyms — the difference is what you give up.`,
+    h1: `Hank’s Ratio and Baldr’s Ratio`,
+    sub: 'Specialist gyms do not care how big your stats are — they care how lopsided they are. Two named builds sit exactly on that line, and choosing between them is the first real decision in a Torn build.',
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Training ratios', path: '/training-ratios/' },
+    ],
+    schema: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: `What is Hank’s Ratio in Torn?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Hank’s Ratio is a training build of high : 80% : 80% : 28% — your primary stat, two stats held at 80% of it, and a fourth deliberately capped near 28%. Holding the primary 25% above the second-highest unlocks an 8.0-dot single-stat gym, and the held-back fourth stat pushes your primary pair well past the 25% margin the 7.5-dot paired gyms need. It buys the most forgiving specialist access of any build, at the cost of one stat that contributes nothing to your battle score.`,
+            },
+          },
+          {
+            '@type': 'Question',
+            name: `What is Baldr’s Ratio in Torn?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Baldr’s Ratio is high : 80% : 72% : 72%. It sits exactly on both specialist thresholds at once: the primary is precisely 25% above the second-highest, and the primary pair is precisely 25% above the other pair. That unlocks the same 8.0-dot and 7.5-dot gyms as Hank’s while keeping the lowest stat at about 22% of the build instead of roughly 10%, so far less battle stat is thrown away.`,
+            },
+          },
+          {
+            '@type': 'Question',
+            name: `Should I use Hank’s Ratio or Baldr’s Ratio?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Both unlock the same gyms. Hank’s keeps a wider margin on the paired-gym requirement, so it is more forgiving to train against, but it writes off roughly a tenth of your build in a stat you never use. Baldr’s keeps that stat — about 22% of your total — but sits exactly on both thresholds, so a few careless trains can lock you out until you rebalance. Choose Hank’s for a lopsided specialist build, Baldr’s for one that still has to survive being attacked.`,
+            },
+          },
+        ],
+      },
     ],
     body: `      <h2>Why ratios exist</h2>
       <p>
         Two-stat specialists need a pair of stats 25% above the other pair. Single-stat specialists
         need one stat 25% above your second highest. So access is bought with imbalance, and the
-        cost of that imbalance is a stat you deliberately never train.
+        cost of that imbalance is a stat you deliberately hold back.
       </p>
 
-      <h2>The common builds</h2>
-      <ul>
-        <li><strong>1.25 : 1 : 1 : 0</strong> — the classic. Three stats trained, one abandoned, primary held a quarter above the rest. Unlocks an 8.0-dot single-stat gym for the primary.</li>
-        <li><strong>Balanced</strong> — no specialist access, George's at 7.3 forever. Simpler, and much better for defending against attacks.</li>
-        <li><strong>Two-stat</strong> — a pair 25% above the other pair, for the 7.5-dot Balboas or Frontline. A softer commitment than a single-stat build.</li>
-      </ul>
+      <h2>The two named builds</h2>
+      <p>
+        The community converged on two ratios, both written as percentages of your highest stat.
+        They are conventions rather than game rules — but what they unlock is a game rule, and every
+        number below is checked against the same requirement code the calculator runs.
+      </p>
+
+${scrollable(
+  `Hank’s Ratio and Baldr’s Ratio compared`,
+  `        <table>
+          <thead>
+            <tr><th>Build</th><th>Primary</th><th>Second</th><th>Third</th><th>Fourth</th><th>Unlocks</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Hank’s</b></td>
+              <td class="num">100%</td><td class="num">80%</td><td class="num">80%</td>
+              <td class="num" style="color:var(--best)">28% max</td>
+              <td>8.0-dot + 7.5-dot</td>
+            </tr>
+            <tr>
+              <td><b>Baldr’s</b></td>
+              <td class="num">100%</td><td class="num">80%</td><td class="num">72%</td>
+              <td class="num" style="color:var(--best)">72%</td>
+              <td>8.0-dot + 7.5-dot</td>
+            </tr>
+            <tr>
+              <td>Balanced</td>
+              <td class="num">100%</td><td class="num">100%</td><td class="num">100%</td>
+              <td class="num">100%</td>
+              <td>George’s only (7.3)</td>
+            </tr>
+          </tbody>
+        </table>`,
+)}
+
+      <h3>Hank’s Ratio — high : 80% : 80% : 28% max</h3>
+      <p>
+        The primary sits exactly 25% above the second-highest (100 ÷ 80 = 1.25), which is the
+        single-stat requirement met on the nose. The fourth stat is held right down, so the primary
+        pair clears the paired-gym requirement with room to spare: (100 + 80) ÷ (80 + 28) = 1.67
+        against a threshold of 1.25. That margin is the point — you can train the pair for a long
+        time before the ratio breaks.
+      </p>
+      <div class="callout">
+        The break point is 64%. Let the fourth stat climb past that and (100 + 80) ÷ (80 + 64)
+        falls to exactly 1.25 — one more train and the 7.5-dot gym locks.
+      </div>
+
+      <h3>Baldr’s Ratio — high : 80% : 72% : 72%</h3>
+      <p>
+        Baldr’s is the tighter piece of engineering: it sits on <em>both</em> thresholds at once.
+        The primary is 25% above the second-highest, and the primary pair is 25% above the other
+        pair — (100 + 80) ÷ (72 + 72) = 1.25 exactly. It unlocks the same two gyms as Hank’s while
+        keeping the lowest stat at about 22% of the build instead of roughly 10%.
+      </p>
 
       <div class="flag">
-        Ratios are checked continuously. Train the wrong stat and you fall out of the gym you built
-        the whole ratio for, keeping the membership but losing access until you climb back.
+        Sitting exactly on a threshold means there is no slack. Ratios are checked continuously, so
+        training the wrong stat drops you out of the gym you built the whole ratio for — you keep the
+        membership but lose access until you climb back.
       </div>
+
+      <h2>Which one to pick</h2>
+      <ul>
+        <li><strong>Hank’s</strong> — more forgiving to train against, but writes off about a tenth of your build in a stat that adds nothing to your battle score.</li>
+        <li><strong>Baldr’s</strong> — keeps that stat, which matters if you ever have to survive being attacked, at the price of zero margin on either requirement.</li>
+        <li><strong>Balanced</strong> — no specialist access, George’s at 7.3 forever. Simpler, and the best of the three at defending.</li>
+      </ul>
 
       <h2>Is the imbalance worth it?</h2>
       <p>
-        Going from George's 7.3 to an 8.0-dot specialist is about 9.6% more gain per energy on that
-        one stat — while the abandoned stat contributes nothing to your battle score. Whether that
-        trades well depends on what you want the stats for.
+        Going from George’s 7.3 to an 8.0-dot specialist is about 9.6% more gain per energy on that
+        one stat — while the stat you held back contributes nothing to your battle score. Whether
+        that trades well depends on what you want the stats for.
       </p>
 
-      <a class="cta" href="/"><b>Check which specialists you qualify for →</b><br />Enter your four stats and it computes every ratio requirement for you.</a>`,
+      <a class="cta" href="/"><b>Check which ratio you are on →</b><br />Enter your four stats and it computes every specialist requirement, and how far you are from each.</a>`,
     related: related('/training-ratios/'),
   }),
-  0.7,
+  0.8,
 );
 
 // --- /xanax-vs-lsd/
@@ -780,7 +913,7 @@ emit(
     path: '/xanax-vs-lsd/',
     title: 'Xanax vs LSD in Torn — Which Actually Gives More Energy',
     description:
-      'LSD often looks cheaper per energy, but drugs share one cooldown. Per cooldown slot Xanax gives five times the energy. Here is the arithmetic that decides your daily training budget.',
+      'LSD looks cheaper per energy, but drugs share one cooldown. Per cooldown slot Xanax gives five times the energy. Here is the arithmetic.',
     h1: 'Xanax vs LSD',
     sub: 'The per-dollar ranking is a trap. Drugs share a single cooldown, so the number that matters is energy per cooldown slot, not energy per dollar.',
     crumbs: [

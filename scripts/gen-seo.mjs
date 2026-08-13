@@ -12,6 +12,7 @@
 //
 // Run: node scripts/gen-seo.mjs   (wired into `npm run build`)
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +31,39 @@ const SITE = 'https://torntraining.com';
  */
 const canon = (path) => (path === '/' ? '/' : path.replace(/\/$/, ''));
 const TODAY = new Date().toISOString().slice(0, 10);
+
+/**
+ * `lastmod` is only a useful signal while it is honest. Stamping every URL with
+ * the build date told Google that all 45 pages changed on every deploy, which
+ * is the documented way to get the field ignored site-wide.
+ *
+ * So dates are pinned to content instead: hash each page's generated HTML, and
+ * only advance its date when that hash actually moves. The map is committed so
+ * the history survives across CI runs, which start from a clean checkout.
+ */
+const STAMPS = resolve(ROOT, 'scripts/lastmod.json');
+const stamps = (() => {
+  try {
+    // Strip a BOM if one crept in. A Windows editor adding one would make
+    // JSON.parse throw, silently resetting every date to the build date — the
+    // exact failure this map exists to prevent.
+    return JSON.parse(readFileSync(STAMPS, 'utf8').replace(/^﻿/, ''));
+  } catch {
+    return {};
+  }
+})();
+const nextStamps = {};
+
+/** Record a page's content hash and return the date it last genuinely changed. */
+function lastmodFor(path, content) {
+  const key = canon(path);
+  const hash = createHash('sha256').update(content).digest('hex').slice(0, 16);
+  const prev = stamps[key];
+  const date = prev && prev.hash === hash ? prev.date : TODAY;
+  nextStamps[key] = { hash, date };
+  return date;
+}
+
 const FONTS =
   'https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap';
 
@@ -75,12 +109,65 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 const STYLE = readFileSync(resolve(OUT, 'guide/index.html'), 'utf8').match(/<style>[\s\S]*?<\/style>/)[0];
 
+/** One publisher entity, referenced by @id from every page's schema. */
+const PUBLISHER = {
+  '@type': 'Organization',
+  '@id': `${SITE}/#org`,
+  name: 'Torn Training Optimizer',
+  url: `${SITE}/`,
+  logo: `${SITE}/icon-512.png`,
+};
+
+/**
+ * Persistent top navigation.
+ *
+ * Search traffic lands deep — on a single gym page or a "best gym for X" — and
+ * a breadcrumb only offers the way back up. Without a nav the only route
+ * sideways is the footer, so the six highest-value destinations sit at the top
+ * of every page instead.
+ */
+const NAV = [
+  { name: 'Calculator', path: '/' },
+  { name: 'Guide', path: '/guide/' },
+  { name: 'Happy jump', path: '/happy-jump/' },
+  { name: 'Gym dots', path: '/gym-dots/' },
+  { name: 'Specialist gyms', path: '/specialist-gyms/' },
+  { name: 'All gyms', path: '/gyms/' },
+];
+
+const navHtml = (current) =>
+  `      <nav class="sitenav" aria-label="Primary">
+${NAV.map(
+  (n) =>
+    `        <a href="${canon(n.path)}"${
+      canon(n.path) === canon(current) ? ' aria-current="page"' : ''
+    }>${esc(n.name)}</a>`,
+).join('\n')}
+      </nav>`;
+
 /**
  * One template for every generated page, so head tags, breadcrumbs, structured
  * data and internal links can never drift apart across 40 files.
  */
-function page({ path, title, description, h1, sub, body, crumbs, schema = [], related = [] }) {
+function page({
+  path,
+  title,
+  description,
+  h1,
+  sub,
+  body,
+  crumbs,
+  schema = [],
+  related = [],
+  robots = 'index, follow, max-image-preview:large',
+}) {
   const url = `${SITE}${canon(path)}`;
+
+  // Date the page by what it says, not by when the build ran. Hashing the
+  // semantic payload (and not the rendered HTML) keeps this out of the circular
+  // dependency where dateModified would feed back into its own hash.
+  const modified = lastmodFor(path, JSON.stringify({ title, description, h1, sub, body, schema }));
+
   const breadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -91,7 +178,24 @@ function page({ path, title, description, h1, sub, body, crumbs, schema = [], re
       item: `${SITE}${canon(c.path)}`,
     })),
   };
-  const blocks = [breadcrumb, ...schema]
+
+  // Freshness and provenance in machine-readable form. Answer engines lean on
+  // both when deciding whether a page is worth citing.
+  const webpage = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${url}#page`,
+    url,
+    name: title,
+    description,
+    inLanguage: 'en',
+    dateModified: modified,
+    isPartOf: { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Torn Training Optimizer', url: `${SITE}/` },
+    publisher: PUBLISHER,
+    about: { '@type': 'VideoGame', name: 'Torn', url: 'https://www.torn.com/' },
+  };
+
+  const blocks = [breadcrumb, webpage, ...schema]
     .map((s) => `    <script type="application/ld+json">\n${JSON.stringify(s, null, 2)}\n    </script>`)
     .join('\n');
 
@@ -103,20 +207,27 @@ function page({ path, title, description, h1, sub, body, crumbs, schema = [], re
     <title>${esc(title)}</title>
     <meta name="description" content="${esc(description)}" />
     <link rel="canonical" href="${url}" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="robots" content="${robots}" />
     <meta name="theme-color" content="#14161b" />
 
     <meta property="og:type" content="article" />
+    <meta property="og:locale" content="en" />
     <meta property="og:site_name" content="Torn Training Optimizer" />
     <meta property="og:title" content="${esc(title)}" />
     <meta property="og:description" content="${esc(description)}" />
     <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${SITE}/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
+    <meta property="article:modified_time" content="${modified}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="${SITE}/og-image.png" />
+    <meta name="twitter:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" type="text/plain" href="${SITE}/llms.txt" title="llms.txt" />
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
     <script>
@@ -136,7 +247,11 @@ ${blocks}
 ${STYLE}
   </head>
   <body>
-    <main class="wrap">
+    <a class="skip" href="#content">Skip to content</a>
+    <div class="wrap navwrap">
+${navHtml(path)}
+    </div>
+    <main class="wrap" id="content">
       <div class="crumb">${crumbs
         .map((c, i) =>
           i === crumbs.length - 1 ? esc(c.name) : `<a href="${canon(c.path)}">${esc(c.name)}</a>`,
@@ -190,36 +305,70 @@ const HUBS = [
   { name: 'Specialist gyms', path: '/specialist-gyms/' },
 ];
 
-const related = (exclude) => HUBS.filter((h) => h.path !== exclude).slice(0, 6);
-const emit = (path, html, priority) => {
-  write(path, html);
-  urls.push({ path, priority });
+/**
+ * Six related links per page, but rotated rather than sliced.
+ *
+ * `.slice(0, 6)` always took the same six hubs off the front of the list, so
+ * the tail never got linked: /happy-jump ended up with 2 inbound internal links
+ * across 41 pages and /guide with 8, while the first six had 41 each — and
+ * /happy-jump is a priority-0.9 URL. Rotating the window by a hash of the page
+ * path spreads the links evenly and keeps them stable per page across builds.
+ */
+const related = (exclude) => {
+  const pool = HUBS.filter((h) => h.path !== exclude);
+  const offset =
+    [...exclude].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % pool.length;
+  return Array.from({ length: Math.min(6, pool.length) }, (_, i) => pool[(offset + i) % pool.length]);
 };
 
-const gymTable = (list, highlight) => `      <table>
-        <thead>
-          <tr><th>Gym</th><th>Energy</th>${STATS.map((s) => `<th>${s.label}</th>`).join('')}<th>Cost</th></tr>
-        </thead>
-        <tbody>
+const emit = (path, html, priority) => {
+  write(path, html);
+  urls.push({ path, priority, lastmod: nextStamps[canon(path)]?.date ?? TODAY });
+};
+
+/**
+ * Wide data tables get their own scroll container.
+ *
+ * The gym table is seven columns and needs 584px to render; a 375px phone
+ * offers 335px of content width, so the whole page scrolled sideways on every
+ * generated URL — a mobile-usability failure on exactly the pages that carry
+ * the search traffic. The wrapper confines that scroll to the table, and the
+ * first column is pinned so the gym name stays visible while you pan across the
+ * dots. tabindex makes the scroll region reachable by keyboard, which is
+ * required once a scrollable box holds content.
+ */
+const scrollable = (label, table) =>
+  `      <div class="table-wrap" role="region" aria-label="${esc(label)}" tabindex="0">
+${table}
+      </div>`;
+
+const gymTable = (list, highlight) => `        <table>
+          <thead>
+            <tr><th>Gym</th><th>Energy</th>${STATS.map((s) => `<th>${s.label}</th>`).join('')}<th>Cost</th></tr>
+          </thead>
+          <tbody>
 ${list
   .map(
-    (g) => `          <tr>
-            <td><a href="/gyms/${g.slug}">${esc(g.name)}</a></td>
-            <td class="num">${g.energy}E</td>
+    (g) => `            <tr>
+              <td><a href="/gyms/${g.slug}">${esc(g.name)}</a></td>
+              <td class="num">${g.energy}E</td>
 ${STATS.map(
   (s) =>
-    `            <td class="num"${
+    `              <td class="num"${
       highlight && g.dots[s.key] === Math.max(...list.map((x) => x.dots[highlight])) && s.key === highlight
         ? ' style="color:var(--best)"'
         : ''
     }>${dot(g.dots[s.key])}</td>`,
 ).join('\n')}
-            <td class="num">${money(g.cost)}</td>
-          </tr>`,
+              <td class="num">${money(g.cost)}</td>
+            </tr>`,
   )
   .join('\n')}
-        </tbody>
-      </table>`;
+          </tbody>
+        </table>`;
+
+/** Gym table already wrapped in its scroll container. */
+const gymTableBlock = (label, list, highlight) => scrollable(label, gymTable(list, highlight));
 
 // --- /gyms/<slug>/ : one page per gym
 for (const g of gyms) {
@@ -272,7 +421,7 @@ for (const g of gyms) {
         },
       ],
       body: `      <h2>Dots and energy</h2>
-${gymTable([g])}
+${gymTableBlock(`${g.name}: dots, energy and cost`, [g])}
 
       <div class="callout">
         Dots are a multiplier, not a rate. ${g.name} at ${dot(g.dots[top?.key ?? 'strength'])} dots gives
@@ -327,9 +476,9 @@ emit(
       { name: 'Gyms', path: '/gyms/' },
     ],
     body: `      <h2>Standard gyms</h2>
-${gymTable(standard)}
+${gymTableBlock('Standard gyms: dots, energy and cost', standard)}
       <h2>Specialist gyms</h2>
-${gymTable(specialist)}
+${gymTableBlock('Specialist gyms: dots, energy and cost', specialist)}
       <a class="cta" href="/"><b>Find the best gym for your stats →</b><br />The calculator only recommends gyms you can actually use.</a>`,
     related: related('/gyms/'),
   }),
@@ -362,9 +511,9 @@ emit(
       },
     ],
     body: `      <h2>Standard gyms</h2>
-${gymTable(standard)}
+${gymTableBlock('Standard gyms: dots per battle stat', standard)}
       <h2>Specialist gyms</h2>
-${gymTable(specialist)}
+${gymTableBlock('Specialist gyms: dots per battle stat', specialist)}
 
       <div class="callout">
         In the Torn API these values are stored ten times larger — George's reads
@@ -413,7 +562,7 @@ for (const s of STATS) {
         },
       ],
       body: `      <h2>Ranked by ${s.label} dots</h2>
-${gymTable(ranked, s.key)}
+${gymTableBlock(`Gyms ranked by ${s.label} dots`, ranked, s.key)}
 
       <h2>The catch</h2>
       <p>
@@ -492,19 +641,22 @@ emit(
         Torn published monthly-growth figures for a fixed regime — 1,500 energy a day, George's, a
         fully upgraded private island, no Steadfast — before and after the change:
       </p>
-      <table>
-        <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
-        <tbody>
-          <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
-          <tr><td class="num">100M</td><td class="num">103.35%</td><td class="num">108.05%</td></tr>
-          <tr><td class="num">1B</td><td class="num">10.33%</td><td class="num">12.87%</td></tr>
-          <tr><td class="num">5B</td><td class="num">2.07%</td><td class="num">4.47%</td></tr>
-          <tr><td class="num">10B</td><td class="num">1.03%</td><td class="num">3.37%</td></tr>
-          <tr><td class="num">50B</td><td class="num">0.21%</td><td class="num">2.40%</td></tr>
-          <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
-          <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
-        </tbody>
-      </table>
+${scrollable(
+  'Monthly stat growth before and after the cap removal',
+  `        <table>
+          <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
+          <tbody>
+            <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
+            <tr><td class="num">100M</td><td class="num">103.35%</td><td class="num">108.05%</td></tr>
+            <tr><td class="num">1B</td><td class="num">10.33%</td><td class="num">12.87%</td></tr>
+            <tr><td class="num">5B</td><td class="num">2.07%</td><td class="num">4.47%</td></tr>
+            <tr><td class="num">10B</td><td class="num">1.03%</td><td class="num">3.37%</td></tr>
+            <tr><td class="num">50B</td><td class="num">0.21%</td><td class="num">2.40%</td></tr>
+            <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
+            <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
+          </tbody>
+        </table>`,
+)}
 
       <h2>The curve behind them</h2>
       <p>
@@ -564,7 +716,7 @@ emit(
       },
     ],
     body: `      <h2>The progression</h2>
-${gymTable(standard)}
+${gymTableBlock('Standard gyms in unlock order', standard)}
       <div class="callout">
         After George's you stop earning gym EXP entirely — the standard ladder ends there, and every
         gym above it is a specialist with ratio requirements instead.
@@ -652,13 +804,16 @@ emit(
       },
     ],
     body: `      <h2>The numbers</h2>
-      <table>
-        <thead><tr><th>Drug</th><th>Energy per dose</th><th>Doses per day</th><th>Energy per day</th></tr></thead>
-        <tbody>
-          <tr><td>Xanax</td><td class="num">250</td><td class="num">~3</td><td class="num">~750</td></tr>
-          <tr><td>LSD</td><td class="num">50</td><td class="num">~3</td><td class="num">~150</td></tr>
-        </tbody>
-      </table>
+${scrollable(
+  'Xanax and LSD energy per dose and per day',
+  `        <table>
+          <thead><tr><th>Drug</th><th>Energy per dose</th><th>Doses per day</th><th>Energy per day</th></tr></thead>
+          <tbody>
+            <tr><td>Xanax</td><td class="num">250</td><td class="num">~3</td><td class="num">~750</td></tr>
+            <tr><td>LSD</td><td class="num">50</td><td class="num">~3</td><td class="num">~150</td></tr>
+          </tbody>
+        </table>`,
+)}
 
       <div class="callout">
         The doses column is the whole argument. One shared cooldown of roughly 6–8 hours means about
@@ -679,14 +834,61 @@ emit(
   0.7,
 );
 
+// --- /404.html : GitHub Pages serves this for any unknown path
+//
+// Without it a mistyped or stale URL gets the default Pages 404: no branding,
+// no links, no way back into the site. Every hub is listed here instead, so a
+// dead link still lands somewhere useful. noindex because a soft-404 in the
+// index is worse than no page at all.
+writeFileSync(
+  resolve(OUT, '404.html'),
+  page({
+    path: '/404',
+    title: 'Page not found — Torn Training Optimizer',
+    description: 'That page does not exist. Here is everything the Torn Training Optimizer covers.',
+    h1: 'That page does not exist',
+    sub: 'The link is probably out of date or mistyped. Everything on the site is listed below — or go straight to the calculator.',
+    robots: 'noindex, follow',
+    crumbs: [{ name: 'Torn Training Optimizer', path: '/' }, { name: 'Not found', path: '/404' }],
+    body: `      <a class="cta" href="/">
+        <b>Open the gym calculator →</b><br />
+        Exact gains per train, best gym per stat, happy jump vs energy training. No account needed.
+      </a>
+
+      <h2>Guides</h2>
+      <ul>
+        <li><a href="/guide">Torn gym training guide</a> — how happy, energy, drugs and gyms interact</li>
+        <li><a href="/happy-jump">Happy jump calculator</a> — the recipe, and when it beats energy training</li>
+        <li><a href="/stat-cap">The 50M stat cap</a> — removed in 2022, and the curve that replaced it</li>
+        <li><a href="/training-ratios">Training ratios</a> — how ratios gate the specialist gyms</li>
+        <li><a href="/xanax-vs-lsd">Xanax vs LSD</a> — why the shared cooldown decides it</li>
+      </ul>
+
+      <h2>Gym reference</h2>
+      <ul>
+        <li><a href="/gym-dots">Gym dots chart</a> — every gym, every stat</li>
+        <li><a href="/gyms">All gyms</a> — one page per gym</li>
+        <li><a href="/gym-unlock-order">Gym unlock order</a> — the 24 standard gyms, with costs</li>
+        <li><a href="/specialist-gyms">Specialist gym requirements</a> — exact stat ratios</li>
+      </ul>
+
+      <h2>Best gym for…</h2>
+      <ul>
+${STATS.map((s) => `        <li><a href="/best-gym-for-${s.key}">Best gym for ${s.label}</a></li>`).join('\n')}
+      </ul>`,
+  }),
+);
+
 // ---- Sitemap ---------------------------------------------------------------
 
+// The hand-written pages are not produced by this script, so their dates come
+// from hashing the files themselves — same honesty rule as the generated ones.
 const STATIC_URLS = [
-  { path: '/', priority: 1.0, changefreq: 'weekly' },
-  { path: '/happy-jump/', priority: 0.9 },
-  { path: '/guide/', priority: 0.8 },
-  { path: '/specialist-gyms/', priority: 0.8 },
-];
+  { path: '/', priority: 1.0, changefreq: 'weekly', file: 'index.html', src: resolve(ROOT, 'index.html') },
+  { path: '/happy-jump/', priority: 0.9, src: resolve(OUT, 'happy-jump/index.html') },
+  { path: '/guide/', priority: 0.8, src: resolve(OUT, 'guide/index.html') },
+  { path: '/specialist-gyms/', priority: 0.8, src: resolve(OUT, 'specialist-gyms/index.html') },
+].map((u) => ({ ...u, lastmod: lastmodFor(u.path, readFileSync(u.src, 'utf8')) }));
 
 const all = [...STATIC_URLS, ...urls];
 writeFileSync(
@@ -697,7 +899,7 @@ ${all
   .map(
     (u) => `  <url>
     <loc>${SITE}${canon(u.path)}</loc>
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${u.lastmod}</lastmod>
     <changefreq>${u.changefreq ?? 'monthly'}</changefreq>
     <priority>${u.priority.toFixed(1)}</priority>
   </url>`,
@@ -707,4 +909,12 @@ ${all
 `,
 );
 
-console.log(`gen-seo: ${urls.length} pages generated, sitemap has ${all.length} URLs.`);
+writeFileSync(STAMPS, JSON.stringify(nextStamps, null, 2) + '\n');
+
+// Count pages whose content actually moved this run, not pages whose date
+// happens to be today — on a first run those are the same number and the
+// distinction is the whole point of the change.
+const changed = Object.keys(nextStamps).filter((k) => stamps[k]?.hash !== nextStamps[k].hash).length;
+console.log(
+  `gen-seo: ${urls.length} pages + 404, sitemap has ${all.length} URLs, ${changed} changed content.`,
+);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
 import { STATIC_GYMS } from '../data/gyms';
 import { standardGyms, georgesGymId } from '../engine/gym-eligibility';
@@ -32,7 +32,8 @@ export function ManualEntry({ onSubmit }: Props) {
 
   const valid = STAT_KEYS.some((s) => stats[s] > 0);
 
-  const submit = () => {
+  const submit = (e?: FormEvent) => {
+    e?.preventDefault();
     if (!valid) return;
     onSubmit({
       stats,
@@ -52,6 +53,9 @@ export function ManualEntry({ onSubmit }: Props) {
         key; you can still enter your gym-gain modifiers by hand afterwards.)
       </p>
 
+      {/* A real form: Enter from any field submits, which is what people expect
+          after typing four numbers. Previously it did nothing at all. */}
+      <form onSubmit={submit}>
       <div className="sim-grid">
         {STAT_KEYS.map((s) => (
           <div key={s}>
@@ -59,6 +63,7 @@ export function ManualEntry({ onSubmit }: Props) {
             <input
               id={`man-${s}`}
               type="number"
+              inputMode="numeric"
               min="0"
               placeholder="0"
               value={stats[s] || ''}
@@ -76,6 +81,7 @@ export function ManualEntry({ onSubmit }: Props) {
           <input
             id="man-happy"
             type="number"
+            inputMode="numeric"
             min="0"
             value={maxHappy}
             onChange={(e) => setMaxHappy(Math.max(0, Number(e.target.value) || 0))}
@@ -86,6 +92,7 @@ export function ManualEntry({ onSubmit }: Props) {
           <input
             id="man-energy"
             type="number"
+            inputMode="numeric"
             min="1"
             value={maxEnergy}
             onChange={(e) => setMaxEnergy(Math.max(1, Number(e.target.value) || 1))}
@@ -96,6 +103,7 @@ export function ManualEntry({ onSubmit }: Props) {
           <input
             id="man-xe"
             type="number"
+            inputMode="numeric"
             min="0"
             placeholder="for SSL eligibility"
             value={xanEcstasy}
@@ -125,10 +133,11 @@ export function ManualEntry({ onSubmit }: Props) {
       </div>
 
       <div className="mod-actions">
-        <button onClick={submit} disabled={!valid}>
+        <button type="submit" disabled={!valid}>
           Use these stats
         </button>
       </div>
+      </form>
       {!valid && <p className="footnote">Enter at least one battle stat to continue.</p>}
     </section>
   );

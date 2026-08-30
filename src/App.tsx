@@ -26,6 +26,7 @@ import { Optimizer } from './components/Optimizer';
 import { AboutSection } from './components/AboutSection';
 import { ManualEntry, ManualData } from './components/ManualEntry';
 import { BuildCompare } from './components/BuildCompare';
+import { BuildRatio } from './components/BuildRatio';
 import { ShareBar } from './components/ShareBar';
 import { Fold } from './components/Fold';
 import { DEMO } from './demo';
@@ -52,16 +53,6 @@ const ChartFallback = () => <p className="footnote">Loading chart…</p>;
 
 const KEY_STORE = 'tto.apiKey';
 const MOD_STORE = 'tto.modifiers';
-
-/** Kept in step with NAV in scripts/gen-seo.mjs, so the nav is the same everywhere. */
-const SITE_NAV = [
-  { label: 'Guide', href: '/guide' },
-  { label: 'Happy jump', href: '/happy-jump' },
-  { label: 'Gym dots', href: '/gym-dots' },
-  { label: 'Specialist gyms', href: '/specialist-gyms' },
-  { label: 'All gyms', href: '/gyms' },
-  { label: '50M stat cap', href: '/stat-cap' },
-];
 
 const PRICED_ITEMS = [
   ...ENERGY_SOURCES.filter((s) => s.itemName).map((s) => s.itemName!),
@@ -123,8 +114,9 @@ export default function App() {
       unlockedCapId: unlockedGymId,
       georgesUnlocked:
         georgesId == null || unlockedGymId == null ? true : unlockedGymId >= georgesId,
+      inJail: player?.inJail === true,
     }),
-    [unlockedGymId, georgesId],
+    [unlockedGymId, georgesId, player],
   );
 
   async function load() {
@@ -153,6 +145,7 @@ export default function App() {
       const localGate: GymGate = {
         unlockedCapId: defaultCap,
         georgesUnlocked: gId == null || defaultCap == null ? true : defaultCap >= gId,
+        inJail: p.inJail === true,
       };
       setConfig({
         stat: 'defense',
@@ -179,6 +172,7 @@ export default function App() {
       energy: { current: data.maxEnergy, maximum: data.maxEnergy },
       xanaxEcstasyTaken: data.xanaxEcstasy,
       activeGymId: null,
+      inJail: data.inJail === true,
     };
     setPlayer(ps);
     setGyms(STATIC_GYMS);
@@ -188,6 +182,7 @@ export default function App() {
     const localGate: GymGate = {
       unlockedCapId: cap,
       georgesUnlocked: gId == null || cap >= gId,
+      inJail: data.inJail === true,
     };
     setConfig({
       stat: 'defense',
@@ -243,6 +238,7 @@ export default function App() {
               maxEnergy: player.energy.maximum,
               xanaxEcstasy: player.xanaxEcstasyTaken ?? null,
               unlockedGymId: unlockedGymId ?? 24,
+              inJail: player.inJail === true,
             }
           : undefined),
       config: config ?? undefined,
@@ -263,9 +259,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <a className="skip" href="#main">
-        Skip to content
-      </a>
       <header className="masthead">
         <h1>
           Torn <span className="mark">Training</span> Optimizer
@@ -276,18 +269,7 @@ export default function App() {
         </p>
       </header>
 
-      {/* The reference pages used to be reachable only from the footer, below a
-          dozen panels. They are the pages search traffic arrives on, so they get
-          a route back and forth at the top instead. */}
-      <nav className="sitenav" aria-label="Primary">
-        {SITE_NAV.map((n) => (
-          <a key={n.href} href={n.href}>
-            {n.label}
-          </a>
-        ))}
-      </nav>
-
-      <main id="main">
+      <main>
         <ApiKeyBar
           apiKey={apiKey}
           onApiKey={setApiKey}
@@ -328,7 +310,10 @@ export default function App() {
               onUnlockedGym={setUnlockedGymId}
             />
 
-            <Fold label="Build roadmap" hint="Which gyms your ratio unlocks next">
+            <Fold label="Build ratio" hint="Are you still on your build?" open>
+            <BuildRatio gyms={gyms} player={player} gate={gate} />
+          </Fold>
+          <Fold label="Build roadmap" hint="Which gyms your ratio unlocks next">
               <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
             </Fold>
             <Fold label="Reach a target" hint="Energy, cash and days to a stat or a gym">

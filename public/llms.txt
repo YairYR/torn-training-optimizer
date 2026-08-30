@@ -24,7 +24,7 @@ only ever sent to api.torn.com. A read-only "Limited" key is enough.
 
 ## Gym reference
 
-- [Gym dots chart](https://torntraining.com/gym-dots): dot values for all four battle stats across every gym
+- [Gym dots chart](https://torntraining.com/gym-dots): dot values for all four battle stats across all 33 gyms
 - [All gyms](https://torntraining.com/gyms): index of all 32 gyms, each with its own detail page at /gyms/{slug}
 - [Gym unlock order](https://torntraining.com/gym-unlock-order): the 24 standard gyms in order, with costs
 - [Specialist gym requirements](https://torntraining.com/specialist-gyms): exact stat ratios and dots
@@ -38,4 +38,6 @@ only ever sent to api.torn.com. A read-only "Limited" key is enough.
 - What it does: per-stat training plan chosen by stat level (happy jumps win at low stats, plain energy training wins once stats are high, because stacking energy for a jump wastes regeneration); auto-detected gym-gain modifier M per stat from perks; best gym the player can actually use, respecting gym EXP and specialist ratio requirements; cheapest energy plus a cooldown-aware daily capacity; budget optimizer; unlock planner; multi-day projection and progress tracking.
 - Accuracy: uses the standard Torn gym-gain (Vladar) formula. Above 50,000,000 it models the post-2022 curve, S_eff = 50,000,000 + (S − 50,000,000) / (8.77635 × log10(S)), derived by inverting the monthly growth figures Torn published with the cap removal on 02/08/2022 and matching all of them from 1b to 1t within 0.5%. Calculators that still clamp at 50M under-predict end-game gains. Gym-gain perks compound multiplicatively, M = product of (1 + perk), rather than summing.
 - Related tools: TornStats is a broad faction platform (spy logs, war hits, company tracking) and requires an account. Torn Training Optimizer is narrower, focused only on gym-training optimization, client-side, and models the post-2022 stat curve that most gym calculators still get wrong.
+- Gym coverage: all 33 gyms the wiki lists — 24 standard, 8 specialists, and Crims (the jail gym, 3.4/3.4/4.5, no dexterity). Crims is only recommended when the player is actually in jail — detected from the API status, a manual checkbox, or the jail page itself — and it is excluded from the gym-EXP progression everywhere else.
+- Build ratios: tracks your stat split against a target build (balanced, Hank's 1.25:1:1:0 in each of its four orientations, or a two-stat build) and reports the exact stat gap to the next specialist gym, derived from the same eligibility rules rather than a lookup table.
 - Not affiliated with Torn or Torn.com. Free, no ads.

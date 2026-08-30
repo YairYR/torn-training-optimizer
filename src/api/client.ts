@@ -25,7 +25,13 @@ async function call<T>(path: string, key: string): Promise<T> {
 
 /** Requires a key with battlestats access (Limited or Full). */
 export async function fetchPlayer(key: string): Promise<PlayerState> {
-  const data = await call<RawUser>('/user/?selections=battlestats,bars,personalstats,perks,gym', key);
+  // `basic` is added only for status.state — it is what tells us whether Crims
+  // Gym is reachable. It carries no extra permission cost: a Limited key that
+  // can already read battlestats can read basic.
+  const data = await call<RawUser>(
+    '/user/?selections=battlestats,bars,personalstats,perks,gym,basic',
+    key,
+  );
   return normalizePlayer(data);
 }
 

@@ -30,11 +30,24 @@ export interface PlayerState {
   modifierContributions?: ModifierContribution[];
   /** Active gym id from the API (a sensible default for the unlocked cap). */
   activeGymId?: number | null;
+  /**
+   * Whether the player is in jail right now. Crims Gym is the only gym usable
+   * there, and it is unusable anywhere else, so this flips a real branch of the
+   * recommendation rather than being cosmetic. null when unknown.
+   */
+  inJail?: boolean | null;
 }
 
 export interface Gym {
   id: string;
   name: string;
+  /**
+   * Crims Gym, reachable only from inside jail. It is real, trainable game
+   * data — good defence dots for a new player — but it sits outside the
+   * gym-EXP progression, so it must never be treated as a standard gym or
+   * recommended to a player who is walking free.
+   */
+  jailOnly?: boolean;
   /** Energy consumed per train (5 / 10 / 25 / 50). */
   energyPerTrain: number;
   /** Real dots per stat = API value / 10 (spec §11, validated vs wiki). */

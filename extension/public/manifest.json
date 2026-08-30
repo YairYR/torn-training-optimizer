@@ -25,7 +25,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.torn.com/gym.php*"
+        "https://www.torn.com/gym.php*",
+        "https://www.torn.com/jailview.php*"
       ],
       "js": [
         "content.js"

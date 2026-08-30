@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
 import { STATIC_GYMS } from '../data/gyms';
 import { standardGyms, georgesGymId } from '../engine/gym-eligibility';
@@ -12,6 +12,8 @@ export interface ManualData {
   maxEnergy: number;
   xanaxEcstasy: number | null;
   unlockedGymId: number;
+  /** Crims Gym is only reachable from inside jail. */
+  inJail?: boolean;
 }
 
 interface Props {
@@ -29,11 +31,11 @@ export function ManualEntry({ onSubmit }: Props) {
   const [maxEnergy, setMaxEnergy] = useState(150);
   const [xanEcstasy, setXanEcstasy] = useState<string>('');
   const [unlockedGymId, setUnlockedGymId] = useState<number>(DEFAULT_GYM);
+  const [inJail, setInJail] = useState(false);
 
   const valid = STAT_KEYS.some((s) => stats[s] > 0);
 
-  const submit = (e?: FormEvent) => {
-    e?.preventDefault();
+  const submit = () => {
     if (!valid) return;
     onSubmit({
       stats,
@@ -41,6 +43,7 @@ export function ManualEntry({ onSubmit }: Props) {
       maxEnergy: Math.max(1, maxEnergy),
       xanaxEcstasy: xanEcstasy.trim() === '' ? null : Math.max(0, Number(xanEcstasy) || 0),
       unlockedGymId,
+      inJail,
     });
   };
 
@@ -53,9 +56,6 @@ export function ManualEntry({ onSubmit }: Props) {
         key; you can still enter your gym-gain modifiers by hand afterwards.)
       </p>
 
-      {/* A real form: Enter from any field submits, which is what people expect
-          after typing four numbers. Previously it did nothing at all. */}
-      <form onSubmit={submit}>
       <div className="sim-grid">
         {STAT_KEYS.map((s) => (
           <div key={s}>
@@ -63,7 +63,6 @@ export function ManualEntry({ onSubmit }: Props) {
             <input
               id={`man-${s}`}
               type="number"
-              inputMode="numeric"
               min="0"
               placeholder="0"
               value={stats[s] || ''}
@@ -81,7 +80,6 @@ export function ManualEntry({ onSubmit }: Props) {
           <input
             id="man-happy"
             type="number"
-            inputMode="numeric"
             min="0"
             value={maxHappy}
             onChange={(e) => setMaxHappy(Math.max(0, Number(e.target.value) || 0))}
@@ -92,7 +90,6 @@ export function ManualEntry({ onSubmit }: Props) {
           <input
             id="man-energy"
             type="number"
-            inputMode="numeric"
             min="1"
             value={maxEnergy}
             onChange={(e) => setMaxEnergy(Math.max(1, Number(e.target.value) || 1))}
@@ -103,7 +100,6 @@ export function ManualEntry({ onSubmit }: Props) {
           <input
             id="man-xe"
             type="number"
-            inputMode="numeric"
             min="0"
             placeholder="for SSL eligibility"
             value={xanEcstasy}
@@ -127,17 +123,25 @@ export function ManualEntry({ onSubmit }: Props) {
         </select>
         <p className="footnote" style={{ marginTop: 6 }}>
           Standard gyms unlock by total energy ever trained (not exposed without a key). Pick the best
-          gym you've opened so the plan only suggests gyms you can use. George's also gates the 50-energy
-          specialist gyms.
+          gym you've opened so the plan only suggests gyms you can use. Cha Cha's gates the 25-energy
+          two-stat gyms, Last Round gates the Sports Science Lab, and George's gates the 50-energy
+          single-stat ones.
         </p>
+
+        <label className="jail-check">
+          <input type="checkbox" checked={inJail} onChange={(e) => setInJail(e.target.checked)} />
+          <span>
+            I'm in jail right now — include Crims Gym
+            <span className="footnote"> (4.5 Defense, better than any lightweight gym)</span>
+          </span>
+        </label>
       </div>
 
       <div className="mod-actions">
-        <button type="submit" disabled={!valid}>
+        <button onClick={submit} disabled={!valid}>
           Use these stats
         </button>
       </div>
-      </form>
       {!valid && <p className="footnote">Enter at least one battle stat to continue.</p>}
     </section>
   );

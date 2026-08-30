@@ -31,6 +31,3 @@ User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: https://torntraining.com/sitemap.xml
-
-# Condensed, plain-text summary of the whole site for answer engines.
-# https://torntraining.com/llms.txt

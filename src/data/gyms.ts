@@ -7,7 +7,9 @@ import { Gym } from '../engine/types';
 // stores them x10). "-" in the wiki (can't train a stat) is 0 here.
 // Standard gyms are ordered by progression and keep ids 1..24 (George's = 24,
 // the top standard gym), so the gym-EXP gate and "highest unlocked" selector
-// work the same as with API data. Specialists follow with higher ids.
+// work the same as with API data. Specialists follow with higher ids, and the
+// jail gym is last and flagged jailOnly so it is reference data everywhere but
+// never a recommendation.
 
 const g = (
   id: number,
@@ -18,6 +20,7 @@ const g = (
   sp: number,
   d: number,
   dx: number,
+  jailOnly = false,
 ): Gym => ({
   id: String(id),
   name,
@@ -25,6 +28,7 @@ const g = (
   unlockStage: null,
   joinCost,
   dots: { strength: s, speed: sp, defense: d, dexterity: dx },
+  ...(jailOnly ? { jailOnly: true } : {}),
 });
 
 export const STATIC_GYMS: Gym[] = [
@@ -64,4 +68,9 @@ export const STATIC_GYMS: Gym[] = [
   g(30, 'The Elites', 50, 100000000, 0, 0, 0, 8.0),
   g(31, 'The Sports Science Lab', 25, 500000000, 9.0, 9.0, 9.0, 9.0),
   g(32, 'Fight Club', 10, 2147483647, 10.0, 10.0, 10.0, 10.0),
+  // Jail-only. The wiki counts 33 gyms (24 standard + 9 special-use); this is
+  // the ninth special. Free, automatic, and genuinely the best Defense in the
+  // early game — 4.5 beats every lightweight gym and Knuckle Heads — but it
+  // stops mattering once Pioneer Fitness is unlocked (4.8 Def).
+  g(33, 'Crims Gym', 5, 0, 3.4, 3.4, 4.5, 0, true),
 ];

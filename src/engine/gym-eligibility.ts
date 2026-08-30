@@ -19,6 +19,13 @@ export interface GymGate {
   unlockedCapId?: number | null;
   /** Whether George's (the top standard gym) is unlocked — required by specialists. */
   georgesUnlocked?: boolean;
+  /** Whether the player is currently in jail. Only then is Crims Gym usable. */
+  inJail?: boolean;
+}
+
+/** Prefer the explicit flag; fall back to the name for older cached data. */
+export function isJailGym(gym: Gym): boolean {
+  return gym.jailOnly === true || /jail|crim/i.test(gym.name ?? '');
 }
 
 function trainedStats(gym: Gym): StatKey[] {
@@ -33,8 +40,39 @@ function sum(stats: Record<StatKey, number>, keys: StatKey[]): number {
   return keys.reduce((a, k) => a + stats[k], 0);
 }
 
-function specialistLockedByProgress(gate?: GymGate): GymEligibility | null {
-  if (gate && gate.georgesUnlocked === false) {
+/**
+ * Standard-gym prerequisites for the specialists (wiki, "Specialist Gyms &
+ * Requirements"). These are NOT all George's, which is what this used to
+ * assume:
+ *   Balboas / Frontline  → Cha Cha's   (20th standard gym)
+ *   Sports Science Lab   → Last Round  (22nd)
+ *   the four 50E singles → George's    (24th)
+ * Getting this wrong locked mid-game players out of the two-stat gyms they had
+ * already earned — precisely the players deciding on a build.
+ *
+ * The ids are progression positions. The standard ladder is a fixed sequence
+ * of 24 gyms and the rest of this module already relies on that ordering
+ * (see the unlockedCapId gate), so naming the positions here is consistent
+ * with how the gate works everywhere else.
+ */
+const CHA_CHAS_ID = 20;
+const LAST_ROUND_ID = 22;
+const GEORGES_ID = 24;
+
+function requiresStandardGym(
+  gate: GymGate | undefined,
+  requiredId: number,
+  label: string,
+): GymEligibility | null {
+  if (!gate) return null;
+  // Prefer the explicit cap; fall back to the George's flag when that is all
+  // the caller supplied.
+  if (gate.unlockedCapId != null) {
+    return gate.unlockedCapId >= requiredId
+      ? null
+      : { status: 'locked', requirement: `Unlock ${label} first (needs more gym EXP)` };
+  }
+  if (requiredId >= GEORGES_ID && gate.georgesUnlocked === false) {
     return { status: 'locked', requirement: 'Unlock George’s first (needs more gym EXP)' };
   }
   return null;
@@ -49,6 +87,15 @@ export function evaluateGymEligibility(
   const e = gym.energyPerTrain;
   const trained = trainedStats(gym);
   const maxDots = Math.max(...STAT_KEYS.map((s) => gym.dots[s]));
+
+  // Crims Gym: no cost, no EXP requirement, but you have to be in jail. It
+  // stays visible in comparisons as reference data and is only ever
+  // recommended when the caller says the player is actually inside.
+  if (isJailGym(gym)) {
+    return gate?.inJail
+      ? { status: 'accessible', requirement: 'Free while you are in jail' }
+      : { status: 'locked', requirement: 'Only usable while you are in jail' };
+  }
 
   // Fight Club: 10E, all four ~10.0 dots, invite only.
   if (e <= 10 && trained.length === 4 && maxDots >= 9.5) {
@@ -68,7 +115,7 @@ export function evaluateGymEligibility(
 
   // 50E single-stat specialists: trained stat 25% above the 2nd-highest stat.
   if (e === 50 && trained.length === 1) {
-    const locked = specialistLockedByProgress(gate);
+    const locked = requiresStandardGym(gate, GEORGES_ID, 'George’s');
     if (locked) return locked;
     const s = trained[0];
     const ok = stats[s] >= 1.25 * secondHighest(stats);
@@ -80,10 +127,10 @@ export function evaluateGymEligibility(
 
   // 25E specialists.
   if (e === 25) {
-    const locked = specialistLockedByProgress(gate);
-    if (locked) return locked;
     if (trained.length === 4) {
-      // The Sports Science Lab.
+      // The Sports Science Lab — Last Round, not George's.
+      const locked = requiresStandardGym(gate, LAST_ROUND_ID, 'Last Round');
+      if (locked) return locked;
       if (xanaxEcstasyTaken == null) {
         return { status: 'unknown', requirement: '≤150 Xanax+Ecstasy taken in total' };
       }
@@ -92,6 +139,10 @@ export function evaluateGymEligibility(
         requirement: `≤150 Xanax+Ecstasy taken (you: ${xanaxEcstasyTaken.toLocaleString('en-US')})`,
       };
     }
+    // Balboas and Frontline — Cha Cha's, not George's.
+    const twoStatLocked = requiresStandardGym(gate, CHA_CHAS_ID, 'Cha Cha’s');
+    if (twoStatLocked) return twoStatLocked;
+
     const set = new Set(trained);
     if (trained.length === 2 && set.has('defense') && set.has('dexterity')) {
       const ok = sum(stats, ['defense', 'dexterity']) >= 1.25 * sum(stats, ['strength', 'speed']);
@@ -144,11 +195,10 @@ export function standardGyms(gyms: Gym[]): Gym[] {
       const maxDots = Math.max(...STAT_KEYS.map((s) => g.dots[s]));
       const allFour = STAT_KEYS.every((s) => g.dots[s] > 0);
       const isFightClub = g.energyPerTrain <= 10 && allFour && maxDots >= 9.5;
-      // The Jail Gym is only usable while in jail — it is NOT part of the
+      // Crims Gym is only usable while in jail — it is NOT part of the
       // gym-EXP progression and must never count as a standard gym (otherwise
       // its high API id is mistaken for George's, the top standard gym).
-      const isJail = /jail/i.test(g.name ?? '');
-      return g.energyPerTrain <= 10 && !isFightClub && !isJail;
+      return g.energyPerTrain <= 10 && !isFightClub && !isJailGym(g);
     })
     .sort((a, b) => Number(a.id) - Number(b.id));
 }

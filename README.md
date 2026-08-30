@@ -99,6 +99,84 @@ The expression above reproduces all of them from 1b to 1t within 0.5%, and
 > matched, re-run that check: the modifier change shifts M by roughly +0.8% on a
 > typical perk set. The Progress tracker panel does exactly this comparison.
 
+## Verification audit
+
+Everything below was re-checked against primary sources before shipping.
+
+**Gym data — 33 gyms × 6 fields, all matching.** The wiki table was transcribed
+by hand and diffed against `src/data/gyms.ts`: energy, join cost and four dot
+values per gym. Zero discrepancies. (Note the trap: one third-party blog lists
+Crims Defense as 3.8, which contradicts the wiki's own claim that Crims beats
+every lightweight gym — Global Gym is 4.0. The wiki table says 4.5, and 4.5 is
+what makes the surrounding prose consistent.)
+
+**Vladar constants** match the wiki exactly.
+
+**"Stat Total" means the trained stat, not the sum of the four.** This was the
+single largest unverified assumption in the model — reading it the other way
+would be wrong by roughly a factor of four. Two independent community sources
+state it explicitly, and the per-stat cap ("50,000,000 in *a* stat") agrees.
+
+**Perks compound.** Confirmed at the primary source: Vladar's thread works the
+example through as 100 × 1.02 × 1.15 × 1.01 = 119.65 and spells out that this
+is not 18%.
+
+**Post-cap curve, re-derived by a second method.** The first derivation
+calibrated an implied happy value; if that assumption were wrong, the result
+would be too. The ratio method avoids it: because the announcement's before and
+after figures share one regime, M, G, E and happy all cancel, and the constant
+term is under 1% of the stat term at any realistic happy. Worst error from 1b
+to 1t: **0.43%**. The 100M point sits ~3% low under the linear reading; day-by-day
+simulation closes that to 1.7%, confirming within-month compounding as the cause.
+
+**Known limitation.** A third-party in-game train at 867M stat (25E in Frontline,
++81,851.07) is consistent with this model but does not prove it, because the
+observer published neither their happy nor their perks. Inverting it for the
+required modifier: the post-cap model needs M between 1.00 and 1.24 across the
+whole happy range, all plausible; the 50M-clamp model needs M ≥ 1.43 at normal
+private-island happy, which is beyond what perks can reach, and only becomes
+plausible if that train happened at near-maximum happy. Suggestive, not
+conclusive. A controlled test with known M and happy — which the Progress
+tracker panel does — is still worth running before making accuracy claims in
+public.
+
+## Build ratios and full gym coverage
+
+- **Crims Gym** (`src/data/gyms.ts`). The wiki counts 33 gyms — 24 standard and
+  nine special-use — and this had 32. The jail gym was being dropped in
+  `normalize.ts` to keep it out of recommendations, which also kept it out of
+  every reference table. It now carries a `jailOnly` flag instead: eligibility
+  locks it unless `gate.inJail`, so it never reaches a recommendation, but it
+  appears in the dots chart, gets its own page, and matches the wiki. Its 4.5
+  Defense genuinely beats every lightweight gym and Knuckle Heads, and loses to
+  Pioneer Fitness — asserted in `src/data/gyms.test.ts` rather than trusted.
+- **Specialist prerequisites are per-gym.** Found during the audit: the gate
+  required George's for *every* specialist. The wiki is explicit that Balboas
+  and Frontline need only Cha Cha's, and the SSL needs Last Round. The effect
+  was to lock mid-game players out of two-stat gyms they had already earned —
+  and that is exactly the audience deciding on a build. The content page under
+  `/specialist-gyms` had it right all along; only the engine disagreed.
+  Regression tests now pin each boundary.
+- **Jail detection is wired through all three input paths.** With a key, it
+  comes from `status.state` (the `basic` selection, which a Limited key already
+  covers). In manual mode there is a checkbox. Either way it rides in the share
+  link as `jail=1`. `inJail` is deliberately `boolean | null`: a response
+  without the selection reads as *unknown*, and only an explicit `true` unlocks
+  Crims, so a missing field can never be mistaken for "definitely not jailed".
+  The overlay also runs on `jailview.php`, where the page itself is the
+  signal — more reliable than the API for someone jailed seconds ago.
+- **Build ratio tracker** (`src/engine/build-ratio.ts`). Specialist gyms gate on
+  ratios, not size, so days of training the wrong stat can quietly cost access
+  to the gym a build exists for. Shows the split against a target build
+  (balanced, Hank's 1.25:1:1:0 in four orientations, two-stat) with the points
+  needed per stat. `nearestGymTarget` goes further than the userscripts that do
+  this job: it bisects on `evaluateGymEligibility` itself to report the real
+  stat gap to the next gym, so the number can never drift from the rule.
+  Surfaced in the app (`BuildRatio.tsx`) and in the in-game overlay.
+- **Collapsible overlay.** The gym-page panel remembers whether it was folded
+  away — a competing script drew the complaint that it shoves the page down on
+  every visit.
+
 ## Distribution features
 
 - **Shareable URLs** (`src/url-state.ts`). Every input lives in the query
@@ -159,11 +237,21 @@ accessibility before the following. Each item is the fix, not the symptom:
   measurement is zero, so charts could render blank. It also keeps a dozen
   panels out of the initial DOM.
 - **`<main>` landmark** in the SPA (the generated pages already had one).
-- **Contrast.** `--muted` and `--danger` were at 4.88 and 4.33 against
-  `--surface-2` where AA needs 4.5. Raised to `#98a1b0` / `#e07d72`, both now
-  above 5.6 on the darkest surface they appear on. `--accent-dim` is unchanged:
-  it is only ever a border or a disabled fill, where the 3:1 non-text
-  threshold applies.
+- **Contrast.** The failure that survived a first pass was `::placeholder`:
+  with no rule of our own, Chrome falls back to a placeholder grey chosen for
+  light pages, which lands at 3.93 on `--ink` against a 4.5 requirement. It is
+  now set explicitly (6.95), and `color-scheme: dark` on `:root` makes native
+  controls, scrollbars and focus rings pick their dark variants. Also raised:
+  `--muted` and `--danger` (4.88 / 4.33 on `--surface-2`), `td.muted-cell`
+  (2.12), and `.series-toggle.off`, which was dimmed to 2.74 by an opacity of
+  0.55 — the off state now reads through the dot rather than by making the
+  label unreadable. `--accent-dim` is deliberately unchanged: it is only ever a
+  border or a disabled fill, where the 3:1 non-text threshold applies.
+
+  Worth repeating the method: guessing at colour tokens fixed nothing. Every
+  `color:` rule was resolved against each surface it can land on, with
+  `opacity` folded in, and checked against 4.5. The real culprit had no rule at
+  all.
 - **Published URLs carry no trailing slash.** The host 301s `/page/` to
   `/page`, so canonicals, `og:url`, breadcrumbs, the sitemap and every internal
   link pointed at URLs that immediately redirect. `canon()` in
@@ -348,3 +436,7 @@ drug cooldown clear (on by default); low-happy/high-energy and education idle
 | 7 | Programmatic SEO (~42 pages) + in-game gym overlay | done |
 | 8 | Landing conversion: demo player, collapsible panels, mobile | done |
 | 9 | Lighthouse pass: code-split charts, async fonts, contrast, canonical URLs | done |
+| 10 | Second Lighthouse pass: placeholder contrast, color-scheme, in-fold contrast | done |
+| 11 | Crims Gym (33/33 wiki coverage) + build-ratio tracker, app and overlay | done |
+| 12 | Source audit: gym data, constants, post-cap re-derivation, prerequisite fix | done |
+| 13 | Jail detection wired: API, manual, share link, and the in-jail overlay | done |

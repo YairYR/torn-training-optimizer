@@ -28,9 +28,13 @@ export function normalizeGyms(raw: Record<string, RawGym>): Gym[] {
       },
       unlockStage: g.stage != null ? Number(g.stage) : null,
       joinCost: g.cost != null ? Number(g.cost) : null,
-    }))
-    // The Jail Gym is jail-only and not part of the training progression.
-    .filter((g) => !/jail/i.test(g.name ?? ''));
+      // The API returns the jail gym alongside the rest. It used to be dropped
+      // here, which kept it out of recommendations but also out of the
+      // reference tables, leaving the app one gym short of the wiki's 33.
+      // Flagging it instead keeps the data complete; eligibility does the
+      // excluding.
+      ...(/jail|crim/i.test(g.name ?? '') ? { jailOnly: true } : {}),
+    }));
 }
 
 function toDots(v: string | number | undefined): number {
@@ -71,6 +75,10 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     detectedModifiers: mod.perStat,
     modifierContributions: mod.contributions,
     activeGymId: raw.active_gym != null ? Number(raw.active_gym) : null,
+    // `basic` gives status.state; anything else (Okay, Hospital, Traveling)
+    // means the jail gym is out of reach. Undefined status → unknown, not false,
+    // so a key without the selection does not silently assert "not in jail".
+    inJail: raw.status?.state != null ? /jail/i.test(raw.status.state) : null,
   };
 }
 
@@ -100,6 +108,8 @@ export interface RawUser {
   happy: RawBar;
   energy: RawBar;
   personalstats?: { xantaken?: number; ecstaken?: number };
+  /** From the `basic` selection. state is 'Okay' | 'Jail' | 'Hospital' | ... */
+  status?: { state?: string; description?: string };
   faction_perks?: string[];
   property_perks?: string[];
   merit_perks?: string[];

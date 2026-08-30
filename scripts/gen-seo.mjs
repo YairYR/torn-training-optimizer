@@ -12,7 +12,6 @@
 //
 // Run: node scripts/gen-seo.mjs   (wired into `npm run build`)
 
-import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,55 +21,15 @@ const OUT = resolve(ROOT, 'public');
 const SITE = 'https://torntraining.com';
 
 /**
- * Every URL we publish is the no-slash form: canonical tags, og:url,
- * breadcrumbs, internal links and the sitemap.
- *
- * This used to be justified by "the host 301s /some-page/ to /some-page", which
- * was not true. The site is served by Vercel, and both forms returned 200 —
- * genuine duplicate content on 42 URL pairs. Search Console had them indexed
- * separately and splitting signals: /training-ratios drew 246 impressions while
- * /training-ratios/ drew 7, and /gyms/core/ ranked five positions worse than
- * /gyms/core. The redirect the comment assumed now actually exists, declared as
- * `trailingSlash: false` in vercel.json — so keep this and that file in step.
- *
- * Directory paths are still used for writing the files; only what we publish is
- * normalised.
+ * The host 301s /some-page/ to /some-page, so every URL we publish has to be
+ * the no-slash form. Emitting the trailing slash meant canonical tags, og:url,
+ * breadcrumbs and the sitemap all pointed at URLs that immediately redirect —
+ * which asks a crawler to resolve a redirect before it can trust the canonical
+ * and wastes crawl budget across 42 pages. Directory paths are still used for
+ * writing the files; only what we publish is normalised.
  */
 const canon = (path) => (path === '/' ? '/' : path.replace(/\/$/, ''));
 const TODAY = new Date().toISOString().slice(0, 10);
-
-/**
- * `lastmod` is only a useful signal while it is honest. Stamping every URL with
- * the build date told Google that all 45 pages changed on every deploy, which
- * is the documented way to get the field ignored site-wide.
- *
- * So dates are pinned to content instead: hash each page's generated HTML, and
- * only advance its date when that hash actually moves. The map is committed so
- * the history survives across CI runs, which start from a clean checkout.
- */
-const STAMPS = resolve(ROOT, 'scripts/lastmod.json');
-const stamps = (() => {
-  try {
-    // Strip a BOM if one crept in. A Windows editor adding one would make
-    // JSON.parse throw, silently resetting every date to the build date — the
-    // exact failure this map exists to prevent.
-    return JSON.parse(readFileSync(STAMPS, 'utf8').replace(/^﻿/, ''));
-  } catch {
-    return {};
-  }
-})();
-const nextStamps = {};
-
-/** Record a page's content hash and return the date it last genuinely changed. */
-function lastmodFor(path, content) {
-  const key = canon(path);
-  const hash = createHash('sha256').update(content).digest('hex').slice(0, 16);
-  const prev = stamps[key];
-  const date = prev && prev.hash === hash ? prev.date : TODAY;
-  nextStamps[key] = { hash, date };
-  return date;
-}
-
 const FONTS =
   'https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap';
 
@@ -79,7 +38,8 @@ const FONTS =
 /** Parse the `g(id, 'name', energy, cost, str, spd, def, dex)` rows. */
 function readGyms() {
   const src = readFileSync(resolve(ROOT, 'src/data/gyms.ts'), 'utf8');
-  const re = /g\(\s*(\d+),\s*(?:'([^']*)'|"([^"]*)"),\s*([\d.]+),\s*(\d+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\s*\)/g;
+  // The trailing group is the optional jailOnly flag on Crims Gym.
+  const re = /g\(\s*(\d+),\s*(?:'([^']*)'|"([^"]*)"),\s*([\d.]+),\s*(\d+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\s*(?:,\s*(true|false)\s*)?\)/g;
   const gyms = [];
   let m;
   while ((m = re.exec(src)) !== null) {
@@ -95,9 +55,10 @@ function readGyms() {
       energy: Number(m[4]),
       cost: Number(m[5]),
       dots: { strength: Number(m[6]), speed: Number(m[7]), defense: Number(m[8]), dexterity: Number(m[9]) },
+      jailOnly: m[10] === 'true',
     });
   }
-  if (gyms.length < 30) throw new Error(`Only parsed ${gyms.length} gyms — check the regex against src/data/gyms.ts`);
+  if (gyms.length < 33) throw new Error(`Only parsed ${gyms.length} gyms — check the regex against src/data/gyms.ts`);
   return gyms;
 }
 
@@ -108,7 +69,7 @@ const STATS = [
   { key: 'dexterity', label: 'Dexterity' },
 ];
 
-const money = (n) => (n >= 2_000_000_000 ? 'Invite only' : '$' + n.toLocaleString('en-US'));
+const money = (n) => (n >= 2_000_000_000 ? 'Invite only' : n === 0 ? 'Free' : '$' + n.toLocaleString('en-US'));
 const dot = (v) => (v > 0 ? v.toFixed(1) : '—');
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -116,83 +77,12 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 const STYLE = readFileSync(resolve(OUT, 'guide/index.html'), 'utf8').match(/<style>[\s\S]*?<\/style>/)[0];
 
-/** Snippet limits Google actually renders. Enforced in page(). */
-const DESC_MAX = 158;
-const TITLE_MAX = 62;
-
-/** One publisher entity, referenced by @id from every page's schema. */
-const PUBLISHER = {
-  '@type': 'Organization',
-  '@id': `${SITE}/#org`,
-  name: 'Torn Training Optimizer',
-  url: `${SITE}/`,
-  logo: `${SITE}/icon-512.png`,
-};
-
-/**
- * Persistent top navigation.
- *
- * Search traffic lands deep — on a single gym page or a "best gym for X" — and
- * a breadcrumb only offers the way back up. Without a nav the only route
- * sideways is the footer, so the six highest-value destinations sit at the top
- * of every page instead.
- */
-const NAV = [
-  { name: 'Calculator', path: '/' },
-  { name: 'Guide', path: '/guide/' },
-  { name: 'Happy jump', path: '/happy-jump/' },
-  { name: 'Gym dots', path: '/gym-dots/' },
-  { name: 'Specialist gyms', path: '/specialist-gyms/' },
-  { name: 'All gyms', path: '/gyms/' },
-];
-
-const navHtml = (current) =>
-  `      <nav class="sitenav" aria-label="Primary">
-${NAV.map(
-  (n) =>
-    `        <a href="${canon(n.path)}"${
-      canon(n.path) === canon(current) ? ' aria-current="page"' : ''
-    }>${esc(n.name)}</a>`,
-).join('\n')}
-      </nav>`;
-
 /**
  * One template for every generated page, so head tags, breadcrumbs, structured
  * data and internal links can never drift apart across 40 files.
  */
-function page({
-  path,
-  title,
-  description,
-  h1,
-  sub,
-  body,
-  crumbs,
-  schema = [],
-  related = [],
-  robots = 'index, follow, max-image-preview:large',
-}) {
+function page({ path, title, description, h1, sub, body, crumbs, schema = [], related = [] }) {
   const url = `${SITE}${canon(path)}`;
-
-  // Google renders ~158 characters of a description on desktop and fewer on
-  // mobile. Every page on this site used to run past that — the homepage by 85
-  // characters — which meant the differentiator was always the part that got
-  // cut: "nothing leaves your browser" never reached a searcher. Failing the
-  // build is the only thing that keeps 42 generated descriptions honest.
-  if (description.length > DESC_MAX) {
-    throw new Error(
-      `${path}: description is ${description.length} chars, ${description.length - DESC_MAX} over the ${DESC_MAX} limit.\n  ${description}`,
-    );
-  }
-  if (title.length > TITLE_MAX) {
-    console.warn(`  warn ${path}: title is ${title.length} chars (soft limit ${TITLE_MAX}).`);
-  }
-
-  // Date the page by what it says, not by when the build ran. Hashing the
-  // semantic payload (and not the rendered HTML) keeps this out of the circular
-  // dependency where dateModified would feed back into its own hash.
-  const modified = lastmodFor(path, JSON.stringify({ title, description, h1, sub, body, schema }));
-
   const breadcrumb = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -203,24 +93,7 @@ function page({
       item: `${SITE}${canon(c.path)}`,
     })),
   };
-
-  // Freshness and provenance in machine-readable form. Answer engines lean on
-  // both when deciding whether a page is worth citing.
-  const webpage = {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    '@id': `${url}#page`,
-    url,
-    name: title,
-    description,
-    inLanguage: 'en',
-    dateModified: modified,
-    isPartOf: { '@type': 'WebSite', '@id': `${SITE}/#website`, name: 'Torn Training Optimizer', url: `${SITE}/` },
-    publisher: PUBLISHER,
-    about: { '@type': 'VideoGame', name: 'Torn', url: 'https://www.torn.com/' },
-  };
-
-  const blocks = [breadcrumb, webpage, ...schema]
+  const blocks = [breadcrumb, ...schema]
     .map((s) => `    <script type="application/ld+json">\n${JSON.stringify(s, null, 2)}\n    </script>`)
     .join('\n');
 
@@ -232,27 +105,20 @@ function page({
     <title>${esc(title)}</title>
     <meta name="description" content="${esc(description)}" />
     <link rel="canonical" href="${url}" />
-    <meta name="robots" content="${robots}" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#14161b" />
 
     <meta property="og:type" content="article" />
-    <meta property="og:locale" content="en" />
     <meta property="og:site_name" content="Torn Training Optimizer" />
     <meta property="og:title" content="${esc(title)}" />
     <meta property="og:description" content="${esc(description)}" />
     <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${SITE}/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
-    <meta property="article:modified_time" content="${modified}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="${SITE}/og-image.png" />
-    <meta name="twitter:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="alternate" type="text/plain" href="${SITE}/llms.txt" title="llms.txt" />
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
     <script>
@@ -272,11 +138,7 @@ ${blocks}
 ${STYLE}
   </head>
   <body>
-    <a class="skip" href="#content">Skip to content</a>
-    <div class="wrap navwrap">
-${navHtml(path)}
-    </div>
-    <main class="wrap" id="content">
+    <main class="wrap">
       <div class="crumb">${crumbs
         .map((c, i) =>
           i === crumbs.length - 1 ? esc(c.name) : `<a href="${canon(c.path)}">${esc(c.name)}</a>`,
@@ -315,7 +177,8 @@ function write(path, html) {
 
 const gyms = readGyms();
 const standard = gyms.filter((g) => g.id <= 24);
-const specialist = gyms.filter((g) => g.id > 24);
+const specialist = gyms.filter((g) => g.id > 24 && !g.jailOnly);
+const jail = gyms.filter((g) => g.jailOnly);
 const urls = [];
 
 const HUBS = [
@@ -330,93 +193,52 @@ const HUBS = [
   { name: 'Specialist gyms', path: '/specialist-gyms/' },
 ];
 
-/**
- * Six related links per page, but rotated rather than sliced.
- *
- * `.slice(0, 6)` always took the same six hubs off the front of the list, so
- * the tail never got linked: /happy-jump ended up with 2 inbound internal links
- * across 41 pages and /guide with 8, while the first six had 41 each — and
- * /happy-jump is a priority-0.9 URL. Rotating the window by a hash of the page
- * path spreads the links evenly and keeps them stable per page across builds.
- */
-const related = (exclude) => {
-  const pool = HUBS.filter((h) => h.path !== exclude);
-  const offset =
-    [...exclude].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % pool.length;
-  return Array.from({ length: Math.min(6, pool.length) }, (_, i) => pool[(offset + i) % pool.length]);
-};
-
+const related = (exclude) => HUBS.filter((h) => h.path !== exclude).slice(0, 6);
 const emit = (path, html, priority) => {
   write(path, html);
-  urls.push({ path, priority, lastmod: nextStamps[canon(path)]?.date ?? TODAY });
+  urls.push({ path, priority });
 };
 
-/**
- * Wide data tables get their own scroll container.
- *
- * The gym table is seven columns and needs 584px to render; a 375px phone
- * offers 335px of content width, so the whole page scrolled sideways on every
- * generated URL — a mobile-usability failure on exactly the pages that carry
- * the search traffic. The wrapper confines that scroll to the table, and the
- * first column is pinned so the gym name stays visible while you pan across the
- * dots. tabindex makes the scroll region reachable by keyboard, which is
- * required once a scrollable box holds content.
- */
-const scrollable = (label, table) =>
-  `      <div class="table-wrap" role="region" aria-label="${esc(label)}" tabindex="0">
-${table}
-      </div>`;
-
-const gymTable = (list, highlight) => `        <table>
-          <thead>
-            <tr><th>Gym</th><th>Energy</th>${STATS.map((s) => `<th>${s.label}</th>`).join('')}<th>Cost</th></tr>
-          </thead>
-          <tbody>
+const gymTable = (list, highlight) => `      <table>
+        <thead>
+          <tr><th>Gym</th><th>Energy</th>${STATS.map((s) => `<th>${s.label}</th>`).join('')}<th>Cost</th></tr>
+        </thead>
+        <tbody>
 ${list
   .map(
-    (g) => `            <tr>
-              <td><a href="/gyms/${g.slug}">${esc(g.name)}</a></td>
-              <td class="num">${g.energy}E</td>
+    (g) => `          <tr>
+            <td><a href="/gyms/${g.slug}">${esc(g.name)}</a></td>
+            <td class="num">${g.energy}E</td>
 ${STATS.map(
   (s) =>
-    `              <td class="num"${
+    `            <td class="num"${
       highlight && g.dots[s.key] === Math.max(...list.map((x) => x.dots[highlight])) && s.key === highlight
         ? ' style="color:var(--best)"'
         : ''
     }>${dot(g.dots[s.key])}</td>`,
 ).join('\n')}
-              <td class="num">${money(g.cost)}</td>
-            </tr>`,
+            <td class="num">${money(g.cost)}</td>
+          </tr>`,
   )
   .join('\n')}
-          </tbody>
-        </table>`;
-
-/** Gym table already wrapped in its scroll container. */
-const gymTableBlock = (label, list, highlight) => scrollable(label, gymTable(list, highlight));
+        </tbody>
+      </table>`;
 
 // --- /gyms/<slug>/ : one page per gym
 for (const g of gyms) {
   const best = STATS.filter((s) => g.dots[s.key] > 0).sort((a, b) => g.dots[b.key] - g.dots[a.key]);
   const top = best[0];
-  const isSpecialist = g.id > 24;
+  const isSpecialist = g.id > 24 && !g.jailOnly;
   const deepLink = top ? `/?stat=${top.key}&gym=${g.id}` : '/';
 
   emit(
     `/gyms/${g.slug}/`,
     page({
       path: `/gyms/${g.slug}/`,
-      // A navigational query like "frontline fitness torn" wants the entry
-      // requirements, not a dots table — Frontline drew 80 impressions and zero
-      // clicks with the old generic title. Specialists lead with the ratio.
-      title: isSpecialist
-        ? `${g.name} (Torn): Requirements, Ratio & ${dot(g.dots[top?.key ?? 'strength'])} Dots`
-        : `${g.name} (Torn Gym): Dots, Energy Cost & Gains`,
-      description: isSpecialist
-        ? `How to unlock ${g.name} in Torn: the exact stat ratio, the prerequisite gym, and what ${dot(g.dots[top?.key ?? 'strength'])} dots at ${g.energy}E per train is really worth.`
-        : `${g.name} in Torn: ${g.energy}E per train, ${money(g.cost)} to join. Dot values for every battle stat, and what you actually gain per train.`,
+      title: `${g.name} (Torn Gym): Dots, Energy Cost & Gains`,
+      description: `${g.name} in Torn costs ${g.energy} energy per train and ${money(g.cost)} to join. Full dot values per battle stat, how it compares to every other gym, and what you actually gain per train.`,
       h1: `${g.name}`,
-      sub: `${g.energy} energy per train · ${money(g.cost)} to join · ${
+      sub: `${g.energy} energy per train · ${g.jailOnly ? 'free, jail only' : `${money(g.cost)} to join`} · ${
         top ? `best for ${top.label} at ${dot(g.dots[top.key])} dots` : 'no trainable stats'
       }.`,
       crumbs: [
@@ -453,7 +275,7 @@ for (const g of gyms) {
         },
       ],
       body: `      <h2>Dots and energy</h2>
-${gymTableBlock(`${g.name}: dots, energy and cost`, [g])}
+${gymTable([g])}
 
       <div class="callout">
         Dots are a multiplier, not a rate. ${g.name} at ${dot(g.dots[top?.key ?? 'strength'])} dots gives
@@ -465,9 +287,11 @@ ${gymTableBlock(`${g.name}: dots, energy and cost`, [g])}
       <h2>${isSpecialist ? 'Requirements' : 'How you unlock it'}</h2>
       <p>
         ${
-          isSpecialist
-            ? `${g.name} is a specialist gym. It requires the relevant standard gym unlocked plus a stat ratio that you must keep meeting — lose the ratio and you lose access until you regain it. Exact requirements are on the <a href="/specialist-gyms">specialist gyms page</a>.`
-            : `Standard gyms unlock on gym EXP — the cumulative energy you have spent training, not your level or your stats. You also pay ${money(g.cost)} to join. See the <a href="/gym-unlock-order">full unlock order</a>.`
+          g.jailOnly
+            ? `You do not unlock ${g.name} — it is free and automatic, but it is reachable only from inside jail, and it is the only gym you can use while you are there. Its 4.5 Defense beats every lightweight gym and Knuckle Heads, which makes it genuinely worth using if a new player gets jailed. Once Pioneer Fitness is open at 4.8 Defense, the advantage is gone. Note that you cannot refill energy from the Points Building while jailed, though drugs and energy drinks still work.`
+            : isSpecialist
+              ? `${g.name} is a specialist gym. It requires the relevant standard gym unlocked plus a stat ratio that you must keep meeting — lose the ratio and you lose access until you regain it. Exact requirements are on the <a href="/specialist-gyms">specialist gyms page</a>.`
+              : `Standard gyms unlock on gym EXP — the cumulative energy you have spent training, not your level or your stats. You also pay ${money(g.cost)} to join. See the <a href="/gym-unlock-order">full unlock order</a>.`
         }
       </p>
 
@@ -498,19 +322,21 @@ emit(
   '/gyms/',
   page({
     path: '/gyms/',
-    title: 'Torn Gym List — All 32 Gyms, Dots, Energy and Unlock Costs',
+    title: 'All Torn Gyms: Dots, Energy and Unlock Costs',
     description:
-      'The complete Torn gym list: 24 standard gyms and 8 specialists, with dots for all four battle stats, energy per train and cost to join.',
+      'Every gym in Torn — 24 standard gyms and the specialists — with dot values for all four battle stats, energy per train and cost to join. One page per gym with full detail.',
     h1: 'All Torn gyms',
-    sub: `${gyms.length} gyms: ${standard.length} standard ones you progress through with gym EXP, and ${specialist.length} specialists gated on stat ratios.`,
+    sub: `${gyms.length} gyms: ${standard.length} standard ones you progress through with gym EXP, ${specialist.length} specialists gated on stat ratios, and the jail gym.`,
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Gyms', path: '/gyms/' },
     ],
     body: `      <h2>Standard gyms</h2>
-${gymTableBlock('Standard gyms: dots, energy and cost', standard)}
+${gymTable(standard)}
       <h2>Specialist gyms</h2>
-${gymTableBlock('Specialist gyms: dots, energy and cost', specialist)}
+${gymTable(specialist)}
+      <h2>Jail gym</h2>
+${gymTable(jail)}
       <a class="cta" href="/"><b>Find the best gym for your stats →</b><br />The calculator only recommends gyms you can actually use.</a>`,
     related: related('/gyms/'),
   }),
@@ -522,14 +348,11 @@ emit(
   '/gym-dots/',
   page({
     path: '/gym-dots/',
-    // "torn gym wiki", "torn gyms wiki" and friends drew 97 impressions and
-    // zero clicks: people want a reference table and could not tell from the
-    // snippet that this is one. Say so.
-    title: 'Torn Gym Dots Chart — All 32 Gyms, All Stats (Wiki Data)',
+    title: 'Torn Gym Dots Chart — All Gyms, All Stats',
     description:
-      'Every Torn gym in one reference table: strength, speed, defense and dexterity dots for all 32 gyms, plus energy per train and join cost. Wiki-verified.',
+      'The complete Torn gym dots chart: strength, speed, defense and dexterity values for all 33 gyms including Crims, plus energy per train and cost. Verified against the Torn wiki.',
     h1: 'Torn gym dots chart',
-    sub: 'Every gym, every stat, in one table — the full reference, verified against the Torn wiki. Dots are the gym multiplier in the gain formula: double the dots, double the gain for the same energy.',
+    sub: 'Every gym, every stat, in one table. Dots are the gym multiplier in the gain formula — double the dots, double the gain for the same energy.',
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Gym dots chart', path: '/gym-dots/' },
@@ -546,9 +369,11 @@ emit(
       },
     ],
     body: `      <h2>Standard gyms</h2>
-${gymTableBlock('Standard gyms: dots per battle stat', standard)}
+${gymTable(standard)}
       <h2>Specialist gyms</h2>
-${gymTableBlock('Specialist gyms: dots per battle stat', specialist)}
+${gymTable(specialist)}
+      <h2>Jail gym</h2>
+${gymTable(jail)}
 
       <div class="callout">
         In the Torn API these values are stored ten times larger — George's reads
@@ -573,7 +398,7 @@ for (const s of STATS) {
     page({
       path: `/best-gym-for-${s.key}/`,
       title: `Best Gym for ${s.label} in Torn (Ranked by Dots)`,
-      description: `Every Torn gym that trains ${s.label}, ranked by dots. ${top.name} leads at ${dot(top.dots[s.key])}; ${bestStandard.name} is the best with no ratio requirement.`,
+      description: `Every Torn gym that trains ${s.label}, ranked by dots. ${top.name} leads the obtainable gyms at ${dot(top.dots[s.key])}; ${bestStandard.name} is the best without specialist requirements. Work out which one you can actually use.`,
       h1: `Best gym for ${s.label} in Torn`,
       sub: `${top.name} has the highest obtainable ${s.label} dots at ${dot(top.dots[s.key])} — only the invite-only Fight Club goes higher. The best gym you can <em>use</em> is a different question: it depends on your unlocks and stat ratios.`,
       crumbs: [
@@ -597,7 +422,7 @@ for (const s of STATS) {
         },
       ],
       body: `      <h2>Ranked by ${s.label} dots</h2>
-${gymTableBlock(`Gyms ranked by ${s.label} dots`, ranked, s.key)}
+${gymTable(ranked, s.key)}
 
       <h2>The catch</h2>
       <p>
@@ -632,7 +457,7 @@ emit(
     path: '/stat-cap/',
     title: 'The Torn 50M Stat Cap — Removed in 2022, and What Replaced It',
     description:
-      'Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate — here is the curve that replaced it.',
+      'Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate. Here is what actually happens now, with the official growth figures and the curve derived from them.',
     h1: 'The Torn 50M stat cap',
     sub: 'It is gone. Torn removed the hard cap on 2 August 2022, and most calculators still have not caught up — which is why they under-predict end-game gains.',
     crumbs: [
@@ -676,22 +501,19 @@ emit(
         Torn published monthly-growth figures for a fixed regime — 1,500 energy a day, George's, a
         fully upgraded private island, no Steadfast — before and after the change:
       </p>
-${scrollable(
-  'Monthly stat growth before and after the cap removal',
-  `        <table>
-          <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
-          <tbody>
-            <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
-            <tr><td class="num">100M</td><td class="num">103.35%</td><td class="num">108.05%</td></tr>
-            <tr><td class="num">1B</td><td class="num">10.33%</td><td class="num">12.87%</td></tr>
-            <tr><td class="num">5B</td><td class="num">2.07%</td><td class="num">4.47%</td></tr>
-            <tr><td class="num">10B</td><td class="num">1.03%</td><td class="num">3.37%</td></tr>
-            <tr><td class="num">50B</td><td class="num">0.21%</td><td class="num">2.40%</td></tr>
-            <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
-            <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
-          </tbody>
-        </table>`,
-)}
+      <table>
+        <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
+        <tbody>
+          <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
+          <tr><td class="num">100M</td><td class="num">103.35%</td><td class="num">108.05%</td></tr>
+          <tr><td class="num">1B</td><td class="num">10.33%</td><td class="num">12.87%</td></tr>
+          <tr><td class="num">5B</td><td class="num">2.07%</td><td class="num">4.47%</td></tr>
+          <tr><td class="num">10B</td><td class="num">1.03%</td><td class="num">3.37%</td></tr>
+          <tr><td class="num">50B</td><td class="num">0.21%</td><td class="num">2.40%</td></tr>
+          <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
+          <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
+        </tbody>
+      </table>
 
       <h2>The curve behind them</h2>
       <p>
@@ -751,7 +573,7 @@ emit(
       },
     ],
     body: `      <h2>The progression</h2>
-${gymTableBlock('Standard gyms in unlock order', standard)}
+${gymTable(standard)}
       <div class="callout">
         After George's you stop earning gym EXP entirely — the standard ladder ends there, and every
         gym above it is a specialist with ratio requirements instead.
@@ -763,147 +585,49 @@ ${gymTableBlock('Standard gyms in unlock order', standard)}
 );
 
 // --- /training-ratios/
-//
-// Search Console showed 60 impressions and zero clicks for "hank's ratio" /
-// "baldr's ratio" variants at position ~8.9. The old page named Hank’s Ratio in
-// its <title> and then never mentioned it in the body, and never mentioned
-// Baldr’s at all — it ranked on the promise and had nothing to deliver.
-//
-// The ratios below are community conventions, not game rules, so they are
-// labelled as such. What they *unlock* is a game rule, and the arithmetic is
-// pinned to the real requirement code by src/engine/ratios.test.ts.
 emit(
   '/training-ratios/',
   page({
     path: '/training-ratios/',
-    title: `Hank’s Ratio vs Baldr’s Ratio — Torn Training Ratios Explained`,
-    description: `Hank’s Ratio is high : 80% : 80% : 28%. Baldr’s is high : 80% : 72% : 72%. Both unlock the same two specialist gyms — the difference is what you give up.`,
-    h1: `Hank’s Ratio and Baldr’s Ratio`,
-    sub: 'Specialist gyms do not care how big your stats are — they care how lopsided they are. Two named builds sit exactly on that line, and choosing between them is the first real decision in a Torn build.',
+    title: 'Torn Training Ratios — Hank\u2019s Ratio and Specialist Access',
+    description:
+      'How stat ratios in Torn gate the 7.5, 8.0 and 9.0-dot specialist gyms, why the 1.25:1:1:0 build exists, and what leaving a stat behind actually buys you.',
+    h1: 'Torn training ratios',
+    sub: 'Specialist gyms do not care how big your stats are — they care how lopsided they are. That single rule shapes every serious Torn build.',
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Training ratios', path: '/training-ratios/' },
-    ],
-    schema: [
-      {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: [
-          {
-            '@type': 'Question',
-            name: `What is Hank’s Ratio in Torn?`,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: `Hank’s Ratio is a training build of high : 80% : 80% : 28% — your primary stat, two stats held at 80% of it, and a fourth deliberately capped near 28%. Holding the primary 25% above the second-highest unlocks an 8.0-dot single-stat gym, and the held-back fourth stat pushes your primary pair well past the 25% margin the 7.5-dot paired gyms need. It buys the most forgiving specialist access of any build, at the cost of one stat that contributes nothing to your battle score.`,
-            },
-          },
-          {
-            '@type': 'Question',
-            name: `What is Baldr’s Ratio in Torn?`,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: `Baldr’s Ratio is high : 80% : 72% : 72%. It sits exactly on both specialist thresholds at once: the primary is precisely 25% above the second-highest, and the primary pair is precisely 25% above the other pair. That unlocks the same 8.0-dot and 7.5-dot gyms as Hank’s while keeping the lowest stat at about 22% of the build instead of roughly 10%, so far less battle stat is thrown away.`,
-            },
-          },
-          {
-            '@type': 'Question',
-            name: `Should I use Hank’s Ratio or Baldr’s Ratio?`,
-            acceptedAnswer: {
-              '@type': 'Answer',
-              text: `Both unlock the same gyms. Hank’s keeps a wider margin on the paired-gym requirement, so it is more forgiving to train against, but it writes off roughly a tenth of your build in a stat you never use. Baldr’s keeps that stat — about 22% of your total — but sits exactly on both thresholds, so a few careless trains can lock you out until you rebalance. Choose Hank’s for a lopsided specialist build, Baldr’s for one that still has to survive being attacked.`,
-            },
-          },
-        ],
-      },
     ],
     body: `      <h2>Why ratios exist</h2>
       <p>
         Two-stat specialists need a pair of stats 25% above the other pair. Single-stat specialists
         need one stat 25% above your second highest. So access is bought with imbalance, and the
-        cost of that imbalance is a stat you deliberately hold back.
+        cost of that imbalance is a stat you deliberately never train.
       </p>
 
-      <h2>The two named builds</h2>
-      <p>
-        The community converged on two ratios, both written as percentages of your highest stat.
-        They are conventions rather than game rules — but what they unlock is a game rule, and every
-        number below is checked against the same requirement code the calculator runs.
-      </p>
-
-${scrollable(
-  `Hank’s Ratio and Baldr’s Ratio compared`,
-  `        <table>
-          <thead>
-            <tr><th>Build</th><th>Primary</th><th>Second</th><th>Third</th><th>Fourth</th><th>Unlocks</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><b>Hank’s</b></td>
-              <td class="num">100%</td><td class="num">80%</td><td class="num">80%</td>
-              <td class="num" style="color:var(--best)">28% max</td>
-              <td>8.0-dot + 7.5-dot</td>
-            </tr>
-            <tr>
-              <td><b>Baldr’s</b></td>
-              <td class="num">100%</td><td class="num">80%</td><td class="num">72%</td>
-              <td class="num" style="color:var(--best)">72%</td>
-              <td>8.0-dot + 7.5-dot</td>
-            </tr>
-            <tr>
-              <td>Balanced</td>
-              <td class="num">100%</td><td class="num">100%</td><td class="num">100%</td>
-              <td class="num">100%</td>
-              <td>George’s only (7.3)</td>
-            </tr>
-          </tbody>
-        </table>`,
-)}
-
-      <h3>Hank’s Ratio — high : 80% : 80% : 28% max</h3>
-      <p>
-        The primary sits exactly 25% above the second-highest (100 ÷ 80 = 1.25), which is the
-        single-stat requirement met on the nose. The fourth stat is held right down, so the primary
-        pair clears the paired-gym requirement with room to spare: (100 + 80) ÷ (80 + 28) = 1.67
-        against a threshold of 1.25. That margin is the point — you can train the pair for a long
-        time before the ratio breaks.
-      </p>
-      <div class="callout">
-        The break point is 64%. Let the fourth stat climb past that and (100 + 80) ÷ (80 + 64)
-        falls to exactly 1.25 — one more train and the 7.5-dot gym locks.
-      </div>
-
-      <h3>Baldr’s Ratio — high : 80% : 72% : 72%</h3>
-      <p>
-        Baldr’s is the tighter piece of engineering: it sits on <em>both</em> thresholds at once.
-        The primary is 25% above the second-highest, and the primary pair is 25% above the other
-        pair — (100 + 80) ÷ (72 + 72) = 1.25 exactly. It unlocks the same two gyms as Hank’s while
-        keeping the lowest stat at about 22% of the build instead of roughly 10%.
-      </p>
+      <h2>The common builds</h2>
+      <ul>
+        <li><strong>1.25 : 1 : 1 : 0</strong> — the classic. Three stats trained, one abandoned, primary held a quarter above the rest. Unlocks an 8.0-dot single-stat gym for the primary.</li>
+        <li><strong>Balanced</strong> — no specialist access, George's at 7.3 forever. Simpler, and much better for defending against attacks.</li>
+        <li><strong>Two-stat</strong> — a pair 25% above the other pair, for the 7.5-dot Balboas or Frontline. A softer commitment than a single-stat build.</li>
+      </ul>
 
       <div class="flag">
-        Sitting exactly on a threshold means there is no slack. Ratios are checked continuously, so
-        training the wrong stat drops you out of the gym you built the whole ratio for — you keep the
-        membership but lose access until you climb back.
+        Ratios are checked continuously. Train the wrong stat and you fall out of the gym you built
+        the whole ratio for, keeping the membership but losing access until you climb back.
       </div>
-
-      <h2>Which one to pick</h2>
-      <ul>
-        <li><strong>Hank’s</strong> — more forgiving to train against, but writes off about a tenth of your build in a stat that adds nothing to your battle score.</li>
-        <li><strong>Baldr’s</strong> — keeps that stat, which matters if you ever have to survive being attacked, at the price of zero margin on either requirement.</li>
-        <li><strong>Balanced</strong> — no specialist access, George’s at 7.3 forever. Simpler, and the best of the three at defending.</li>
-      </ul>
 
       <h2>Is the imbalance worth it?</h2>
       <p>
-        Going from George’s 7.3 to an 8.0-dot specialist is about 9.6% more gain per energy on that
-        one stat — while the stat you held back contributes nothing to your battle score. Whether
-        that trades well depends on what you want the stats for.
+        Going from George's 7.3 to an 8.0-dot specialist is about 9.6% more gain per energy on that
+        one stat — while the abandoned stat contributes nothing to your battle score. Whether that
+        trades well depends on what you want the stats for.
       </p>
 
-      <a class="cta" href="/"><b>Check which ratio you are on →</b><br />Enter your four stats and it computes every specialist requirement, and how far you are from each.</a>`,
+      <a class="cta" href="/"><b>Check which specialists you qualify for →</b><br />Enter your four stats and it computes every ratio requirement for you.</a>`,
     related: related('/training-ratios/'),
   }),
-  0.8,
+  0.7,
 );
 
 // --- /xanax-vs-lsd/
@@ -913,7 +637,7 @@ emit(
     path: '/xanax-vs-lsd/',
     title: 'Xanax vs LSD in Torn — Which Actually Gives More Energy',
     description:
-      'LSD looks cheaper per energy, but drugs share one cooldown. Per cooldown slot Xanax gives five times the energy. Here is the arithmetic.',
+      'LSD often looks cheaper per energy, but drugs share one cooldown. Per cooldown slot Xanax gives five times the energy. Here is the arithmetic that decides your daily training budget.',
     h1: 'Xanax vs LSD',
     sub: 'The per-dollar ranking is a trap. Drugs share a single cooldown, so the number that matters is energy per cooldown slot, not energy per dollar.',
     crumbs: [
@@ -937,16 +661,13 @@ emit(
       },
     ],
     body: `      <h2>The numbers</h2>
-${scrollable(
-  'Xanax and LSD energy per dose and per day',
-  `        <table>
-          <thead><tr><th>Drug</th><th>Energy per dose</th><th>Doses per day</th><th>Energy per day</th></tr></thead>
-          <tbody>
-            <tr><td>Xanax</td><td class="num">250</td><td class="num">~3</td><td class="num">~750</td></tr>
-            <tr><td>LSD</td><td class="num">50</td><td class="num">~3</td><td class="num">~150</td></tr>
-          </tbody>
-        </table>`,
-)}
+      <table>
+        <thead><tr><th>Drug</th><th>Energy per dose</th><th>Doses per day</th><th>Energy per day</th></tr></thead>
+        <tbody>
+          <tr><td>Xanax</td><td class="num">250</td><td class="num">~3</td><td class="num">~750</td></tr>
+          <tr><td>LSD</td><td class="num">50</td><td class="num">~3</td><td class="num">~150</td></tr>
+        </tbody>
+      </table>
 
       <div class="callout">
         The doses column is the whole argument. One shared cooldown of roughly 6–8 hours means about
@@ -967,61 +688,14 @@ ${scrollable(
   0.7,
 );
 
-// --- /404.html : GitHub Pages serves this for any unknown path
-//
-// Without it a mistyped or stale URL gets the default Pages 404: no branding,
-// no links, no way back into the site. Every hub is listed here instead, so a
-// dead link still lands somewhere useful. noindex because a soft-404 in the
-// index is worse than no page at all.
-writeFileSync(
-  resolve(OUT, '404.html'),
-  page({
-    path: '/404',
-    title: 'Page not found — Torn Training Optimizer',
-    description: 'That page does not exist. Here is everything the Torn Training Optimizer covers.',
-    h1: 'That page does not exist',
-    sub: 'The link is probably out of date or mistyped. Everything on the site is listed below — or go straight to the calculator.',
-    robots: 'noindex, follow',
-    crumbs: [{ name: 'Torn Training Optimizer', path: '/' }, { name: 'Not found', path: '/404' }],
-    body: `      <a class="cta" href="/">
-        <b>Open the gym calculator →</b><br />
-        Exact gains per train, best gym per stat, happy jump vs energy training. No account needed.
-      </a>
-
-      <h2>Guides</h2>
-      <ul>
-        <li><a href="/guide">Torn gym training guide</a> — how happy, energy, drugs and gyms interact</li>
-        <li><a href="/happy-jump">Happy jump calculator</a> — the recipe, and when it beats energy training</li>
-        <li><a href="/stat-cap">The 50M stat cap</a> — removed in 2022, and the curve that replaced it</li>
-        <li><a href="/training-ratios">Training ratios</a> — how ratios gate the specialist gyms</li>
-        <li><a href="/xanax-vs-lsd">Xanax vs LSD</a> — why the shared cooldown decides it</li>
-      </ul>
-
-      <h2>Gym reference</h2>
-      <ul>
-        <li><a href="/gym-dots">Gym dots chart</a> — every gym, every stat</li>
-        <li><a href="/gyms">All gyms</a> — one page per gym</li>
-        <li><a href="/gym-unlock-order">Gym unlock order</a> — the 24 standard gyms, with costs</li>
-        <li><a href="/specialist-gyms">Specialist gym requirements</a> — exact stat ratios</li>
-      </ul>
-
-      <h2>Best gym for…</h2>
-      <ul>
-${STATS.map((s) => `        <li><a href="/best-gym-for-${s.key}">Best gym for ${s.label}</a></li>`).join('\n')}
-      </ul>`,
-  }),
-);
-
 // ---- Sitemap ---------------------------------------------------------------
 
-// The hand-written pages are not produced by this script, so their dates come
-// from hashing the files themselves — same honesty rule as the generated ones.
 const STATIC_URLS = [
-  { path: '/', priority: 1.0, changefreq: 'weekly', file: 'index.html', src: resolve(ROOT, 'index.html') },
-  { path: '/happy-jump/', priority: 0.9, src: resolve(OUT, 'happy-jump/index.html') },
-  { path: '/guide/', priority: 0.8, src: resolve(OUT, 'guide/index.html') },
-  { path: '/specialist-gyms/', priority: 0.8, src: resolve(OUT, 'specialist-gyms/index.html') },
-].map((u) => ({ ...u, lastmod: lastmodFor(u.path, readFileSync(u.src, 'utf8')) }));
+  { path: '/', priority: 1.0, changefreq: 'weekly' },
+  { path: '/happy-jump/', priority: 0.9 },
+  { path: '/guide/', priority: 0.8 },
+  { path: '/specialist-gyms/', priority: 0.8 },
+];
 
 const all = [...STATIC_URLS, ...urls];
 writeFileSync(
@@ -1032,7 +706,7 @@ ${all
   .map(
     (u) => `  <url>
     <loc>${SITE}${canon(u.path)}</loc>
-    <lastmod>${u.lastmod}</lastmod>
+    <lastmod>${TODAY}</lastmod>
     <changefreq>${u.changefreq ?? 'monthly'}</changefreq>
     <priority>${u.priority.toFixed(1)}</priority>
   </url>`,
@@ -1042,12 +716,4 @@ ${all
 `,
 );
 
-writeFileSync(STAMPS, JSON.stringify(nextStamps, null, 2) + '\n');
-
-// Count pages whose content actually moved this run, not pages whose date
-// happens to be today — on a first run those are the same number and the
-// distinction is the whole point of the change.
-const changed = Object.keys(nextStamps).filter((k) => stamps[k]?.hash !== nextStamps[k].hash).length;
-console.log(
-  `gen-seo: ${urls.length} pages + 404, sitemap has ${all.length} URLs, ${changed} changed content.`,
-);
+console.log(`gen-seo: ${urls.length} pages generated, sitemap has ${all.length} URLs.`);

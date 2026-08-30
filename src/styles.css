@@ -17,6 +17,10 @@
   --best: #5ec0a8;          /* teal — "best" highlight only */
   --danger: #e07d72;
 
+  /* Tells the browser this is a dark UI, so native form controls, scrollbars
+     and focus rings pick their dark variants instead of light-page defaults. */
+  color-scheme: dark;
+
   --mono: 'JetBrains Mono', ui-monospace, monospace;
   --display: 'Oswald', system-ui, sans-serif;
   --body: 'Inter', system-ui, sans-serif;
@@ -43,40 +47,6 @@ body {
   margin: 0 auto;
   padding: 28px 20px 80px;
 }
-
-/* ---- Skip link ----
-   Twelve panels of controls sit between the top of the page and the content,
-   so a keyboard or screen-reader user had a long tab journey with no way past
-   it. Off-screen until focused. */
-.skip {
-  position: absolute;
-  left: 8px;
-  top: -48px;
-  z-index: 10;
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  padding: 8px 14px;
-  text-decoration: none;
-  font-size: 14px;
-}
-.skip:focus { top: 8px; }
-
-/* ---- Primary nav ----
-   The reference pages carry the search traffic, and used to be reachable only
-   from the footer below every panel. */
-.sitenav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  font-size: 13.5px;
-  padding-bottom: 14px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--line);
-}
-.sitenav a { color: var(--muted); text-decoration: none; }
-.sitenav a:hover { color: var(--accent); }
 
 /* ---- Masthead ---- */
 .masthead {
@@ -169,18 +139,8 @@ body {
 
 /* ---- API bar ---- */
 .apibar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-/* The field and its Show/Hide toggle move as one unit in the flex row. */
-.apikey-field { flex: 1 1 280px; display: flex; gap: 6px; align-items: center; }
-.apikey-field input { flex: 1 1 auto; min-width: 0; }
-.reveal-btn {
-  flex: 0 0 auto;
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 12.5px;
-  padding: 8px 10px;
-}
-.reveal-btn:hover { color: var(--text); border-color: var(--accent-dim); }
+.apibar input[type='password'],
+.apibar input[type='text'] { flex: 1 1 280px; }
 .apibar .hint {
   flex-basis: 100%;
   font-size: 12.5px;
@@ -197,6 +157,11 @@ input, select {
   font-size: 14px;
   padding: 9px 11px;
 }
+/* Placeholders were the one real contrast failure Lighthouse kept flagging.
+   With no rule of our own, Chrome falls back to its default placeholder grey,
+   which is picked for a light page: on --ink it lands at 3.93 against a 4.5
+   requirement. Setting it explicitly fixes it at 6.95. */
+input::placeholder { color: var(--muted); opacity: 1; }
 input:focus, select:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
@@ -268,7 +233,9 @@ thead th {
 tbody td { font-family: var(--mono); border-bottom: 1px solid #20252e; }
 tbody tr:hover { background: var(--surface-2); }
 td.gym-name { font-family: var(--body); }
-td.muted-cell { color: #525a68; }
+/* 2.12 against --surface-2 before; #8791a0 clears AA (4.62) on the darkest
+   surface it lands on while still reading as dimmer than normal cell text. */
+td.muted-cell { color: #8791a0; }
 .col-focus { color: var(--text); }
 .cell-best {
   color: var(--best);
@@ -758,7 +725,10 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   border-radius: 50%;
   background: var(--dot, var(--accent));
 }
-.series-toggle.off { color: var(--muted); opacity: 0.55; }
+/* Dimming by opacity dropped this to 2.74. The off state now reads as off
+   through the dot and border, not by making the label unreadable. */
+.series-toggle.off { color: var(--muted); opacity: 1; }
+.series-toggle.off .series-dot { opacity: 0.3; }
 .series-toggle.off .series-dot { background: var(--muted); }
 
 .history-chart { margin: 4px -4px 0; }
@@ -999,8 +969,8 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   .plan-controls,
   .history-controls,
   .sharebar { flex-direction: column; align-items: stretch; }
-  .apikey-field,
-  .apibar > button,
+  .apibar input[type='password'],
+  .apibar button,
   .qty-input,
   .plan-select select,
   .cmp-field > input,
@@ -1022,3 +992,15 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   .fold > summary { padding: 12px 14px; }
 }
 #own-numbers { scroll-margin-top: 12px; }
+
+/* Jail toggle in manual entry. */
+.jail-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.jail-check input { width: auto; margin-top: 2px; accent-color: var(--accent); }
+.jail-check .footnote { display: inline; margin: 0; }

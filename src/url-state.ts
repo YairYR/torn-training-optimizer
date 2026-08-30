@@ -78,6 +78,7 @@ export function readSharedState(search = window.location.search): SharedState | 
       maxEnergy: num(p, 'me') ?? 150,
       xanaxEcstasy: num(p, 'xe'),
       unlockedGymId: num(p, 'cap') ?? 24,
+      inJail: p.get('jail') === '1',
     };
   }
   return Object.keys(state).length ? state : null;
@@ -93,6 +94,7 @@ export function buildShareUrl(state: SharedState, origin = window.location.origi
     p.set('me', String(Math.round(m.maxEnergy)));
     if (m.xanaxEcstasy != null) p.set('xe', String(Math.round(m.xanaxEcstasy)));
     p.set('cap', String(m.unlockedGymId));
+    if (m.inJail) p.set('jail', '1');
   }
   const c = state.config;
   if (c?.stat) p.set('stat', c.stat);

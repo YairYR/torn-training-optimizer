@@ -7,7 +7,7 @@
     <title>Torn Gym Calculator — Gym Gains, Happy Jump & Best Gym Planner</title>
     <meta
       name="description"
-      content="Free Torn gym calculator: exact gains per train and per day, the best gym for every stat, happy jump break-even. No account, your key stays in your browser."
+      content="Free Torn gym calculator: exact gains per train and per day, happy jump vs energy training break-even, the best gym for every battle stat, unlock targets and energy costs. Use your API key or enter stats manually — nothing leaves your browser."
     />
     <link rel="canonical" href="https://torntraining.com/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -27,11 +27,9 @@
       content="Exact gains per train and per day, happy jump vs energy training break-even, best gym per battle stat, unlock targets and energy costs. Free, privacy-first: your API key stays in your browser."
     />
     <meta property="og:url" content="https://torntraining.com/" />
-    <meta property="og:locale" content="en" />
     <meta property="og:image" content="https://torntraining.com/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -41,7 +39,6 @@
       content="Exact gains per train, happy jump vs energy training break-even, and the best gym for every battle stat in Torn. Your API key stays in your browser."
     />
     <meta name="twitter:image" content="https://torntraining.com/og-image.png" />
-    <meta name="twitter:image:alt" content="Torn Training Optimizer — the free Torn gym calculator" />
 
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
@@ -49,12 +46,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./site.webmanifest" />
-
-    <!--
-      llms.txt exists but nothing pointed at it, so an answer engine had to
-      guess the path. Declared here and in robots.txt.
-    -->
-    <link rel="alternate" type="text/plain" href="https://torntraining.com/llms.txt" title="llms.txt" />
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VXBFXDRGL2"></script>
@@ -65,48 +56,11 @@
       gtag('config', 'G-VXBFXDRGL2');
     </script>
 
-    <!--
-      Structured data: site and publisher entities.
-
-      Every generated page references these by @id, so the whole site resolves
-      to one publisher rather than 42 unrelated documents. Answer engines lean
-      on exactly this kind of entity and freshness signal when deciding whether
-      a source is worth citing.
-    -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://torntraining.com/#org",
-          "name": "Torn Training Optimizer",
-          "url": "https://torntraining.com/",
-          "logo": "https://torntraining.com/icon-512.png",
-          "description": "Free, privacy-first gym training calculator for the online game Torn."
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://torntraining.com/#website",
-          "name": "Torn Training Optimizer",
-          "alternateName": "Torn Gym Calculator",
-          "url": "https://torntraining.com/",
-          "inLanguage": "en",
-          "publisher": { "@id": "https://torntraining.com/#org" },
-          "about": { "@type": "VideoGame", "name": "Torn", "url": "https://www.torn.com/" }
-        }
-      ]
-    }
-    </script>
-
     <!-- Structured data: WebApplication -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "@id": "https://torntraining.com/#app",
-      "publisher": { "@id": "https://torntraining.com/#org" },
-      "isPartOf": { "@id": "https://torntraining.com/#website" },
       "name": "Torn Training Optimizer",
       "alternateName": ["Torn Gym Calculator", "Torn Gym Gains Calculator", "Torn Training Calculator", "Torn Happy Jump Calculator"],
       "url": "https://torntraining.com/",

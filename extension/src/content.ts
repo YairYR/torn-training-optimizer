@@ -14,12 +14,9 @@ import { Gym, StatKey, STAT_KEYS, STAT_LABEL } from '../../src/engine/types';
 import { gainPerTrain } from '../../src/engine/vladar';
 import { simulateSession } from '../../src/engine/session';
 import { normalizeGyms, normalizePlayer } from '../../src/api/normalize';
-import { evaluateGymEligibility } from '../../src/engine/gym-eligibility';
-import {
-  BUILD_PRESETS,
-  evaluateBuildRatio,
-  nearestGymTarget,
-} from '../../src/engine/build-ratio';
+import { evaluateGymEligibility, isJailGym, ratioReachable } from '../../src/engine/gym-eligibility';
+import { resolveUnlockTarget } from '../../src/engine/planner';
+import { BUILD_PRESETS, evaluateBuildRatio } from '../../src/engine/build-ratio';
 
 const PANEL_ID = 'tto-panel';
 const SITE = 'https://torntraining.com';
@@ -87,6 +84,36 @@ async function renderPanel(body: string) {
 }
 
 /**
+ * Nearest locked specialist gym and the stat gap that opens it, via the same
+ * closed-form ratio rules the web app uses (resolveUnlockTarget) rather than
+ * bisecting the eligibility check. Returns null for non-stat gates (SSL's
+ * drug count, Fight Club's invite) same as always — those just never become
+ * candidates. ratioReachable (engine) drops the gyms whose real blocker is
+ * the progression gate rather than the ratio.
+ */
+function nearestUnlock(
+  gyms: Gym[],
+  stats: Record<StatKey, number>,
+  xanaxEcstasy: number | null | undefined,
+  gate: { georgesUnlocked: boolean },
+): { gym: Gym; stat: StatKey; pointsNeeded: number; requirement: string } | null {
+  let best: { gym: Gym; stat: StatKey; pointsNeeded: number; requirement: string } | null = null;
+  for (const gym of gyms) {
+    if (isJailGym(gym)) continue;
+    const elig = evaluateGymEligibility(gym, stats, xanaxEcstasy, gate);
+    if (elig.status !== 'locked' || !elig.requirement) continue;
+    if (!ratioReachable(gym, stats, xanaxEcstasy, gate)) continue;
+    const t = resolveUnlockTarget(gym, stats);
+    if (!t) continue;
+    const pointsNeeded = Math.max(0, t.target - stats[t.stat]);
+    if (!best || pointsNeeded < best.pointsNeeded) {
+      best = { gym, stat: t.stat, pointsNeeded, requirement: elig.requirement };
+    }
+  }
+  return best;
+}
+
+/**
  * Build-ratio tracker.
  *
  * Shows the stat split against the chosen build, and — the part the existing
@@ -124,7 +151,7 @@ async function ratioSection(
     (p) => `<option value="${p.id}"${p.id === preset.id ? ' selected' : ''}>${p.label}</option>`,
   ).join('');
 
-  const target = nearestGymTarget(gyms, stats, xanaxEcstasy, {
+  const target = nearestUnlock(gyms, stats, xanaxEcstasy, {
     georgesUnlocked: true,
   });
   const targetLine = target

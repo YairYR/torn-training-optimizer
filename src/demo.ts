@@ -1,5 +1,5 @@
 // Type-only: keeps this module free of React so the engine tests can import it.
-import type { ManualData } from './components/ManualEntry';
+import type { ManualData } from './engine/types';
 
 /**
  * The player the site loads for a first-time visitor.

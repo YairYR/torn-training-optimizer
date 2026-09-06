@@ -4,8 +4,7 @@ import { GymGate, bestUsableGymIdForStat } from '../engine/gym-eligibility';
 import { gainPerTrain } from '../engine/vladar';
 import { buildRoadmap } from '../engine/build-roadmap';
 import { planToTarget } from '../engine/planner';
-import { dailyEnergyCapacity } from '../engine/energy-capacity';
-import { ENERGY_SOURCES } from '../data/consumables';
+import { xanaxDailyEnergy } from '../engine/energy-capacity';
 import { fmtInt, fmtGain } from '../format';
 
 interface Props {
@@ -28,15 +27,7 @@ export function SummaryCard({ gyms, player, modifiers, gate }: Props) {
     [stats],
   );
 
-  const dailyCap = useMemo(() => {
-    const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax');
-    if (!xan?.cooldownMinutes) return 0;
-    return dailyEnergyCapacity({
-      maxEnergy: player.energy.maximum,
-      drugEnergyPerDose: xan.energyGain,
-      drugCooldownMinutes: xan.cooldownMinutes,
-    }).total;
-  }, [player.energy.maximum]);
+  const dailyCap = useMemo(() => xanaxDailyEnergy(player.energy.maximum), [player.energy.maximum]);
 
   const rec = useMemo(() => {
     const gymId = bestUsableGymIdForStat(gyms, primary, stats, player.xanaxEcstasyTaken, gate);

@@ -50,6 +50,22 @@ describe('buildRoadmap', () => {
     expect(r.stages.find((s) => s.gymName === 'The Elites')!.status).toBe('unlocked');
   });
 
+  it('no propone entrenar hacia un gym que el gate de progresion tiene cerrado', () => {
+    // El jugador de ejemplo: cap en Atlas (20), asi que los 50E siguen
+    // cerrados por gym EXP aunque Strength ya este 1.25x arriba. Gym 3000
+    // reportaba gap 0 y ganaba nextStage con "Train Strength to X (+0)".
+    const demo = stat(3_200_000, 2_100_000, 2_450_000, 1_800_000);
+    const capped: GymGate = { unlockedCapId: 20, georgesUnlocked: false };
+    const r = buildRoadmap(STATIC_GYMS, demo, 'strength', 220, capped);
+    expect(r.nextStage?.gymName).toBe('Frontline Fitness');
+    expect(r.nextStage!.gap).toBeGreaterThan(0);
+    // El 50E sigue en la escalera, como 'locked' y con su requisito real.
+    const single = r.stages.find((s) => s.gymName === 'Gym 3000')!;
+    expect(single.status).toBe('locked');
+    expect(single.trainStat).toBeUndefined();
+    expect(single.requirement).toMatch(/gym EXP/);
+  });
+
   it('includes SSL as a parallel option gated by drug count', () => {
     const clean = buildRoadmap(STATIC_GYMS, stat(20e6, 30e6, 15e6, 60e6), 'dexterity', 0, gate);
     const sslClean = clean.stages.find((s) => s.parallel);

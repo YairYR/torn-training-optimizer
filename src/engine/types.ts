@@ -57,3 +57,21 @@ export interface Gym {
   /** Money cost to join (informational). */
   joinCost: number | null;
 }
+
+/** What one simulated training session is configured with (stat, gym, bars). */
+export interface SessionConfig {
+  stat: StatKey;
+  gymId: string;
+  energy: number;
+  happy: number;
+}
+
+export interface ManualData {
+  stats: Record<StatKey, number>;
+  maxHappy: number;
+  maxEnergy: number;
+  xanaxEcstasy: number | null;
+  unlockedGymId: number;
+  /** Crims Gym is only reachable from inside jail. */
+  inJail?: boolean;
+}

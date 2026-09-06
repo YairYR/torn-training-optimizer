@@ -1,12 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  BUILD_PRESETS,
-  evaluateBuildRatio,
-  nearestGymTarget,
-  ratioSummary,
-} from './build-ratio';
-import { STATIC_GYMS } from '../data/gyms';
-import { evaluateGymEligibility, GymGate, georgesGymId } from './gym-eligibility';
+import { BUILD_PRESETS, evaluateBuildRatio } from './build-ratio';
 import { StatKey, STAT_KEYS } from './types';
 
 const preset = (id: string) => BUILD_PRESETS.find((p) => p.id === id)!.weights;
@@ -65,53 +58,5 @@ describe('evaluateBuildRatio', () => {
     );
     expect(r.total).toBe(0);
     expect(r.rows.every((x) => Number.isFinite(x.deltaPoints))).toBe(true);
-  });
-
-  it('summarises in one line', () => {
-    const r = evaluateBuildRatio(
-      { strength: 10, defense: 100, speed: 100, dexterity: 100 },
-      preset('balanced'),
-    );
-    expect(ratioSummary(r)).toContain('Strength');
-  });
-});
-
-describe('nearestGymTarget', () => {
-  const gate: GymGate = {
-    unlockedCapId: georgesGymId(STATIC_GYMS),
-    georgesUnlocked: true,
-  };
-
-  it('finds the stat gap that unlocks a single-stat specialist', () => {
-    // Defense-led but not yet 25% clear of the second-highest stat.
-    const stats = { strength: 10e6, defense: 11e6, speed: 9e6, dexterity: 8e6 };
-    const t = nearestGymTarget(STATIC_GYMS, stats, 500, gate)!;
-    expect(t).toBeTruthy();
-    expect(t.pointsNeeded).toBeGreaterThan(0);
-
-    // The reported gap has to be the real boundary: a hair over unlocks the
-    // gym, a hair under does not. This is what makes the number quotable.
-    const at = (mult: number) =>
-      evaluateGymEligibility(
-        t.gym,
-        { ...stats, [t.stat]: stats[t.stat] + t.pointsNeeded * mult },
-        500,
-        gate,
-      ).status;
-    expect(at(1.001)).not.toBe('locked');
-    expect(at(0.999)).toBe('locked');
-  });
-
-  it('never proposes the jail gym', () => {
-    const stats = { strength: 1000, defense: 1000, speed: 1000, dexterity: 1000 };
-    const t = nearestGymTarget(STATIC_GYMS, stats, 0, { unlockedCapId: 2, georgesUnlocked: false });
-    expect(t?.gym.name).not.toBe('Crims Gym');
-  });
-
-  it('returns null when nothing is left to unlock by training', () => {
-    // Everything already accessible or invite-only.
-    const stats = { strength: 1e9, defense: 1e6, speed: 1e6, dexterity: 1e6 };
-    const t = nearestGymTarget([STATIC_GYMS[0]], stats, 0, gate);
-    expect(t).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import { Gym, StatKey, STAT_KEYS, STAT_LABEL } from './types';
+import { resolveUnlockTarget } from './planner';
 
 // Standard gyms (the 24 progressing to George's) unlock by GYM EXP, which is
 // total energy spent training over the player's whole career (wiki). The API
@@ -155,6 +156,32 @@ export function evaluateGymEligibility(
   }
 
   return { status: 'accessible' };
+}
+
+/**
+ * Can training alone ever open this gym?
+ *
+ * evaluateGymEligibility checks the standard-gym progression gate (George's /
+ * Cha Cha's / Last Round) BEFORE the ratio, and that gate depends only on
+ * `gate`, never on `stats`. resolveUnlockTarget knows nothing about it, so on
+ * a gate-locked gym it still returns a ratio target the player may already
+ * meet — a 0-point "train this much" on a gym they cannot join. One probe
+ * settles it: inflate the stat the ratio wants and re-run the real check; if
+ * the gym is STILL locked, the blocker is the gate, not the ratio.
+ *
+ * False as well for the gyms whose gate is not a stat at all (Fight Club's
+ * invite, the SSL's drug count) — same answer to the same question.
+ */
+export function ratioReachable(
+  gym: Gym,
+  stats: Record<StatKey, number>,
+  xanaxEcstasyTaken?: number | null,
+  gate?: GymGate,
+): boolean {
+  const t = resolveUnlockTarget(gym, stats);
+  if (!t) return false;
+  const probe = { ...stats, [t.stat]: stats[t.stat] * 8 + 1e6 };
+  return evaluateGymEligibility(gym, probe, xanaxEcstasyTaken, gate).status !== 'locked';
 }
 
 const USABLE: EligibilityStatus[] = ['accessible', 'eligible'];

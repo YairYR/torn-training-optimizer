@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Gym, PlayerState, STAT_LABEL } from '../engine/types';
+import { Gym, PlayerState, STAT_LABEL, SessionConfig } from '../engine/types';
 import { ENERGY_SOURCES, HAPPY_BOOSTERS } from '../data/consumables';
 import { Prices } from '../engine/cost-model';
 import { optimizeBudget } from '../engine/optimizer';
-import { SessionConfig } from '../session-config';
 import { fmtInt, fmtMoney, fmtPerPoint, fmtGain } from '../format';
 
 interface Props {

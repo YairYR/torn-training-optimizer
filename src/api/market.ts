@@ -1,17 +1,5 @@
 import { Prices } from '../engine/cost-model';
-
-const BASE = 'https://api.torn.com';
-const COMMENT = 'TrainingOptimizer';
-
-async function call<T>(path: string, key: string): Promise<T> {
-  const sep = path.includes('?') ? '&' : '?';
-  const url = `${BASE}${path}${sep}key=${encodeURIComponent(key)}&comment=${COMMENT}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Torn API returned HTTP ${res.status}.`);
-  const data = (await res.json()) as T & { error?: { code: number; error: string } };
-  if (data.error) throw new Error(`Torn API error ${data.error.code}: ${data.error.error}`);
-  return data;
-}
+import { call } from './client';
 
 interface RawItems {
   items: Record<string, { name: string; market_value?: number }>;

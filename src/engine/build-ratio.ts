@@ -11,8 +11,7 @@
 // (gym-eligibility.ts), it can answer the question the percentages are a proxy
 // for — how much of which stat until the gym I am building toward opens.
 
-import { Gym, StatKey, STAT_KEYS, STAT_LABEL } from './types';
-import { evaluateGymEligibility, GymGate, isJailGym } from './gym-eligibility';
+import { StatKey, STAT_KEYS } from './types';
 
 export interface BuildPreset {
   id: string;
@@ -144,64 +143,3 @@ export function evaluateBuildRatio(
   };
 }
 
-export interface GymTarget {
-  gym: Gym;
-  /** Which stat to train, and how much more of it, to meet the requirement. */
-  stat: StatKey;
-  pointsNeeded: number;
-  requirement: string;
-}
-
-/**
- * The nearest locked specialist gym, and the stat gap that opens it.
- *
- * This is the payoff of tracking a ratio at all. Rather than "you are 2.3
- * points below target", it answers "train 1.4m more Defense and Mr. Isoyamas
- * opens" — which is the thing the player actually wants to know.
- *
- * The gap is found by bisection on the eligibility check itself, so it can
- * never drift from the real rule: whatever gym-eligibility says unlocks a gym
- * is what gets measured here.
- */
-export function nearestGymTarget(
-  gyms: Gym[],
-  stats: Record<StatKey, number>,
-  xanaxEcstasyTaken?: number | null,
-  gate?: GymGate,
-): GymTarget | null {
-  const candidates: GymTarget[] = [];
-
-  for (const gym of gyms) {
-    if (isJailGym(gym)) continue;
-    const current = evaluateGymEligibility(gym, stats, xanaxEcstasyTaken, gate);
-    if (current.status !== 'locked' || !current.requirement) continue;
-
-    for (const stat of STAT_KEYS) {
-      if (gym.dots[stat] <= 0) continue;
-
-      // Would training this stat alone ever unlock it? Probe a large multiple.
-      const probe = { ...stats, [stat]: stats[stat] * 8 + 1e6 };
-      if (evaluateGymEligibility(gym, probe, xanaxEcstasyTaken, gate).status === 'locked') continue;
-
-      let lo = 0;
-      let hi = probe[stat] - stats[stat];
-      for (let i = 0; i < 60; i++) {
-        const mid = (lo + hi) / 2;
-        const trial = { ...stats, [stat]: stats[stat] + mid };
-        if (evaluateGymEligibility(gym, trial, xanaxEcstasyTaken, gate).status === 'locked') lo = mid;
-        else hi = mid;
-      }
-      candidates.push({ gym, stat, pointsNeeded: hi, requirement: current.requirement });
-    }
-  }
-
-  if (!candidates.length) return null;
-  return candidates.sort((a, b) => a.pointsNeeded - b.pointsNeeded)[0];
-}
-
-/** One-line summary for the in-game overlay. */
-export function ratioSummary(r: BuildRatioResult): string {
-  if (r.onTrack) return 'On track for this build.';
-  const worst = r.rows.find((x) => x.stat === r.trainNext)!;
-  return `Train ${STAT_LABEL[worst.stat]} — ${worst.deltaPoints.toFixed(1)} points below target.`;
-}

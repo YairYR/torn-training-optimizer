@@ -9,11 +9,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
+import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, SessionConfig, StatKey } from '../engine/types';
 import { bestUsableGymIdForStat, GymGate } from '../engine/gym-eligibility';
 import { project, DailyPlan, GymForStat, Goal } from '../engine/projector';
 import { Prices } from '../engine/cost-model';
-import { SessionConfig } from '../session-config';
 import { fmtInt, fmtMoney } from '../format';
 
 interface Props {

@@ -7,11 +7,12 @@
 // into the calculator with the relevant stat and gym pre-selected via the query
 // string (see src/url-state.ts), so search traffic lands on a filled-in tool.
 //
-// Single source of truth: gyms are parsed out of src/data/gyms.ts, never
-// retyped here. Change a dot value there and every page follows.
+// Single source of truth: gyms are read from src/data/gyms.json — the same
+// file the app bundles. Change a dot value there and every page follows.
 //
 // Run: node scripts/gen-seo.mjs   (wired into `npm run build`)
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,35 +32,51 @@ const SITE = 'https://torntraining.com';
 const canon = (path) => (path === '/' ? '/' : path.replace(/\/$/, ''));
 const TODAY = new Date().toISOString().slice(0, 10);
 const FONTS =
-  'https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap';
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap';
+
+// ---- lastmod ledger --------------------------------------------------------
+//
+// A <lastmod> that says "today" on all 47 URLs every time the site is built is
+// worth nothing: it is the same claim for a page rewritten this morning and one
+// untouched since August, so a crawler learns to ignore the field entirely.
+//
+// The date a page publishes is therefore the date its content last actually
+// changed. Each build fingerprints what it is about to write and compares that
+// against scripts/lastmod.json; the date only moves when the hash moves. The
+// ledger is committed because a build is stateless — the file IS the memory of
+// when each page last changed, and deleting it re-dates the whole site.
+
+const LEDGER = resolve(ROOT, 'scripts/lastmod.json');
+const previous = JSON.parse(readFileSync(LEDGER, 'utf8'));
+const ledger = {};
+let changed = 0;
+
+/** Records the fingerprint and returns the date this URL should publish. */
+function lastmodOf(path, html) {
+  const key = canon(path);
+  const hash = createHash('sha256').update(html).digest('hex').slice(0, 16);
+  const same = previous[key]?.hash === hash;
+  if (!same) changed++;
+  ledger[key] = { hash, date: same ? previous[key].date : TODAY };
+  return ledger[key].date;
+}
 
 // ---- Data ------------------------------------------------------------------
 
-/** Parse the `g(id, 'name', energy, cost, str, spd, def, dex)` rows. */
+/** Gym rows, read straight from the table the app itself bundles. */
 function readGyms() {
-  const src = readFileSync(resolve(ROOT, 'src/data/gyms.ts'), 'utf8');
-  // The trailing group is the optional jailOnly flag on Crims Gym.
-  const re = /g\(\s*(\d+),\s*(?:'([^']*)'|"([^"]*)"),\s*([\d.]+),\s*(\d+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\s*(?:,\s*(true|false)\s*)?\)/g;
-  const gyms = [];
-  let m;
-  while ((m = re.exec(src)) !== null) {
-    const name = (m[2] ?? m[3]).replace(/\\'/g, "'");
-    gyms.push({
-      id: Number(m[1]),
-      name,
-      slug: name
-        .toLowerCase()
-        .replace(/[’']/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, ''),
-      energy: Number(m[4]),
-      cost: Number(m[5]),
-      dots: { strength: Number(m[6]), speed: Number(m[7]), defense: Number(m[8]), dexterity: Number(m[9]) },
-      jailOnly: m[10] === 'true',
-    });
-  }
-  if (gyms.length < 33) throw new Error(`Only parsed ${gyms.length} gyms — check the regex against src/data/gyms.ts`);
-  return gyms;
+  const rows = JSON.parse(readFileSync(resolve(ROOT, 'src/data/gyms.json'), 'utf8'));
+  return rows.map((g) => ({
+    ...g,
+    energy: g.energyPerTrain,
+    cost: g.joinCost,
+    jailOnly: g.jailOnly === true,
+    slug: g.name
+      .toLowerCase()
+      .replace(/[’']/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, ''),
+  }));
 }
 
 const STATS = [
@@ -196,7 +213,7 @@ const HUBS = [
 const related = (exclude) => HUBS.filter((h) => h.path !== exclude).slice(0, 6);
 const emit = (path, html, priority) => {
   write(path, html);
-  urls.push({ path, priority });
+  urls.push({ path, priority, lastmod: lastmodOf(path, html) });
 };
 
 const gymTable = (list, highlight) => `      <table>
@@ -229,7 +246,7 @@ for (const g of gyms) {
   const best = STATS.filter((s) => g.dots[s.key] > 0).sort((a, b) => g.dots[b.key] - g.dots[a.key]);
   const top = best[0];
   const isSpecialist = g.id > 24 && !g.jailOnly;
-  const deepLink = top ? `/?stat=${top.key}&gym=${g.id}` : '/';
+  const deepLink = top ? `/compare?stat=${top.key}&gym=${g.id}` : '/compare';
 
   emit(
     `/gyms/${g.slug}/`,
@@ -337,7 +354,7 @@ ${gymTable(standard)}
 ${gymTable(specialist)}
       <h2>Jail gym</h2>
 ${gymTable(jail)}
-      <a class="cta" href="/"><b>Find the best gym for your stats →</b><br />The calculator only recommends gyms you can actually use.</a>`,
+      <a class="cta" href="/compare"><b>Find the best gym for your stats →</b><br />The calculator only recommends gyms you can actually use.</a>`,
     related: related('/gyms/'),
   }),
   0.8,
@@ -380,7 +397,7 @@ ${gymTable(jail)}
         <code>73</code>, not <code>7.3</code>. Divide by ten before putting them in the gain formula.
       </div>
 
-      <a class="cta" href="/"><b>Apply these to your own stats →</b></a>`,
+      <a class="cta" href="/compare"><b>Apply these to your own stats →</b></a>`,
     related: related('/gym-dots/'),
   }),
   0.9,
@@ -433,7 +450,7 @@ ${gymTable(ranked, s.key)}
         ratio on purpose.
       </p>
 
-      <a class="cta" href="/?stat=${s.key}">
+      <a class="cta" href="/compare?stat=${s.key}">
         <b>Find your best usable ${s.label} gym →</b><br />
         Enter your stats and it filters out everything you are locked out of.
       </a>
@@ -578,7 +595,7 @@ ${gymTable(standard)}
         After George's you stop earning gym EXP entirely — the standard ladder ends there, and every
         gym above it is a specialist with ratio requirements instead.
       </div>
-      <a class="cta" href="/"><b>See which gym you should be in →</b></a>`,
+      <a class="cta" href="/build"><b>See which gym you should be in →</b></a>`,
     related: related('/gym-unlock-order/'),
   }),
   0.8,
@@ -624,7 +641,7 @@ emit(
         trades well depends on what you want the stats for.
       </p>
 
-      <a class="cta" href="/"><b>Check which specialists you qualify for →</b><br />Enter your four stats and it computes every ratio requirement for you.</a>`,
+      <a class="cta" href="/build"><b>Check which specialists you qualify for →</b><br />Enter your four stats and it computes every ratio requirement for you.</a>`,
     related: related('/training-ratios/'),
   }),
   0.7,
@@ -682,7 +699,7 @@ emit(
         settings and uses the total as the training budget in every projection.
       </p>
 
-      <a class="cta" href="/"><b>Work out your daily energy budget →</b></a>`,
+      <a class="cta" href="/cost"><b>Work out your daily energy budget →</b></a>`,
     related: related('/xanax-vs-lsd/'),
   }),
   0.7,
@@ -690,14 +707,22 @@ emit(
 
 // ---- Sitemap ---------------------------------------------------------------
 
+// These four are hand-written rather than generated, so they are fingerprinted
+// from their source file. `source` is relative to the repo root.
 const STATIC_URLS = [
-  { path: '/', priority: 1.0, changefreq: 'weekly' },
-  { path: '/happy-jump/', priority: 0.9 },
-  { path: '/guide/', priority: 0.8 },
-  { path: '/specialist-gyms/', priority: 0.8 },
+  { path: '/', priority: 1.0, changefreq: 'weekly', source: 'index.html' },
+  { path: '/happy-jump/', priority: 0.9, source: 'public/happy-jump/index.html' },
+  { path: '/guide/', priority: 0.8, source: 'public/guide/index.html' },
+  { path: '/specialist-gyms/', priority: 0.8, source: 'public/specialist-gyms/index.html' },
 ];
 
-const all = [...STATIC_URLS, ...urls];
+const all = [
+  ...STATIC_URLS.map((u) => ({
+    ...u,
+    lastmod: lastmodOf(u.path, readFileSync(resolve(ROOT, u.source), 'utf8')),
+  })),
+  ...urls,
+];
 writeFileSync(
   resolve(OUT, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -706,7 +731,7 @@ ${all
   .map(
     (u) => `  <url>
     <loc>${SITE}${canon(u.path)}</loc>
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${u.lastmod}</lastmod>
     <changefreq>${u.changefreq ?? 'monthly'}</changefreq>
     <priority>${u.priority.toFixed(1)}</priority>
   </url>`,
@@ -716,4 +741,9 @@ ${all
 `,
 );
 
-console.log(`gen-seo: ${urls.length} pages generated, sitemap has ${all.length} URLs.`);
+writeFileSync(LEDGER, JSON.stringify(ledger, null, 2) + '\n');
+
+console.log(
+  `gen-seo: ${urls.length} pages generated, sitemap has ${all.length} URLs, ` +
+    `${changed} re-dated to ${TODAY}, ${all.length - changed} unchanged.`,
+);

@@ -11,9 +11,7 @@
 // Nothing sensitive goes in the URL: stats and gym choices only, never the API
 // key.
 
-import { SessionConfig } from './session-config';
-import { StatKey, STAT_KEYS } from './engine/types';
-import { ManualData } from './components/ManualEntry';
+import { STAT_KEYS, SessionConfig, StatKey, ManualData } from './engine/types';
 
 const STAT_PARAM: Record<StatKey, string> = {
   strength: 'str',
@@ -21,6 +19,20 @@ const STAT_PARAM: Record<StatKey, string> = {
   speed: 'spd',
   dexterity: 'dex',
 };
+
+/**
+ * Cinco rutas planas, sin params y sin anidar. Un router traería loaders,
+ * outlets y 12 KB para resolver esto; la History API ya lo resuelve.
+ * La ruta va en el path y los datos del jugador siguen en la query, así que
+ * un link compartido lleva la sección Y los números de quien lo comparte.
+ */
+export const ROUTES = ['/', '/build', '/compare', '/cost', '/progress'] as const;
+export type Route = (typeof ROUTES)[number];
+
+export function readRoute(pathname = window.location.pathname): Route {
+  const clean = ('/' + pathname.replace(/^\/+|\/+$/g, '')) as Route;
+  return ROUTES.includes(clean) ? clean : '/';
+}
 
 export interface SharedState {
   manual?: ManualData;
@@ -85,7 +97,11 @@ export function readSharedState(search = window.location.search): SharedState | 
 }
 
 /** Absolute, pasteable URL that reproduces the current view. */
-export function buildShareUrl(state: SharedState, origin = window.location.origin): string {
+export function buildShareUrl(
+  state: SharedState,
+  origin = window.location.origin,
+  route: Route = '/',
+): string {
   const p = new URLSearchParams();
   const m = state.manual;
   if (m) {
@@ -107,11 +123,17 @@ export function buildShareUrl(state: SharedState, origin = window.location.origi
       if (v !== 1) p.set(`m_${STAT_PARAM[s]}`, v.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''));
     }
   }
-  return `${origin}/?${p.toString()}`;
+  return `${origin}${route === '/' ? '/' : route}?${p.toString()}`;
 }
 
-/** Keep the address bar in sync without adding history entries. */
-export function syncUrl(state: SharedState): void {
-  const url = buildShareUrl(state, window.location.origin);
+/** Mantiene la barra de direcciones al día sin ensuciar el historial. */
+export function syncUrl(state: SharedState, route: Route = '/'): void {
+  const url = buildShareUrl(state, window.location.origin, route);
   window.history.replaceState(null, '', url.slice(window.location.origin.length));
+}
+
+/** Cambio de sección: sí entra en el historial, para que "atrás" funcione. */
+export function navigate(route: Route, state: SharedState): void {
+  const url = buildShareUrl(state, window.location.origin, route);
+  window.history.pushState(null, '', url.slice(window.location.origin.length));
 }

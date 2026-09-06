@@ -19,6 +19,9 @@ public/xanax-vs-lsd/
 public/best-gym-for-*/
 public/sitemap.xml
 
+# Agent worktrees — a full second checkout of this repo, not source.
+.claude/worktrees/
+
 # Local
 .DS_Store
 *.log

@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Phase 1 — Vladar gym-gain engine, session simulator and gym comparator for Torn.",
+  "description": "Torn gym calculator: Vladar gain engine, gym eligibility, build roadmap, economics and multi-day projections.",
   "scripts": {
     "dev": "node scripts/gen-seo.mjs && vite",
     "build": "tsc --noEmit && node scripts/gen-seo.mjs && vite build",

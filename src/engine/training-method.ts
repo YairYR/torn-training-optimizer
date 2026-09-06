@@ -8,7 +8,8 @@
 //     with the "Ignorance Is Bliss" book (happy stays above max for 31 days).
 // Thresholds are approximate and editable.
 
-export const STAT_GROWTH_CAP = 50_000_000; // above this gains grow at a decreasing rate
+import { STAT_SOFT_CAP } from './constants';
+
 export const HAPPY_JUMP_CEILING = 400_000; // below: happy jumps dominate
 export const ENERGY_TRAINING_FLOOR = 12_000_000; // above: pure energy training
 
@@ -45,5 +46,5 @@ export function trainingRegime(statValue: number): RegimeInfo {
 }
 
 export function atGrowthCap(statValue: number): boolean {
-  return statValue >= STAT_GROWTH_CAP;
+  return statValue >= STAT_SOFT_CAP;
 }

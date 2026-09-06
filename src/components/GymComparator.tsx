@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
+import { Gym, PlayerState, SessionConfig, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
 import { compareGyms } from '../engine/gym-comparator';
 import { evaluateGymEligibility, GymEligibility, isUsable, GymGate } from '../engine/gym-eligibility';
 import { fmtGain } from '../format';
@@ -9,6 +9,7 @@ interface Props {
   player: PlayerState;
   modifiers: Record<StatKey, number>;
   gate: GymGate;
+  config: SessionConfig;
 }
 
 type Metric = 'gpe' | 'gpt';
@@ -21,8 +22,12 @@ const STATUS_LABEL: Record<GymEligibility['status'], string> = {
   unknown: '?',
 };
 
-export function GymComparator({ gyms, player, modifiers, gate }: Props) {
-  const [focus, setFocus] = useState<StatKey>('defense');
+export function GymComparator({ gyms, player, modifiers, gate, config }: Props) {
+  // Seeds from the deep link (e.g. a /best-gym-for-strength CTA) so the page
+  // opens already sorted on the stat the visitor came for. An initial value,
+  // not a binding — picking a different stat afterwards must win, so this is
+  // a useState initialiser, not a useEffect that would fight the user.
+  const [focus, setFocus] = useState<StatKey>(config.stat);
   const [metric, setMetric] = useState<Metric>('gpe');
 
   const rows = useMemo(

@@ -4,11 +4,14 @@ import { normalizeGyms, normalizePlayer, RawGym, RawUser } from './normalize';
 const BASE = 'https://api.torn.com';
 const COMMENT = 'TrainingOptimizer';
 
+// The one place a Torn API request is built. market.ts and the extension talk to
+// the same host with the same error shape; a second copy only ever drifts.
+
 interface ApiError {
   error?: { code: number; error: string };
 }
 
-async function call<T>(path: string, key: string): Promise<T> {
+export async function call<T>(path: string, key: string): Promise<T> {
   const sep = path.includes('?') ? '&' : '?';
   const url = `${BASE}${path}${sep}key=${encodeURIComponent(key)}&comment=${COMMENT}`;
   let res: Response;

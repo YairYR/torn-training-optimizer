@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
-import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/types';
+import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, SessionConfig, StatKey } from '../engine/types';
 import { gainPerTrain } from '../engine/vladar';
 import { simulateBand } from '../engine/session';
-import { SessionConfig } from '../session-config';
 import { fmtGain, fmtInt } from '../format';
 
 interface Props {

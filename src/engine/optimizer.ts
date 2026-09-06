@@ -61,10 +61,7 @@ export function optimizeBudget(i: OptimizerInput): OptimizerResult {
   // Practical drug energy: per shared cooldown slot you take the biggest drug
   // (Xanax 250 > LSD 50), not the cheapest $/E — which would pick LSD and ignore
   // the ~3 doses/day cooldown cap.
-  const primary = primaryDrugSource(i.energySources, i.prices);
-  const paid = primary
-    ? { s: primary.source, dpe: primary.dollarsPerEnergy }
-    : null;
+  const paid = primaryDrugSource(i.energySources, i.prices);
 
   const refill = i.energySources.find((s) => s.priceKind === 'points');
   const refillCost =
@@ -95,8 +92,8 @@ export function optimizeBudget(i: OptimizerInput): OptimizerResult {
       let unitE = 0;
       let unitCost = 0;
       if (paid) {
-        unitE = paid.s.energyGain;
-        unitCost = (paid.dpe as number) * unitE;
+        unitE = paid.source.energyGain;
+        unitCost = (paid.dollarsPerEnergy as number) * unitE;
         const maxByCap = Math.floor(i.maxStackEnergy / unitE);
         const maxByBudget = unitCost > 0 ? Math.floor(remaining / unitCost) : 0;
         paidUnits = Math.max(0, Math.min(maxByCap, maxByBudget));
@@ -128,7 +125,7 @@ export function optimizeBudget(i: OptimizerInput): OptimizerResult {
         edvdQty: j,
         ecstasy,
         refillUsed,
-        paidSource: paid?.s.name ?? null,
+        paidSource: paid?.source.name ?? null,
         paidUnits,
         happyCapped,
       };
@@ -168,20 +165,13 @@ export function optimizeBudget(i: OptimizerInput): OptimizerResult {
     freeEnergy: i.freeEnergy,
     refillEnergy: refill?.energyGain ?? 150,
     refillCost,
-    paidUnitE: unitEnergyOf(paid),
-    paidUnitCost: unitCostOf(paid),
+    paidUnitE: paid?.source.energyGain ?? 0,
+    paidUnitCost: paid ? (paid.dollarsPerEnergy ?? 0) * paid.source.energyGain : 0,
     edvdPrice,
     ecstasyPrice,
   });
 
   return best;
-}
-
-function unitEnergyOf(paid: { s: EnergySource; dpe: number | null } | null): number {
-  return paid ? paid.s.energyGain : 0;
-}
-function unitCostOf(paid: { s: EnergySource; dpe: number | null } | null): number {
-  return paid && paid.dpe != null ? paid.dpe * paid.s.energyGain : 0;
 }
 
 function buildBuyList(

@@ -1,3 +1,5 @@
+import { ENERGY_SOURCES } from '../data/consumables';
+
 // Daily energy capacity. Drug energy is gated by a single shared drug cooldown
 // (you can only have one drug active), so the per-unit $/energy ranking alone
 // is misleading: with ~6-8h cooldowns you get ~3 doses/day, and each Xanax
@@ -37,3 +39,19 @@ export function dailyEnergyCapacity(i: CapacityInput): CapacityResult {
   const refill = (i.refillEnergy ?? 150) * (i.refillsPerDay ?? 1);
   return { natural, drugDoses, drugEnergy, refill, total: natural + drugEnergy + refill };
 }
+
+/**
+ * The daily capacity the whole app assumes: natural regen + Xanax at its own
+ * cooldown + one points refill. Every panel that shows "energy per day" wants
+ * exactly this, so the Xanax lookup lives here once instead of in each caller.
+ */
+export function xanaxCapacity(maxEnergy: number): CapacityResult {
+  const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax')!;
+  return dailyEnergyCapacity({
+    maxEnergy,
+    drugEnergyPerDose: xan.energyGain,
+    drugCooldownMinutes: xan.cooldownMinutes!,
+  });
+}
+
+export const xanaxDailyEnergy = (maxEnergy: number): number => xanaxCapacity(maxEnergy).total;

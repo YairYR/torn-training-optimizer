@@ -1,5 +1,11 @@
-import { Gym, StatKey, STAT_KEYS, STAT_LABEL } from './types';
-import { evaluateGymEligibility, GymGate, isUsable, georgesGymId } from './gym-eligibility';
+import { Gym, StatKey, STAT_KEYS } from './types';
+import {
+  evaluateGymEligibility,
+  GymGate,
+  isUsable,
+  georgesGymId,
+  ratioReachable,
+} from './gym-eligibility';
 import { resolveUnlockTarget } from './planner';
 
 // Build roadmap: given the player's stats and a chosen primary stat, lays out
@@ -72,7 +78,14 @@ function specialistStage(
     requirement: elig.requirement ?? '',
   };
   if (base.status === 'locked') {
-    const t = resolveUnlockTarget(gym, stats);
+    // Only a RATIO block turns into "train X to Y". When the real blocker is
+    // the standard-gym progression gate, resolveUnlockTarget still answers —
+    // with a target the player may already meet — and that 0-point gap wins
+    // the nextStage election below, displacing the stage they can actually
+    // work on with advice that is both false and silent about the gate.
+    const t = ratioReachable(gym, stats, xanaxEcstasy, gate)
+      ? resolveUnlockTarget(gym, stats)
+      : null;
     if (t) {
       base.trainStat = t.stat;
       base.targetValue = t.target;
@@ -142,5 +155,3 @@ export function buildRoadmap(
 
   return { primary, pair, dumped, primaryRatio, isOffensive, stages, nextStage };
 }
-
-export const buildLabel = (primary: StatKey): string => `${STAT_LABEL[primary]} build`;

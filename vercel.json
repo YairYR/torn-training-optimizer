@@ -8,5 +8,11 @@
       "destination": "https://torntraining.com/:path*",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    { "source": "/build", "destination": "/index.html" },
+    { "source": "/compare", "destination": "/index.html" },
+    { "source": "/cost", "destination": "/index.html" },
+    { "source": "/progress", "destination": "/index.html" }
   ]
 }

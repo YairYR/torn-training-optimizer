@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Gym, PlayerState, STAT_LABEL } from '../engine/types';
+import { Gym, PlayerState, STAT_LABEL, SessionConfig } from '../engine/types';
 import { ENERGY_SOURCES, HAPPY_BOOSTERS } from '../data/consumables';
 import { Prices, rankEnergy, boosterValue } from '../engine/cost-model';
-import { dailyEnergyCapacity, dosesPerDay } from '../engine/energy-capacity';
-import { SessionConfig } from '../session-config';
+import { dosesPerDay, xanaxCapacity } from '../engine/energy-capacity';
 import { fmtInt, fmtMoney, fmtPerPoint, fmtGain } from '../format';
 
 interface Props {
@@ -31,16 +30,9 @@ export function Economics({ gyms, player, modifiers, config, prices }: Props) {
   const cheapestPaid = energyRanked.find((r) => r.dollarsPerEnergy != null && r.dollarsPerEnergy > 0);
 
   const capacity = useMemo(() => {
-    const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax');
     const lsd = ENERGY_SOURCES.find((s) => s.id === 'lsd');
-    if (!xan?.cooldownMinutes) return null;
-    const cap = dailyEnergyCapacity({
-      maxEnergy: player.energy.maximum,
-      drugEnergyPerDose: xan.energyGain,
-      drugCooldownMinutes: xan.cooldownMinutes,
-    });
     const lsdEnergy = lsd?.cooldownMinutes ? dosesPerDay(lsd.cooldownMinutes) * lsd.energyGain : 0;
-    return { cap, lsdEnergy };
+    return { cap: xanaxCapacity(player.energy.maximum), lsdEnergy };
   }, [player.energy.maximum]);
 
   const boosterRows = useMemo(() => {
@@ -118,55 +110,51 @@ export function Economics({ gyms, player, modifiers, config, prices }: Props) {
         </p>
       )}
 
-      {capacity && (
-        <>
-          <h3 className="subhead">Daily energy capacity (cooldown-limited)</h3>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Source</th>
-                  <th>Per day</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="gym-name">Natural regen</td>
-                  <td>{fmtInt(capacity.cap.natural)}</td>
-                </tr>
-                <tr>
-                  <td className="gym-name">Points refill (1/day)</td>
-                  <td>{fmtInt(capacity.cap.refill)}</td>
-                </tr>
-                <tr>
-                  <td className="gym-name">Xanax ({capacity.cap.drugDoses} doses × 250)</td>
-                  <td className="cell-best">{fmtInt(capacity.cap.drugEnergy)}</td>
-                </tr>
-                <tr>
-                  <td className="gym-name">— same slots with LSD ({capacity.cap.drugDoses} × 50)</td>
-                  <td className="muted-cell">{fmtInt(capacity.lsdEnergy)}</td>
-                </tr>
-                <tr>
-                  <td className="gym-name">
-                    <strong>Total (Xanax path)</strong>
-                  </td>
-                  <td className="cell-best">
-                    <strong>{fmtInt(capacity.cap.total)}</strong>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p className="footnote">
-            Drugs share <strong>one</strong> cooldown (~6-8h), so you get ~{capacity.cap.drugDoses}{' '}
-            doses/day total — you pick one drug per slot, not both. Per slot Xanax gives 250 E vs
-            LSD's 50, i.e. 5× the energy. So even if LSD looks cheaper per-$ above, the cooldown caps
-            daily drug energy at {fmtInt(capacity.lsdEnergy)} (LSD) vs {fmtInt(capacity.cap.drugEnergy)}{' '}
-            (Xanax) — which the $/energy ranking alone doesn't show. Natural assumes you train often
-            enough not to waste regen.
-          </p>
-        </>
-      )}
+      <h3 className="subhead">Daily energy capacity (cooldown-limited)</h3>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Per day</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="gym-name">Natural regen</td>
+              <td>{fmtInt(capacity.cap.natural)}</td>
+            </tr>
+            <tr>
+              <td className="gym-name">Points refill (1/day)</td>
+              <td>{fmtInt(capacity.cap.refill)}</td>
+            </tr>
+            <tr>
+              <td className="gym-name">Xanax ({capacity.cap.drugDoses} doses × 250)</td>
+              <td className="cell-best">{fmtInt(capacity.cap.drugEnergy)}</td>
+            </tr>
+            <tr>
+              <td className="gym-name">— same slots with LSD ({capacity.cap.drugDoses} × 50)</td>
+              <td className="muted-cell">{fmtInt(capacity.lsdEnergy)}</td>
+            </tr>
+            <tr>
+              <td className="gym-name">
+                <strong>Total (Xanax path)</strong>
+              </td>
+              <td className="cell-best">
+                <strong>{fmtInt(capacity.cap.total)}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="footnote">
+        Drugs share <strong>one</strong> cooldown (~6-8h), so you get ~{capacity.cap.drugDoses}{' '}
+        doses/day total — you pick one drug per slot, not both. Per slot Xanax gives 250 E vs
+        LSD's 50, i.e. 5× the energy. So even if LSD looks cheaper per-$ above, the cooldown caps
+        daily drug energy at {fmtInt(capacity.lsdEnergy)} (LSD) vs {fmtInt(capacity.cap.drugEnergy)}{' '}
+        (Xanax) — which the $/energy ranking alone doesn't show. Natural assumes you train often
+        enough not to waste regen.
+      </p>
 
       <h3 className="subhead">
         Happy boosters · {STAT_LABEL[config.stat]} in {gym?.name ?? '—'} ({fmtInt(config.energy)} E)

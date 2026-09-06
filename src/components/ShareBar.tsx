@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Gym, PlayerState, StatKey } from '../engine/types';
 import { GymGate } from '../engine/gym-eligibility';
 import { buildBbcode } from '../bbcode';
-import { buildShareUrl, SharedState } from '../url-state';
+import { buildShareUrl, Route, SharedState } from '../url-state';
 
 interface Props {
   gyms: Gym[];
@@ -11,6 +11,9 @@ interface Props {
   gate: GymGate;
   energyPerDay: number;
   shared: SharedState;
+  /** The section the link should open on — the whole point of putting the
+   *  route in the path is that a shared /cost link opens /cost. */
+  route: Route;
 }
 
 async function copy(text: string): Promise<boolean> {
@@ -26,7 +29,7 @@ async function copy(text: string): Promise<boolean> {
  * Turns a session into something that travels: a link that reproduces the exact
  * readout, and a BBCode block for Torn's forums and faction Discords.
  */
-export function ShareBar({ gyms, player, modifiers, gate, energyPerDay, shared }: Props) {
+export function ShareBar({ gyms, player, modifiers, gate, energyPerDay, shared, route }: Props) {
   const [msg, setMsg] = useState<string | null>(null);
 
   const flash = (text: string) => {
@@ -35,7 +38,7 @@ export function ShareBar({ gyms, player, modifiers, gate, energyPerDay, shared }
   };
 
   async function copyLink() {
-    const url = buildShareUrl(shared);
+    const url = buildShareUrl(shared, window.location.origin, route);
     flash((await copy(url)) ? 'Link copied.' : url);
   }
 
@@ -46,7 +49,7 @@ export function ShareBar({ gyms, player, modifiers, gate, energyPerDay, shared }
       modifiers,
       gate,
       energyPerDay,
-      shareUrl: buildShareUrl(shared),
+      shareUrl: buildShareUrl(shared, window.location.origin, route),
     });
     flash((await copy(text)) ? 'BBCode copied — paste it into a Torn forum post.' : 'Copy failed.');
   }

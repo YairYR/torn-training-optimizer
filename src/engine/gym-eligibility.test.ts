@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateGymEligibility, bestUsableGymIdForStat, standardGyms, georgesGymId } from './gym-eligibility';
-import { Gym, StatKey } from './types';
+import {
+  evaluateGymEligibility,
+  bestUsableGymIdForStat,
+  standardGyms,
+  georgesGymId,
+  ratioReachable,
+} from './gym-eligibility';
+import { Gym, StatKey, STAT_KEYS } from './types';
+import { STATIC_GYMS } from '../data/gyms';
+import { DEMO } from '../demo';
 
 const g = (id: string, energyPerTrain: number, dots: Partial<Record<StatKey, number>>): Gym => ({
   id,
@@ -117,5 +125,75 @@ describe('standardGyms / georgesGymId', () => {
 
   it('identifies George’s as the top standard gym', () => {
     expect(georgesGymId(gyms)).toBe(24);
+  });
+});
+
+describe('ratioReachable', () => {
+  // Dex 60M is already 1.25x Speed 40.67M, so the ratio is met: the ONLY
+  // thing standing between this player and The Elites is George's.
+  const ratioMet = { ...stats, dexterity: 60_000_000 };
+
+  it('es falso cuando el bloqueo real es el gate de progresion, no el ratio', () => {
+    expect(evaluateGymEligibility(elites, ratioMet, 0, { unlockedCapId: 22 }).status).toBe('locked');
+    expect(ratioReachable(elites, ratioMet, 0, { unlockedCapId: 22 })).toBe(false);
+  });
+
+  it('es verdadero cuando el gate esta abierto y falta ratio', () => {
+    // Mismo gym, cap en George's: aca entrenar Dex si abre la puerta.
+    expect(ratioReachable(elites, stats, 0, { unlockedCapId: 24 })).toBe(true);
+  });
+
+  it('es falso para los gyms cuyo gate no es un stat', () => {
+    expect(ratioReachable(ssl, stats, 500, { unlockedCapId: 24 })).toBe(false);
+    expect(ratioReachable(fightClub, stats, 0, { unlockedCapId: 24 })).toBe(false);
+  });
+});
+
+describe('TrainingPlan "Next upgrade" election on real data (regression, finding 1)', () => {
+  // Reproduces the election in TrainingPlan.tsx's `plans` useMemo: the best
+  // higher-dots gym that is not already usable AND is ratioReachable — using
+  // the real gym table and the shipped demo player, not synthetic fixtures.
+  // Before the fix this always elected The Sports Science Lab (9.0 dots on
+  // all four stats, gated on a permanent lifetime drug count) for every
+  // stat, because only the 'invite' status was excluded.
+  function nextUpgrade(stat: StatKey, xanaxEcstasyTaken: number, unlockedCapId: number) {
+    const gate = { unlockedCapId, georgesUnlocked: unlockedCapId >= georgesGymId(STATIC_GYMS)! };
+    const usableId = bestUsableGymIdForStat(STATIC_GYMS, stat, DEMO.stats, xanaxEcstasyTaken, gate);
+    const dots = STATIC_GYMS.find((g) => g.id === usableId)!.dots[stat];
+    let best: Gym | null = null;
+    for (const g of STATIC_GYMS) {
+      if (g.dots[stat] <= dots) continue;
+      const el = evaluateGymEligibility(g, DEMO.stats, xanaxEcstasyTaken, gate);
+      if (['accessible', 'eligible'].includes(el.status)) continue;
+      if (!ratioReachable(g, DEMO.stats, xanaxEcstasyTaken, gate)) continue;
+      if (!best || g.dots[stat] > best.dots[stat]) best = g;
+    }
+    return best;
+  }
+
+  it('demo player (cap below Last Round, over the drug cap): SSL never wins, each stat gets a real trainable specialist', () => {
+    for (const stat of STAT_KEYS) {
+      const upgrade = nextUpgrade(stat, DEMO.xanaxEcstasy!, DEMO.unlockedGymId);
+      expect(upgrade?.name).not.toBe('The Sports Science Lab');
+      expect(upgrade?.name).not.toBe('Fight Club');
+    }
+    // The two pairs are the correct, reachable specialists for this player.
+    expect(nextUpgrade('strength', DEMO.xanaxEcstasy!, DEMO.unlockedGymId)?.name).toBe(
+      'Frontline Fitness',
+    );
+    expect(nextUpgrade('defense', DEMO.xanaxEcstasy!, DEMO.unlockedGymId)?.name).toBe(
+      'Balboas Gym',
+    );
+  });
+
+  it('once Last Round is unlocked and the drug count is under the cap, SSL becomes usable (not an "upgrade") and nothing beats it but invite-only Fight Club', () => {
+    const capAtLastRound = 22;
+    for (const stat of STAT_KEYS) {
+      const gate = { unlockedCapId: capAtLastRound, georgesUnlocked: false };
+      const usableId = bestUsableGymIdForStat(STATIC_GYMS, stat, DEMO.stats, 100, gate);
+      expect(STATIC_GYMS.find((g) => g.id === usableId)!.name).toBe('The Sports Science Lab');
+      // No upgrade line at all — the only higher-dots gym is Fight Club (invite).
+      expect(nextUpgrade(stat, 100, capAtLastRound)).toBeNull();
+    }
   });
 });

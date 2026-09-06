@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Gym, PlayerState, StatKey, STAT_KEYS } from './engine/types';
+import { useEffect, useMemo, useState } from 'react';
+import { Gym, PlayerState, STAT_KEYS, SessionConfig, StatKey, ManualData } from './engine/types';
 import { fetchGyms, fetchPlayer } from './api/client';
 import { fetchPrices } from './api/market';
 import { Prices } from './engine/cost-model';
@@ -11,45 +11,21 @@ import {
 } from './engine/gym-eligibility';
 import { flatModifiers } from './engine/modifiers';
 import { ENERGY_SOURCES, HAPPY_BOOSTERS } from './data/consumables';
-import { SessionConfig } from './session-config';
-import { ApiKeyBar } from './components/ApiKeyBar';
-import { SummaryCard } from './components/SummaryCard';
-import { Modifiers } from './components/Modifiers';
-import { PlayerSummary } from './components/PlayerSummary';
-import { TrainingPlan } from './components/TrainingPlan';
-import { Planner } from './components/Planner';
-import { BuildRoadmap } from './components/BuildRoadmap';
-import { GymComparator } from './components/GymComparator';
-import { SessionSimulator } from './components/SessionSimulator';
-import { Economics } from './components/Economics';
-import { Optimizer } from './components/Optimizer';
-import { AboutSection } from './components/AboutSection';
-import { ManualEntry, ManualData } from './components/ManualEntry';
-import { BuildCompare } from './components/BuildCompare';
-import { BuildRatio } from './components/BuildRatio';
+import { YourData } from './components/YourData';
 import { ShareBar } from './components/ShareBar';
-import { Fold } from './components/Fold';
+import { Nav } from './components/Nav';
+import { AnswerBar } from './components/AnswerBar';
+import { Plan } from './routes/Plan';
+import { Build } from './routes/Build';
+import { Compare } from './routes/Compare';
+import { Cost } from './routes/Cost';
+import { Progress } from './routes/Progress';
 import { DEMO } from './demo';
-import { readSharedState, syncUrl, SharedState } from './url-state';
-import { dailyEnergyCapacity } from './engine/energy-capacity';
+import { readSharedState, syncUrl, navigate, readRoute, Route, SharedState } from './url-state';
+import { xanaxDailyEnergy } from './engine/energy-capacity';
+import { playerStage } from './engine/stage';
 import { STATIC_GYMS } from './data/gyms';
 import './styles.css';
-
-// Recharts is the single biggest dependency and powers only these three
-// panels, all of which start collapsed. Splitting them out keeps it off the
-// critical path; Fold mounts the subtree the first time a panel is opened, so
-// the import fires on demand rather than on load.
-const Projector = lazy(() =>
-  import('./components/Projector').then((m) => ({ default: m.Projector })),
-);
-const ProgressTracker = lazy(() =>
-  import('./components/ProgressTracker').then((m) => ({ default: m.ProgressTracker })),
-);
-const HistoryChart = lazy(() =>
-  import('./components/HistoryChart').then((m) => ({ default: m.HistoryChart })),
-);
-
-const ChartFallback = () => <p className="footnote">Loading chart…</p>;
 
 const KEY_STORE = 'tto.apiKey';
 const MOD_STORE = 'tto.modifiers';
@@ -81,26 +57,34 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   // Manual inputs are kept so the share link can reproduce them exactly.
   const [manual, setManual] = useState<ManualData | null>(null);
-  // A stat/gym from the URL has to survive until a player is loaded — a visitor
-  // from an SEO landing page arrives with a gym selected but no stats yet.
-  const [pendingConfig, setPendingConfig] = useState<Partial<SessionConfig> | null>(null);
   // True while the visitor is looking at the sample player rather than their own.
   const [isDemo, setIsDemo] = useState(false);
+  const [route, setRoute] = useState<Route>(() => readRoute());
+
+  // Back/forward move between sections, not between state snapshots: the
+  // player's stats are session state shared by all five routes, so only the
+  // section is restored here. (The syncUrl effect then rewrites the query of
+  // the entry we land on with the current stats — deliberate: the address bar
+  // stays pasteable, and "back" never silently swaps the player out from
+  // under you.)
+  useEffect(() => {
+    const onPop = () => setRoute(readRoute());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
 
   // A shared link (or an SEO landing page) fills the tool in before first paint,
   // so a visitor from search lands on real numbers instead of an empty form.
+  // A landing-page CTA carries a stat/gym but no stats (/compare?stat=defense&
+  // gym=25): that still has to reach a working calculator, so the sample player
+  // loads on every route unless the URL brought real stats of its own.
   useEffect(() => {
     const shared = readSharedState();
     if (shared?.modifiers) setModifiers(shared.modifiers);
-    if (shared?.config) setPendingConfig(shared.config);
-    if (shared?.manual) {
-      loadManual(shared.manual);
-    } else if (!shared) {
-      // Nothing to restore — show the tool working on a sample player instead
-      // of an empty form. Replaced the moment real data arrives.
-      loadManual(DEMO);
-      setIsDemo(true);
-    }
+    // The config goes in as an argument, not through state: loadManual runs
+    // synchronously here and would read the pre-update value of any setState.
+    loadManual(shared?.manual ?? DEMO, shared?.config ?? null);
+    setIsDemo(!shared?.manual);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -132,6 +116,13 @@ export default function App() {
       setPlayer(p);
       setGyms(g);
       setPrices(pr);
+      // Otherwise `manual` still holds the sample player from the mount
+      // effect (or an earlier "enter your own numbers" session), and the
+      // `shared` memo below keeps returning ITS stats instead of the real
+      // API player's — the address bar and ShareBar would publish the wrong
+      // numbers, and reloading that URL would find a `manual` and never show
+      // the "Sample player" banner. See the `shared` memo.
+      setManual(null);
       if (p.detectedModifiers) setModifiers(p.detectedModifiers);
 
       // Default the unlocked cap from the active gym if it's a standard gym,
@@ -147,14 +138,16 @@ export default function App() {
         georgesUnlocked: gId == null || defaultCap == null ? true : defaultCap >= gId,
         inJail: p.inJail === true,
       };
+      // Keep whatever stat is on screen (the URL's, or the one the visitor
+      // picked while looking at the sample player); the gym is recomputed,
+      // since only now do we know which gyms this account can actually use.
+      const stat = config?.stat ?? 'defense';
       setConfig({
-        stat: 'defense',
-        gymId: bestUsableGymIdForStat(g, 'defense', p.stats, p.xanaxEcstasyTaken, localGate),
+        stat,
+        gymId: bestUsableGymIdForStat(g, stat, p.stats, p.xanaxEcstasyTaken, localGate),
         energy: p.energy.current,
         happy: p.happy.current,
-        ...pendingConfig,
       });
-      setPendingConfig(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error.');
     } finally {
@@ -162,7 +155,8 @@ export default function App() {
     }
   }
 
-  function loadManual(data: ManualData) {
+  /** `cfg` is the stat/gym a link arrived with, if any — see the mount effect. */
+  function loadManual(data: ManualData, cfg: Partial<SessionConfig> | null = null) {
     setError(null);
     setPrices(null);
     setManual(data);
@@ -184,20 +178,21 @@ export default function App() {
       georgesUnlocked: gId == null || cap >= gId,
       inJail: data.inJail === true,
     };
+    // The gym default follows the stat already on screen: `cfg` when a link
+    // brought one in (the mount effect), else whatever `config` already has
+    // (the "enter your own numbers" form, called with no `cfg` — see its call
+    // site below). At mount `config` is still null so this yields 'defense'
+    // unchanged; by the time the form calls in, `config` is settled. Without
+    // this fallback, typing your own stats after landing on e.g.
+    // /compare?stat=speed silently flipped the visible stat to Defense.
+    const stat = cfg?.stat ?? config?.stat ?? 'defense';
     setConfig({
-      stat: 'defense',
-      gymId: bestUsableGymIdForStat(
-        STATIC_GYMS,
-        'defense',
-        ps.stats,
-        ps.xanaxEcstasyTaken,
-        localGate,
-      ),
+      stat,
+      gymId: bestUsableGymIdForStat(STATIC_GYMS, stat, ps.stats, ps.xanaxEcstasyTaken, localGate),
       energy: ps.energy.current,
       happy: ps.happy.current,
-      ...pendingConfig,
+      ...cfg,
     });
-    setPendingConfig(null);
   }
 
   const patchConfig = (patch: Partial<SessionConfig>) =>
@@ -216,16 +211,15 @@ export default function App() {
       return next;
     });
 
-  const energyPerDay = useMemo(() => {
-    if (!player) return 0;
-    const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax');
-    if (!xan?.cooldownMinutes) return player.energy.maximum;
-    return dailyEnergyCapacity({
-      maxEnergy: player.energy.maximum,
-      drugEnergyPerDose: xan.energyGain,
-      drugCooldownMinutes: xan.cooldownMinutes,
-    }).total;
-  }, [player]);
+  const energyPerDay = useMemo(
+    () => (player ? xanaxDailyEnergy(player.energy.maximum) : 0),
+    [player],
+  );
+
+  const stage = useMemo(
+    () => (player ? playerStage(player, prices) : null),
+    [player, prices],
+  );
 
   const shared: SharedState = useMemo(
     () => ({
@@ -249,13 +243,79 @@ export default function App() {
 
   // Keep the address bar pasteable at all times, without polluting history.
   useEffect(() => {
-    if (player && !isDemo) syncUrl(shared);
-  }, [player, shared, isDemo]);
+    if (player && !isDemo) syncUrl(shared, route);
+  }, [player, shared, isDemo, route]);
+
+  // Solo / se indexa; las cuatro rutas profundas llevan noindex.
+  useEffect(() => {
+    const id = 'route-robots';
+    document.getElementById(id)?.remove();
+    if (route === '/') return;
+    const m = document.createElement('meta');
+    m.id = id;
+    m.name = 'robots';
+    m.content = 'noindex, follow';
+    document.head.appendChild(m);
+  }, [route]);
 
   const setMod = (stat: StatKey, value: number) => setModifiers((m) => ({ ...m, [stat]: value }));
   const detectMods = () => {
     if (player?.detectedModifiers) setModifiers(player.detectedModifiers);
   };
+
+  const go = (r: Route) => {
+    // Same guard as syncUrl above: the sample player's stats must never end up
+    // in the address bar, or reloading that link presents them as the
+    // visitor's own (readSharedState finds a `manual`, so isDemo stays false
+    // and the "Sample player" banner is gone).
+    navigate(r, isDemo ? {} : shared);
+    setRoute(r);
+    window.scrollTo(0, 0);
+  };
+
+  // Construido dentro del if, no en la guarda `&&` del JSX: TS solo estrecha
+  // player/gyms/config/stage a no-nulos dentro del mismo bloque que los revisa.
+  let routeSection: JSX.Element | null = null;
+  if (player && gyms && config && stage) {
+    const routeProps = {
+      gyms, player, modifiers, gate, config, prices, energyPerDay, stage,
+      unlockedGymId,
+      onConfig: patchConfig,
+      onUnlockedGym: setUnlockedGymId,
+      onMod: setMod,
+      onDetect: detectMods,
+    };
+    routeSection = (
+      <>
+        {!isDemo && (
+          <ShareBar
+            gyms={gyms}
+            player={player}
+            modifiers={modifiers}
+            gate={gate}
+            energyPerDay={energyPerDay}
+            shared={shared}
+            route={route}
+          />
+        )}
+        {route !== '/' && (
+          <AnswerBar
+            gyms={gyms}
+            player={player}
+            modifiers={modifiers}
+            gate={gate}
+            energyPerDay={energyPerDay}
+          />
+        )}
+        <Nav route={route} stage={stage} onNavigate={go} />
+        {route === '/' && <Plan {...routeProps} />}
+        {route === '/build' && <Build {...routeProps} />}
+        {route === '/compare' && <Compare {...routeProps} />}
+        {route === '/cost' && <Cost {...routeProps} />}
+        {route === '/progress' && <Progress {...routeProps} />}
+      </>
+    );
+  }
 
   return (
     <div className="app">
@@ -270,12 +330,16 @@ export default function App() {
       </header>
 
       <main>
-        <ApiKeyBar
+        <YourData
           apiKey={apiKey}
           onApiKey={setApiKey}
           loading={loading}
           onLoad={load}
           error={error}
+          onManual={(d) => {
+            setIsDemo(false);
+            loadManual(d);
+          }}
         />
 
         {isDemo && (
@@ -286,137 +350,7 @@ export default function App() {
           </p>
         )}
 
-        {player && gyms && config && (
-          <>
-            <SummaryCard gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-            {!isDemo && (
-              <ShareBar
-                gyms={gyms}
-                player={player}
-                modifiers={modifiers}
-                gate={gate}
-                energyPerDay={energyPerDay}
-                shared={shared}
-              />
-            )}
-            <TrainingPlan
-              gyms={gyms}
-              player={player}
-              modifiers={modifiers}
-              prices={prices}
-              gate={gate}
-              standardGyms={standardGyms(gyms)}
-              unlockedGymId={unlockedGymId}
-              onUnlockedGym={setUnlockedGymId}
-            />
-
-            <Fold label="Build ratio" hint="Are you still on your build?" open>
-            <BuildRatio gyms={gyms} player={player} gate={gate} />
-          </Fold>
-          <Fold label="Build roadmap" hint="Which gyms your ratio unlocks next">
-              <BuildRoadmap gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-            </Fold>
-            <Fold label="Reach a target" hint="Energy, cash and days to a stat or a gym">
-              <Planner
-                gyms={gyms}
-                player={player}
-                modifiers={modifiers}
-                prices={prices}
-                gate={gate}
-              />
-            </Fold>
-            <Fold label="Compare every gym" hint="Ranked for the stat you pick">
-              <GymComparator gyms={gyms} player={player} modifiers={modifiers} gate={gate} />
-            </Fold>
-            <Fold label="Simulate one session" hint="Train by train, with the happy-loss band">
-              <SessionSimulator
-                gyms={gyms}
-                player={player}
-                modifiers={modifiers[config.stat]}
-                config={config}
-                onConfig={patchConfig}
-              />
-            </Fold>
-            <Fold label="Cost of energy" hint="Cheapest source, and your daily ceiling">
-              <Economics
-                gyms={gyms}
-                player={player}
-                modifiers={modifiers[config.stat]}
-                config={config}
-                prices={prices}
-              />
-            </Fold>
-            <Fold label="Spend a budget" hint="Best items to buy for the most gains">
-              <Optimizer
-                gyms={gyms}
-                player={player}
-                modifiers={modifiers[config.stat]}
-                config={config}
-                prices={prices}
-              />
-            </Fold>
-            <Fold label="Project forward" hint="Multi-day stat growth">
-              <Suspense fallback={<ChartFallback />}>
-                <Projector
-                  gyms={gyms}
-                  player={player}
-                  modifiers={modifiers}
-                  config={config}
-                  prices={prices}
-                  gate={gate}
-                />
-              </Suspense>
-            </Fold>
-            <Fold label="Compare two setups" hint="What a gym, happy level or perk is worth">
-              <BuildCompare
-                gyms={gyms}
-                player={player}
-                modifiers={modifiers}
-                gate={gate}
-                energyPerDay={energyPerDay}
-              />
-            </Fold>
-            <Fold label="Gym-gain modifiers (M)" hint="Detected from your perks, editable">
-              <Modifiers
-                modifiers={modifiers}
-                detected={player.detectedModifiers}
-                contributions={player.modifierContributions}
-                onChange={setMod}
-                onDetect={detectMods}
-              />
-            </Fold>
-            <Fold label="Your bars and stats" hint="What was read from the API">
-              <PlayerSummary player={player} />
-            </Fold>
-            <Fold label="Track real vs predicted" hint="Check the formula against your own trains">
-              <Suspense fallback={<ChartFallback />}>
-                <ProgressTracker player={player} gyms={gyms} modifiers={modifiers} gate={gate} />
-              </Suspense>
-            </Fold>
-            <Fold label="Stats history" hint="Your curve over time">
-              <Suspense fallback={<ChartFallback />}>
-                <HistoryChart player={player} />
-              </Suspense>
-            </Fold>
-          </>
-        )}
-
-        {(!player || isDemo) && (
-          <>
-            <p className="getstarted" id="own-numbers">
-              Two ways to use your own numbers: paste your Torn <strong>API key</strong> above and
-              everything fills in instantly — stats, gyms, perks and prices. Or type your stats in
-              below; no key needed.
-            </p>
-            <ManualEntry
-              onSubmit={(d) => {
-                setIsDemo(false);
-                loadManual(d);
-              }}
-            />
-            <AboutSection />
-          </>
-        )}
+        {routeSection}
       </main>
 
       <footer className="site-footer">

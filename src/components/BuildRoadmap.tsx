@@ -3,8 +3,7 @@ import { Gym, PlayerState, STAT_KEYS, STAT_LABEL, StatKey } from '../engine/type
 import { buildRoadmap } from '../engine/build-roadmap';
 import { GymGate, bestUsableGymIdForStat } from '../engine/gym-eligibility';
 import { planToTarget } from '../engine/planner';
-import { dailyEnergyCapacity } from '../engine/energy-capacity';
-import { ENERGY_SOURCES } from '../data/consumables';
+import { xanaxDailyEnergy } from '../engine/energy-capacity';
 import { fmtInt } from '../format';
 
 interface Props {
@@ -34,15 +33,7 @@ export function BuildRoadmap({ gyms, player, modifiers, gate }: Props) {
     [gyms, stats, primary, player.xanaxEcstasyTaken, gate],
   );
 
-  const dailyCap = useMemo(() => {
-    const xan = ENERGY_SOURCES.find((s) => s.id === 'xanax');
-    if (!xan?.cooldownMinutes) return 0;
-    return dailyEnergyCapacity({
-      maxEnergy: player.energy.maximum,
-      drugEnergyPerDose: xan.energyGain,
-      drugCooldownMinutes: xan.cooldownMinutes,
-    }).total;
-  }, [player.energy.maximum]);
+  const dailyCap = useMemo(() => xanaxDailyEnergy(player.energy.maximum), [player.energy.maximum]);
 
   const eta = useMemo(() => {
     const ns = roadmap.nextStage;

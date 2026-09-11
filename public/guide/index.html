@@ -153,11 +153,34 @@
       .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
       .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
       .cta b { color: var(--accent); }
+      /* Mismo patrón que la app (.table-wrap en src/styles.css): scrollea el
+         contenedor, no la tabla. Poner overflow en el propio <table> obliga a
+         display:block, y eso le quita la semántica de tabla en el árbol de
+         accesibilidad de varios lectores de pantalla. */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
       th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
       th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
       td.num { font-family: var(--mono); }
       footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+      /* Estas páginas no tenían ni una media query. Medido a 375px, /gyms/
+         hacía 592px de ancho: 217px de desborde horizontal en las URLs que
+         reciben el trafico de búsqueda, que es justo lo que Google marca como
+         "content wider than screen". Una buena parte de Torn se juega en
+         TornPDA y en navegador móvil. */
+      @media (max-width: 640px) {
+        .wrap { padding: 20px 14px 48px; }
+        h1 { font-size: 26px; }
+        h2 { font-size: 19px; margin: 26px 0 8px; }
+        h3 { font-size: 16px; }
+        p, li { font-size: 15px; }
+        .sub { font-size: 15px; }
+        .toc { padding: 14px 16px; }
+        .cta { padding: 14px 16px; }
+        table { font-size: 13px; }
+        th, td { padding: 6px 8px; }
+      }
     </style>
   </head>
   <body>
@@ -230,13 +253,13 @@
         a time, and the cooldown runs roughly <b>6–8 hours</b>. So you get about <b>three doses a day,
         total</b>.
       </p>
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>Drug</th><th>Energy/dose</th><th>~3 doses/day</th><th>Notes</th></tr></thead>
         <tbody>
           <tr><td>Xanax</td><td class="num">250</td><td class="num">~750</td><td>+75 happy; the training staple</td></tr>
           <tr><td>LSD</td><td class="num">50</td><td class="num">~150</td><td>happy boost, but high overdose risk</td></tr>
         </tbody>
-      </table>
+      </table></div>
       <p>
         Because the cooldown caps you at ~3 doses, the drug with the most energy <em>per dose</em> wins.
         Even if LSD looks cheaper per point of energy on the market, you can't make up the <b>5×</b>

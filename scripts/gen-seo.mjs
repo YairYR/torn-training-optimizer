@@ -125,11 +125,34 @@ const PAGE_CSS = `      * { box-sizing: border-box; }
       .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
       .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
       .cta b { color: var(--accent); }
+      /* Mismo patrón que la app (.table-wrap en src/styles.css): scrollea el
+         contenedor, no la tabla. Poner overflow en el propio <table> obliga a
+         display:block, y eso le quita la semántica de tabla en el árbol de
+         accesibilidad de varios lectores de pantalla. */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
       th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
       th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
       td.num { font-family: var(--mono); }
-      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }`;
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+      /* Estas páginas no tenían ni una media query. Medido a 375px, /gyms/
+         hacía 592px de ancho: 217px de desborde horizontal en las URLs que
+         reciben el trafico de búsqueda, que es justo lo que Google marca como
+         "content wider than screen". Una buena parte de Torn se juega en
+         TornPDA y en navegador móvil. */
+      @media (max-width: 640px) {
+        .wrap { padding: 20px 14px 48px; }
+        h1 { font-size: 26px; }
+        h2 { font-size: 19px; margin: 26px 0 8px; }
+        h3 { font-size: 16px; }
+        p, li { font-size: 15px; }
+        .sub { font-size: 15px; }
+        .toc { padding: 14px 16px; }
+        .cta { padding: 14px 16px; }
+        table { font-size: 13px; }
+        th, td { padding: 6px 8px; }
+      }`;
 
 const STYLE = `<style>\n${TOKENS}\n${PAGE_CSS}\n    </style>`;
 
@@ -275,7 +298,7 @@ const emit = (path, html, priority) => {
   urls.push({ path, priority, lastmod: lastmodOf(path, html) });
 };
 
-const gymTable = (list, highlight) => `      <table>
+const gymTable = (list, highlight) => `      <div class="table-wrap"><table>
         <thead>
           <tr><th>Gym</th><th>Energy</th>${STATS.map((s) => `<th>${s.label}</th>`).join('')}<th>Cost</th></tr>
         </thead>
@@ -298,7 +321,7 @@ ${STATS.map(
   )
   .join('\n')}
         </tbody>
-      </table>`;
+      </table></div>`;
 
 // --- /gyms/<slug>/ : one page per gym
 for (const g of gyms) {
@@ -577,7 +600,7 @@ emit(
         Torn published monthly-growth figures for a fixed regime — 1,500 energy a day, George's, a
         fully upgraded private island, no Steadfast — before and after the change:
       </p>
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
         <tbody>
           <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
@@ -589,7 +612,7 @@ emit(
           <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
           <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h2>The curve behind them</h2>
       <p>
@@ -737,13 +760,13 @@ emit(
       },
     ],
     body: `      <h2>The numbers</h2>
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>Drug</th><th>Energy per dose</th><th>Doses per day</th><th>Energy per day</th></tr></thead>
         <tbody>
           <tr><td>Xanax</td><td class="num">250</td><td class="num">~3</td><td class="num">~750</td></tr>
           <tr><td>LSD</td><td class="num">50</td><td class="num">~3</td><td class="num">~150</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <div class="callout">
         The doses column is the whole argument. One shared cooldown of roughly 6–8 hours means about

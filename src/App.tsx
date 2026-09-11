@@ -329,6 +329,9 @@ export default function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main">
+        Skip to the calculator
+      </a>
       <header className="masthead">
         {/* La keyword principal vive en el H1, no solo en el shell SSR de
             index.html. React sustituye ese shell al montar, así que el H1 que
@@ -345,7 +348,10 @@ export default function App() {
         </p>
       </header>
 
-      <main>
+      {/* tabIndex -1 para que el salto mueva el foco de verdad, no solo el
+          scroll: <main> no es focusable por defecto, así que sin esto el
+          siguiente Tab volvería al principio de la cabecera. */}
+      <main id="main" tabIndex={-1}>
         <YourData
           apiKey={apiKey}
           onApiKey={setApiKey}

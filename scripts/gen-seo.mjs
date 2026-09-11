@@ -51,10 +51,30 @@ const previous = JSON.parse(readFileSync(LEDGER, 'utf8'));
 const ledger = {};
 let changed = 0;
 
+/**
+ * Marcador que las plantillas dejan donde va la fecha. Se sustituye por la
+ * fecha real justo antes de escribir el fichero, nunca antes de calcular el
+ * fingerprint.
+ */
+const DATE_TOKEN = '__LASTMOD__';
+
+/**
+ * Normaliza las fechas antes de hashear. Es lo que rompe el bucle: si la fecha
+ * entrara en el fingerprint, escribirla cambiaría el hash, el hash nuevo
+ * re-dataría la página, y esa fecha volvería a cambiar el hash. La página
+ * quedaría marcada como modificada en cada build, para siempre, y `dateModified`
+ * dejaría de significar nada.
+ */
+const withoutDates = (html) =>
+  html.replace(/"dateModified": "[^"]*"/g, `"dateModified": "${DATE_TOKEN}"`);
+
 /** Records the fingerprint and returns the date this URL should publish. */
 function lastmodOf(path, html) {
   const key = canon(path);
-  const hash = createHash('sha256').update(html).digest('hex').slice(0, 16);
+  // Memoizado dentro de un mismo build: las tres páginas de prosa piden la
+  // fecha una vez para estamparla en su schema y otra al armar el sitemap.
+  if (ledger[key]) return ledger[key].date;
+  const hash = createHash('sha256').update(withoutDates(html)).digest('hex').slice(0, 16);
   const same = previous[key]?.hash === hash;
   if (!same) changed++;
   ledger[key] = { hash, date: same ? previous[key].date : TODAY };
@@ -165,14 +185,26 @@ const STYLE = `<style>\n${TOKENS}\n${PAGE_CSS}\n    </style>`;
  * El techo es ese: si algún día estorba en un diff, la salida es mover las tres
  * a una hoja externa /seo.css y pagar un round trip de render-blocking.
  */
-function syncHandWrittenStyles() {
+function syncHandWrittenPages() {
   for (const slug of ['guide', 'happy-jump', 'specialist-gyms']) {
     const file = resolve(OUT, slug, 'index.html');
     const html = readFileSync(file, 'utf8');
+
     // Función de reemplazo, no string: STYLE lleva $ en las plantillas y un
     // reemplazo literal los interpretaría como referencias de grupo.
-    const next = html.replace(/<style>[\s\S]*?<\/style>/, () => STYLE);
-    if (next !== html) writeFileSync(file, next);
+    let next = html.replace(/<style>[\s\S]*?<\/style>/, () => STYLE);
+
+    // Estas tres ya declaraban Article, pero sin ninguna fecha. La del ledger
+    // es la honesta: sale del fingerprint del contenido, así que dice cuándo
+    // cambió la página de verdad y no cuándo se corrió el último build.
+    next = next.includes('"dateModified"')
+      ? next.replace(/"dateModified": "[^"]*"/, `"dateModified": "${DATE_TOKEN}"`)
+      : next.replace(/"@type": "Article",/, `$&\n      "dateModified": "${DATE_TOKEN}",`);
+
+    // Mismo orden de dos fases que emit(): el fingerprint se calcula con el
+    // token puesto, y la fecha se estampa después.
+    const out = next.replaceAll(DATE_TOKEN, lastmodOf(`/${slug}/`, next));
+    if (out !== html) writeFileSync(file, out);
   }
 }
 
@@ -180,7 +212,18 @@ function syncHandWrittenStyles() {
  * One template for every generated page, so head tags, breadcrumbs, structured
  * data and internal links can never drift apart across 40 files.
  */
-function page({ path, title, description, h1, sub, body, crumbs, schema = [], related = [] }) {
+function page({
+  path,
+  title,
+  description,
+  h1,
+  sub,
+  body,
+  crumbs,
+  schema = [],
+  related = [],
+  article = false,
+}) {
   const url = `${SITE}${canon(path)}`;
   const breadcrumb = {
     '@context': 'https://schema.org',
@@ -192,7 +235,32 @@ function page({ path, title, description, h1, sub, body, crumbs, schema = [], re
       item: `${SITE}${canon(c.path)}`,
     })),
   };
-  const blocks = [breadcrumb, ...schema]
+  // TechArticle solo en las páginas explicativas. Les da entidad de artículo
+  // con autor, editor y fecha real de modificación, que es lo que pesan tanto
+  // la búsqueda como los motores de respuesta. Las páginas de referencia
+  // (tablas de gimnasios, dots) se quedan fuera a propósito: son datos, no
+  // prosa, y ya declaran Dataset donde corresponde. Marcar una tabla como
+  // artículo es ruido de schema, no señal.
+  const techArticle = article
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'TechArticle',
+          headline: h1,
+          description,
+          mainEntityOfPage: url,
+          image: `${SITE}/og-image.png`,
+          author: { '@type': 'Organization', name: 'Torn Training Optimizer' },
+          publisher: { '@type': 'Organization', name: 'Torn Training Optimizer' },
+          // emit() lo sustituye por la fecha del ledger. No se emite
+          // datePublished: el ledger guarda cuándo cambió el contenido, no
+          // cuándo se publicó por primera vez, y declarar una fecha que no
+          // tenemos sería inventarse el dato.
+          dateModified: DATE_TOKEN,
+        },
+      ]
+    : [];
+  const blocks = [breadcrumb, ...techArticle, ...schema]
     .map((s) => `    <script type="application/ld+json">\n${JSON.stringify(s, null, 2)}\n    </script>`)
     .join('\n');
 
@@ -294,8 +362,12 @@ const HUBS = [
 
 const related = (exclude) => HUBS.filter((h) => h.path !== exclude).slice(0, 6);
 const emit = (path, html, priority) => {
-  write(path, html);
-  urls.push({ path, priority, lastmod: lastmodOf(path, html) });
+  // Dos fases, y el orden importa: primero el fingerprint, que se calcula con
+  // el token de fecha todavía en su sitio, y solo después se sustituye por la
+  // fecha ya resuelta. Ver withoutDates.
+  const date = lastmodOf(path, html);
+  write(path, html.replaceAll(DATE_TOKEN, date));
+  urls.push({ path, priority, lastmod: date });
 };
 
 const gymTable = (list, highlight) => `      <div class="table-wrap"><table>
@@ -554,6 +626,7 @@ emit(
   '/stat-cap/',
   page({
     path: '/stat-cap/',
+    article: true,
     title: 'The Torn 50M Stat Cap — Removed in 2022, and What Replaced It',
     description:
       'Torn removed the 50,000,000 gym stat cap in August 2022. Gains above 50M keep growing at a decreasing rate. Here is what actually happens now, with the official growth figures and the curve derived from them.',
@@ -646,6 +719,7 @@ emit(
   '/gym-unlock-order/',
   page({
     path: '/gym-unlock-order/',
+    article: true,
     title: 'Torn Gym Unlock Order — All 24 Standard Gyms',
     description:
       'The full order Torn gyms unlock in, with the cost to join each one. Standard gyms unlock on gym EXP — total energy spent training — not on level or stats.',
@@ -688,6 +762,7 @@ emit(
   '/training-ratios/',
   page({
     path: '/training-ratios/',
+    article: true,
     title: 'Torn Training Ratios — Hank\u2019s Ratio and Specialist Access',
     description:
       'How stat ratios in Torn gate the 7.5, 8.0 and 9.0-dot specialist gyms, why the 1.25:1:1:0 build exists, and what leaving a stat behind actually buys you.',
@@ -734,6 +809,7 @@ emit(
   '/xanax-vs-lsd/',
   page({
     path: '/xanax-vs-lsd/',
+    article: true,
     title: 'Xanax vs LSD in Torn — Which Actually Gives More Energy',
     description:
       'LSD often looks cheaper per energy, but drugs share one cooldown. Per cooldown slot Xanax gives five times the energy. Here is the arithmetic that decides your daily training budget.',
@@ -788,9 +864,9 @@ emit(
 );
 
 // Antes del sitemap, no después: las tres páginas de prosa se fingerprintean
-// desde su fichero, así que el <style> tiene que estar ya sincronizado cuando
-// lastmodOf las lea, o el cambio de estilos no re-data la entrada.
-syncHandWrittenStyles();
+// desde su fichero, así que el <style> y la fecha tienen que estar ya puestos
+// cuando lastmodOf las lea, o el cambio no re-data la entrada.
+syncHandWrittenPages();
 
 // ---- Sitemap ---------------------------------------------------------------
 

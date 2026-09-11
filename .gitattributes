@@ -1,0 +1,20 @@
+# Finales de línea normalizados: LF en el índice y LF en el working tree, en
+# cualquier sistema operativo.
+#
+# Sin esto, core.autocrlf=true en Windows hacía que cada `git add` avisara de
+# la conversión, pero el problema de verdad es otro: scripts/gen-seo.mjs
+# compara el HTML byte a byte en syncHandWrittenStyles() para decidir si
+# reescribe las tres páginas de prosa. Con el working tree en CRLF en Windows y
+# en LF en macOS o Linux, ese `next !== html` daría siempre verdadero fuera de
+# Windows y el build reescribiría los tres ficheros en cada ejecución.
+#
+# `eol=lf` es deliberado, no `text=auto` a secas: este último respeta
+# core.autocrlf y devolvería CRLF en el checkout de Windows, que es justo la
+# asimetría que causa el problema.
+* text=auto eol=lf
+
+# Las imágenes nunca pasan por conversión. `text=auto` ya las detecta como
+# binarias, pero una corrupción por conversión accidental no se recupera del
+# historial sin dolor, así que se declara explícito.
+*.png binary
+*.ico binary

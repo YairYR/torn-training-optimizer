@@ -246,17 +246,13 @@ export default function App() {
     if (player && !isDemo) syncUrl(shared, route);
   }, [player, shared, isDemo, route]);
 
-  // Solo / se indexa; las cuatro rutas profundas llevan noindex.
-  useEffect(() => {
-    const id = 'route-robots';
-    document.getElementById(id)?.remove();
-    if (route === '/') return;
-    const m = document.createElement('meta');
-    m.id = id;
-    m.name = 'robots';
-    m.content = 'noindex, follow';
-    document.head.appendChild(m);
-  }, [route]);
+  // Aquí NO va un noindex por ruta, y es deliberado. Las cuatro rutas
+  // profundas se reescriben a index.html (vercel.json), que sirve
+  // <link rel="canonical" href="https://torntraining.com/">. Esa canónica ya
+  // consolida las cinco URLs en la home. Añadir además noindex mezcla dos
+  // señales que Google documenta como contradictorias sobre la misma URL, y
+  // en el peor caso el noindex se propaga al destino canónico, que es
+  // precisamente la página que sí queremos indexada.
 
   const setMod = (stat: StatKey, value: number) => setModifiers((m) => ({ ...m, [stat]: value }));
   const detectMods = () => {
@@ -320,12 +316,18 @@ export default function App() {
   return (
     <div className="app">
       <header className="masthead">
+        {/* La keyword principal vive en el H1, no solo en el shell SSR de
+            index.html. React sustituye ese shell al montar, así que el H1 que
+            Google indexa es este; sin la segunda línea el H1 renderizado se
+            quedaba en "Torn Training Optimizer" y perdía "Torn gym calculator",
+            que es el término por el que se busca la herramienta. */}
         <h1>
           Torn <span className="mark">Training</span> Optimizer
+          <span className="h1-sub">the free Torn gym calculator</span>
         </h1>
         <p className="tagline">
-          The free Torn gym calculator — exact gains per train, happy jump vs energy training, best
-          gym and unlock targets for every battle stat.
+          Exact gains per train, happy jump vs energy training, best gym and unlock targets for
+          every battle stat.
         </p>
       </header>
 
@@ -363,7 +365,7 @@ export default function App() {
           <a href="/gyms">All Gyms</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
-        and is sent only to api.torn.com — nothing is stored on any server.
+        and is sent only to api.torn.com. Your stats are never stored on any server.
       </footer>
     </div>
   );

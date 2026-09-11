@@ -128,6 +128,59 @@ input:focus, select:focus {
   outline-offset: -1px;
   border-color: var(--accent);
 }
+
+/* Foco de teclado en todo lo demás que se tabula. Hasta aquí solo lo tenían
+   input y select: los botones, los enlaces y las cinco pestañas del Nav se
+   apoyaban en el anillo por defecto del navegador, que sobre --accent y sobre
+   las superficies oscuras a veces no se distingue.
+
+   :focus-visible y no :focus, para que el anillo aparezca al tabular y no al
+   hacer clic con el ratón. Los inputs se quedan con :focus a propósito: ahí sí
+   se espera la marca al pinchar dentro del campo.
+
+   El main[tabindex="-1"] del skip link queda fuera a propósito: recibe el foco
+   de forma programática al saltar, y un anillo alrededor de toda la página se
+   lee como un fallo de pintado, no como una marca de foco. El salto ya se
+   confirma con el scroll, y el siguiente Tab entra en el primer control de
+   dentro, que sí lo muestra. */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Salto al contenido. Oculto hasta que recibe foco. Con ~70 elementos
+   interactivos y un nav de cinco pestañas, quien navega con teclado tabulaba
+   por toda la cabecera antes de llegar a la calculadora. */
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip-link:focus {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 10px 16px;
+  clip-path: none;
+  background: var(--accent);
+  color: #15110a;
+  font-family: var(--display);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
 label { font-size: var(--fs-sm); color: var(--muted); display: block; margin-bottom: 5px; }
 
 button {
@@ -679,7 +732,10 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   resize: vertical;
   min-height: 78px;
 }
-.import-textarea:focus { outline: none; border-color: var(--accent-dim); }
+/* Llevaba `outline: none` con solo un cambio de borde a --accent-dim como
+   sustituto, que es un fallo de WCAG 2.4.7. Ahora usa el mismo tratamiento que
+   el resto de campos. */
+.import-textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent); }
 .import-actions {
   display: flex;
   gap: 8px;

@@ -95,13 +95,60 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" /></noscript>
     <style>
-      :root {
-        --bg: #0f1116; --surface: #181b22; --surface-2: #232834; --line: #2e3543;
-        --text: #e9ecf1; --muted: #98a1b0; --accent: #d99a4e; --best: #5ec0a8;
-        --display: 'IBM Plex Sans', system-ui, sans-serif; --body: 'IBM Plex Sans', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
-      }
+/* Fuente de verdad de los tokens. La importan tanto la app (styles.css) como
+   las páginas SEO (scripts/gen-seo.mjs inyecta este bloque en su <style>).
+   Antes había dos paletas distintas: la app en gris cálido (#14161b/#e8e4d9)
+   y las páginas SEO en gris frío (#0f1116/#e9ecf1), con la costura visible
+   justo en el clic de conversión. Un valor nuevo va aquí, no a un hex repetido
+   en cuatro sitios. */
+:root {
+  --ink: #14161b;
+  --surface: #1b1f27;
+  --surface-2: #232834;
+  --line: #2e3543;
+  --text: #e8e4d9;
+  /* Los dos valores de abajo se subieron tras un fallo de contraste en
+     Lighthouse: con #8c95a4 / #d96a5e, el texto muted y el de peligro sobre
+     --surface-2 daban 4.88 y 4.33 contra un requisito de 4.5, uno al límite y
+     otro fallando. Ahora pasan de 5.6 sobre la superficie más oscura en la que
+     se usan. --accent-dim se queda igual: solo es borde o relleno de botón
+     deshabilitado, donde aplica el umbral de 3:1 para no-texto. */
+  --muted: #98a1b0;
+  --accent: #d99a4e;        /* latón: estructura e interactivo */
+  --accent-dim: #8f6a37;
+  --best: #5ec0a8;          /* verde azulado: solo el resaltado "best" */
+  --danger: #e07d72;
+
+  /* Le dice al navegador que esta es una UI oscura, para que los controles de
+     formulario, las barras de scroll y los focus rings nativos elijan su
+     variante oscura en vez de los defaults de página clara. */
+  color-scheme: dark;
+
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* Una sola familia en dos roles. La jerarquía sale del peso y el tamaño,
+     no de cambiar de tipografía. --display se conserva como nombre porque
+     lo usan ~20 selectores; apunta a lo mismo que --body. */
+  --display: 'IBM Plex Sans', system-ui, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, sans-serif;
+
+  /* Escala tipográfica. Seis pasos cubren todo lo que la app muestra; antes
+     había 18 tamaños distintos, un font-size adivinado por componente.
+     Cualquier valor nuevo va a uno de estos, no a un px suelto. */
+  --fs-figure: 30px;  /* cifra principal, siempre en --mono */
+  --fs-title: 20px;   /* título de ruta y de bloque */
+  --fs-lead: 16px;    /* frase de apertura */
+  --fs-base: 14px;    /* texto corrido y celdas */
+  --fs-sm: 12px;      /* notas al pie y secundario */
+  --fs-label: 11px;   /* etiquetas: el único lugar con mayúsculas */
+
+  /* Escala de espaciado. Usar en gap, padding y margin. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 16px;
+  --sp-4: 24px;
+}
       * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.7; }
+      body { margin: 0; background: var(--ink); color: var(--text); font-family: var(--body); line-height: 1.7; }
       .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 64px; }
       a { color: var(--accent); }
       .crumb { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 18px; }
@@ -120,11 +167,34 @@
       .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
       .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
       .cta b { color: var(--accent); }
+      /* Mismo patrón que la app (.table-wrap en src/styles.css): scrollea el
+         contenedor, no la tabla. Poner overflow en el propio <table> obliga a
+         display:block, y eso le quita la semántica de tabla en el árbol de
+         accesibilidad de varios lectores de pantalla. */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
       th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
       th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
       td.num { font-family: var(--mono); }
       footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+      /* Estas páginas no tenían ni una media query. Medido a 375px, /gyms/
+         hacía 592px de ancho: 217px de desborde horizontal en las URLs que
+         reciben el trafico de búsqueda, que es justo lo que Google marca como
+         "content wider than screen". Una buena parte de Torn se juega en
+         TornPDA y en navegador móvil. */
+      @media (max-width: 640px) {
+        .wrap { padding: 20px 14px 48px; }
+        h1 { font-size: 26px; }
+        h2 { font-size: 19px; margin: 26px 0 8px; }
+        h3 { font-size: 16px; }
+        p, li { font-size: 15px; }
+        .sub { font-size: 15px; }
+        .toc { padding: 14px 16px; }
+        .cta { padding: 14px 16px; }
+        table { font-size: 13px; }
+        th, td { padding: 6px 8px; }
+      }
     </style>
   </head>
   <body>
@@ -219,7 +289,7 @@
         This is the question that actually matters, and the honest answer is:
         <strong>it depends on how big the stat already is.</strong>
       </p>
-      <table>
+      <div class="table-wrap"><table>
         <thead>
           <tr><th>Stat level</th><th>Better method</th><th>Why</th></tr>
         </thead>
@@ -235,7 +305,7 @@
             <td>The stat's own value now drives gains. Stacking energy for 30+ hours to set up one jump wastes all the regen and drug doses you would have trained daily — the jump never pays that back.</td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
       <p>
         In between, it is genuinely close and depends on your happy maximum, your perks and your
         energy ceiling — which is why a per-player calculation beats any rule of thumb. At high

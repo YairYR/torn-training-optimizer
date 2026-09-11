@@ -92,7 +92,89 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 // ---- Template --------------------------------------------------------------
 
-const STYLE = readFileSync(resolve(OUT, 'guide/index.html'), 'utf8').match(/<style>[\s\S]*?<\/style>/)[0];
+// El <style> de las páginas se compone aquí, y solo aquí. Los tokens salen de
+// src/tokens.css, el mismo archivo que importa la app, así que la paleta no
+// puede volver a divergir entre lo que ve quien llega desde Google y lo que ve
+// al hacer clic en la calculadora.
+//
+// Antes esta línea sacaba el <style> de public/guide/index.html con un regex:
+// la hoja de estilos de 43 páginas tenía como fuente de verdad un artefacto de
+// build. Había cuatro copias del bloque y specialist-gyms ya había divergido.
+const TOKENS = readFileSync(resolve(ROOT, 'src/tokens.css'), 'utf8').trim();
+
+// ponytail: los px sueltos de abajo (34px, 15.5px, 14.5px...) no usan todavía
+// la escala --fs-*; mapearlos es trabajo de la pasada de tipografía, no de
+// esta. Los colores y las familias sí salen ya de los tokens.
+const PAGE_CSS = `      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--ink); color: var(--text); font-family: var(--body); line-height: 1.7; }
+      .wrap { max-width: 760px; margin: 0 auto; padding: 28px 20px 64px; }
+      a { color: var(--accent); }
+      .crumb { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 18px; }
+      h1 { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1.2; letter-spacing: 0.02em; margin: 0 0 8px; }
+      .sub { color: var(--muted); font-size: 16px; margin: 0 0 24px; }
+      h2 { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; margin: 34px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+      h3 { font-size: 17px; margin: 20px 0 6px; }
+      p, li { font-size: 15.5px; }
+      ul, ol { padding-left: 22px; }
+      li { margin-bottom: 7px; }
+      .toc { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px; margin: 0 0 8px; }
+      .toc strong { font-family: var(--display); letter-spacing: 0.04em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+      .toc ol { margin: 8px 0 0; }
+      .toc a { text-decoration: none; }
+      .callout { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 16px 0; font-size: 14.5px; }
+      .flag { background: rgba(217,154,78,0.08); border: 1px dashed var(--accent); border-radius: 6px; padding: 10px 14px; margin: 14px 0; font-size: 14px; color: var(--text); }
+      .cta { display: block; background: var(--surface-2); border: 1px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 24px 0; text-decoration: none; color: var(--text); }
+      .cta b { color: var(--accent); }
+      /* Mismo patrón que la app (.table-wrap en src/styles.css): scrollea el
+         contenedor, no la tabla. Poner overflow en el propio <table> obliga a
+         display:block, y eso le quita la semántica de tabla en el árbol de
+         accesibilidad de varios lectores de pantalla. */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+      th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; }
+      td.num { font-family: var(--mono); }
+      footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+      /* Estas páginas no tenían ni una media query. Medido a 375px, /gyms/
+         hacía 592px de ancho: 217px de desborde horizontal en las URLs que
+         reciben el trafico de búsqueda, que es justo lo que Google marca como
+         "content wider than screen". Una buena parte de Torn se juega en
+         TornPDA y en navegador móvil. */
+      @media (max-width: 640px) {
+        .wrap { padding: 20px 14px 48px; }
+        h1 { font-size: 26px; }
+        h2 { font-size: 19px; margin: 26px 0 8px; }
+        h3 { font-size: 16px; }
+        p, li { font-size: 15px; }
+        .sub { font-size: 15px; }
+        .toc { padding: 14px 16px; }
+        .cta { padding: 14px 16px; }
+        table { font-size: 13px; }
+        th, td { padding: 6px 8px; }
+      }`;
+
+const STYLE = `<style>\n${TOKENS}\n${PAGE_CSS}\n    </style>`;
+
+/**
+ * Las tres páginas de prosa (guide, happy-jump, specialist-gyms) no se generan:
+ * su contenido se edita a mano. Su <style> sí, o vuelven a divergir, que es
+ * exactamente lo que le pasó a specialist-gyms.
+ *
+ * ponytail: reescribe un bloque dentro de ficheros versionados en cada build.
+ * El techo es ese: si algún día estorba en un diff, la salida es mover las tres
+ * a una hoja externa /seo.css y pagar un round trip de render-blocking.
+ */
+function syncHandWrittenStyles() {
+  for (const slug of ['guide', 'happy-jump', 'specialist-gyms']) {
+    const file = resolve(OUT, slug, 'index.html');
+    const html = readFileSync(file, 'utf8');
+    // Función de reemplazo, no string: STYLE lleva $ en las plantillas y un
+    // reemplazo literal los interpretaría como referencias de grupo.
+    const next = html.replace(/<style>[\s\S]*?<\/style>/, () => STYLE);
+    if (next !== html) writeFileSync(file, next);
+  }
+}
 
 /**
  * One template for every generated page, so head tags, breadcrumbs, structured
@@ -216,7 +298,7 @@ const emit = (path, html, priority) => {
   urls.push({ path, priority, lastmod: lastmodOf(path, html) });
 };
 
-const gymTable = (list, highlight) => `      <table>
+const gymTable = (list, highlight) => `      <div class="table-wrap"><table>
         <thead>
           <tr><th>Gym</th><th>Energy</th>${STATS.map((s) => `<th>${s.label}</th>`).join('')}<th>Cost</th></tr>
         </thead>
@@ -239,7 +321,7 @@ ${STATS.map(
   )
   .join('\n')}
         </tbody>
-      </table>`;
+      </table></div>`;
 
 // --- /gyms/<slug>/ : one page per gym
 for (const g of gyms) {
@@ -518,7 +600,7 @@ emit(
         Torn published monthly-growth figures for a fixed regime — 1,500 energy a day, George's, a
         fully upgraded private island, no Steadfast — before and after the change:
       </p>
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>Stat</th><th>Monthly growth (old)</th><th>Monthly growth (now)</th></tr></thead>
         <tbody>
           <tr><td class="num">50M</td><td class="num">211.75%</td><td class="num">211.75%</td></tr>
@@ -530,7 +612,7 @@ emit(
           <tr><td class="num">100B</td><td class="num">0.10%</td><td class="num">2.24%</td></tr>
           <tr><td class="num">1T</td><td class="num">0.01%</td><td class="num">1.97%</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <h2>The curve behind them</h2>
       <p>
@@ -678,13 +760,13 @@ emit(
       },
     ],
     body: `      <h2>The numbers</h2>
-      <table>
+      <div class="table-wrap"><table>
         <thead><tr><th>Drug</th><th>Energy per dose</th><th>Doses per day</th><th>Energy per day</th></tr></thead>
         <tbody>
           <tr><td>Xanax</td><td class="num">250</td><td class="num">~3</td><td class="num">~750</td></tr>
           <tr><td>LSD</td><td class="num">50</td><td class="num">~3</td><td class="num">~150</td></tr>
         </tbody>
-      </table>
+      </table></div>
 
       <div class="callout">
         The doses column is the whole argument. One shared cooldown of roughly 6–8 hours means about
@@ -704,6 +786,11 @@ emit(
   }),
   0.7,
 );
+
+// Antes del sitemap, no después: las tres páginas de prosa se fingerprintean
+// desde su fichero, así que el <style> tiene que estar ya sincronizado cuando
+// lastmodOf las lea, o el cambio de estilos no re-data la entrada.
+syncHandWrittenStyles();
 
 // ---- Sitemap ---------------------------------------------------------------
 

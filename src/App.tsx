@@ -21,7 +21,15 @@ import { Compare } from './routes/Compare';
 import { Cost } from './routes/Cost';
 import { Progress } from './routes/Progress';
 import { DEMO } from './demo';
-import { readSharedState, syncUrl, navigate, readRoute, Route, SharedState } from './url-state';
+import {
+  readSharedState,
+  syncUrl,
+  navigate,
+  readRoute,
+  buildShareUrl,
+  Route,
+  SharedState,
+} from './url-state';
 import { xanaxDailyEnergy } from './engine/energy-capacity';
 import { playerStage } from './engine/stage';
 import { STATIC_GYMS } from './data/gyms';
@@ -246,22 +254,24 @@ export default function App() {
     if (player && !isDemo) syncUrl(shared, route);
   }, [player, shared, isDemo, route]);
 
-  // Solo / se indexa; las cuatro rutas profundas llevan noindex.
-  useEffect(() => {
-    const id = 'route-robots';
-    document.getElementById(id)?.remove();
-    if (route === '/') return;
-    const m = document.createElement('meta');
-    m.id = id;
-    m.name = 'robots';
-    m.content = 'noindex, follow';
-    document.head.appendChild(m);
-  }, [route]);
+  // Aquí NO va un noindex por ruta, y es deliberado. Las cuatro rutas
+  // profundas se reescriben a index.html (vercel.json), que sirve
+  // <link rel="canonical" href="https://torntraining.com/">. Esa canónica ya
+  // consolida las cinco URLs en la home. Añadir además noindex mezcla dos
+  // señales que Google documenta como contradictorias sobre la misma URL, y
+  // en el peor caso el noindex se propaga al destino canónico, que es
+  // precisamente la página que sí queremos indexada.
 
   const setMod = (stat: StatKey, value: number) => setModifiers((m) => ({ ...m, [stat]: value }));
   const detectMods = () => {
     if (player?.detectedModifiers) setModifiers(player.detectedModifiers);
   };
+
+  // El href de cada pestaña del Nav. Misma función que construye el enlace de
+  // "Copy link", así que abrir una sección en pestaña nueva reproduce el mismo
+  // estado que verías al hacer clic normal. El guard de isDemo es el de `go`:
+  // los stats del jugador de muestra no salen nunca en una URL.
+  const hrefFor = (r: Route) => buildShareUrl(isDemo ? {} : shared, window.location.origin, r);
 
   const go = (r: Route) => {
     // Same guard as syncUrl above: the sample player's stats must never end up
@@ -307,7 +317,7 @@ export default function App() {
             energyPerDay={energyPerDay}
           />
         )}
-        <Nav route={route} stage={stage} onNavigate={go} />
+        <Nav route={route} stage={stage} hrefFor={hrefFor} onNavigate={go} />
         {route === '/' && <Plan {...routeProps} />}
         {route === '/build' && <Build {...routeProps} />}
         {route === '/compare' && <Compare {...routeProps} />}
@@ -320,12 +330,18 @@ export default function App() {
   return (
     <div className="app">
       <header className="masthead">
+        {/* La keyword principal vive en el H1, no solo en el shell SSR de
+            index.html. React sustituye ese shell al montar, así que el H1 que
+            Google indexa es este; sin la segunda línea el H1 renderizado se
+            quedaba en "Torn Training Optimizer" y perdía "Torn gym calculator",
+            que es el término por el que se busca la herramienta. */}
         <h1>
           Torn <span className="mark">Training</span> Optimizer
+          <span className="h1-sub">the free Torn gym calculator</span>
         </h1>
         <p className="tagline">
-          The free Torn gym calculator — exact gains per train, happy jump vs energy training, best
-          gym and unlock targets for every battle stat.
+          Exact gains per train, happy jump vs energy training, best gym and unlock targets for
+          every battle stat.
         </p>
       </header>
 
@@ -363,7 +379,7 @@ export default function App() {
           <a href="/gyms">All Gyms</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
-        and is sent only to api.torn.com — nothing is stored on any server.
+        and is sent only to api.torn.com. Your stats are never stored on any server.
       </footer>
     </div>
   );

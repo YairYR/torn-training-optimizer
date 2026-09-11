@@ -884,10 +884,16 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
 }
+/* Los tabs son <a>, no <button> (ver components/Nav.tsx). El peso y la familia
+   los daba antes la regla global de `button`; un ancla no los hereda, así que
+   se declaran aquí para que el nav no cambie de aspecto. */
 .nav-tab {
   padding: var(--sp-2) var(--sp-3);
+  font-family: var(--display);
   font-size: var(--fs-base);
+  font-weight: 600;
   color: var(--muted);
+  text-decoration: none;
   background: none;
   border: 0;
   border-bottom: 2px solid transparent;

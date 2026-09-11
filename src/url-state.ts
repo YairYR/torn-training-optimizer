@@ -123,7 +123,12 @@ export function buildShareUrl(
       if (v !== 1) p.set(`m_${STAT_PARAM[s]}`, v.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''));
     }
   }
-  return `${origin}${route === '/' ? '/' : route}?${p.toString()}`;
+  // Sin params no se emite la `?`. Importa desde que el Nav usa esta función
+  // para el href de cada pestaña: con el jugador de muestra el estado va vacío
+  // y la barra de direcciones mostraría "/build?", que se copia y se pega tal
+  // cual en un hilo del foro.
+  const qs = p.toString();
+  return `${origin}${route === '/' ? '/' : route}${qs ? `?${qs}` : ''}`;
 }
 
 /** Mantiene la barra de direcciones al día sin ensuciar el historial. */

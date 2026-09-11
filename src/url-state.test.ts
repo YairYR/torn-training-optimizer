@@ -32,9 +32,14 @@ describe('buildShareUrl', () => {
     expect(url).toContain('str=3200000');
   });
 
-  it('no deja doble barra en la raiz', () => {
-    const url = buildShareUrl({}, 'https://torntraining.com', '/');
-    expect(url).toBe('https://torntraining.com/?');
+  it('no deja doble barra ni ? colgante cuando no hay estado', () => {
+    // Sin params la URL termina limpia. El Nav usa esta funcion para el href de
+    // cada pestana, asi que con el jugador de muestra estas son las URLs que se
+    // ven en la barra de estado del navegador y se copian al portapapeles.
+    expect(buildShareUrl({}, 'https://torntraining.com', '/')).toBe('https://torntraining.com/');
+    expect(buildShareUrl({}, 'https://torntraining.com', '/build')).toBe(
+      'https://torntraining.com/build',
+    );
   });
 });
 

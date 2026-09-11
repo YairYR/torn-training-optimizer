@@ -21,7 +21,15 @@ import { Compare } from './routes/Compare';
 import { Cost } from './routes/Cost';
 import { Progress } from './routes/Progress';
 import { DEMO } from './demo';
-import { readSharedState, syncUrl, navigate, readRoute, Route, SharedState } from './url-state';
+import {
+  readSharedState,
+  syncUrl,
+  navigate,
+  readRoute,
+  buildShareUrl,
+  Route,
+  SharedState,
+} from './url-state';
 import { xanaxDailyEnergy } from './engine/energy-capacity';
 import { playerStage } from './engine/stage';
 import { STATIC_GYMS } from './data/gyms';
@@ -259,6 +267,12 @@ export default function App() {
     if (player?.detectedModifiers) setModifiers(player.detectedModifiers);
   };
 
+  // El href de cada pestaña del Nav. Misma función que construye el enlace de
+  // "Copy link", así que abrir una sección en pestaña nueva reproduce el mismo
+  // estado que verías al hacer clic normal. El guard de isDemo es el de `go`:
+  // los stats del jugador de muestra no salen nunca en una URL.
+  const hrefFor = (r: Route) => buildShareUrl(isDemo ? {} : shared, window.location.origin, r);
+
   const go = (r: Route) => {
     // Same guard as syncUrl above: the sample player's stats must never end up
     // in the address bar, or reloading that link presents them as the
@@ -303,7 +317,7 @@ export default function App() {
             energyPerDay={energyPerDay}
           />
         )}
-        <Nav route={route} stage={stage} onNavigate={go} />
+        <Nav route={route} stage={stage} hrefFor={hrefFor} onNavigate={go} />
         {route === '/' && <Plan {...routeProps} />}
         {route === '/build' && <Build {...routeProps} />}
         {route === '/compare' && <Compare {...routeProps} />}

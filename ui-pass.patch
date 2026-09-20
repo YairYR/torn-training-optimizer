@@ -1,0 +1,575 @@
+diff --git a/public/sw.js b/public/sw.js
+index ceddd12..8968b4d 100644
+--- a/public/sw.js
++++ b/public/sw.js
+@@ -3,10 +3,20 @@
+ // reach api.torn.com and manual entry still does everything. Useful on mobile,
+ // and it makes the installed PWA feel native.
+ //
+-// Cache-first for same-origin assets, network-only for api.torn.com (stale
+-// prices and stats would be worse than none).
++// Dos reglas de caché, no una. `/assets/*` lo versiona Vite por hash: es
++// inmutable y servirlo cache-first para siempre es correcto. El HTML NO lo es:
++// nombra el bundle actual por hash, y cada deploy borra el anterior. Servir un
++// index.html cacheado después de un deploy apunta el navegador a archivos que
++// devuelven 404 — la página carga sin CSS y sin calculadora, y se queda así
++// hasta que el visitante borre los datos del sitio. Esto pasó en producción:
++// el SW guardaba index-r2GdPLaQ.js cuando el servidor ya servía
++// index-Dw6_4qFc.js. Por eso la navegación va network-first y la copia en
++// caché queda solo como respaldo sin conexión.
++//
++// La versión del caché vive en CACHE. Subirla en un deploy fuerza descartar
++// todo lo viejo; el activate ya borra cualquier caché con otro nombre.
+ 
+-const CACHE = 'tto-v1';
++const CACHE = 'tto-v2';
+ const SHELL = ['/', '/index.html', '/site.webmanifest', '/favicon.svg'];
+ 
+ self.addEventListener('install', (e) => {
+@@ -25,6 +35,24 @@ self.addEventListener('activate', (e) => {
+ self.addEventListener('fetch', (e) => {
+   const url = new URL(e.request.url);
+   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
++
++  // Documentos: red primero, caché como respaldo. Cada visita con conexión
++  // refresca la copia offline, así que el shell guardado nunca se queda atrás
++  // del deploy. Las cuatro rutas profundas se reescriben a index.html en el
++  // servidor (vercel.json), por eso el respaldo es siempre esa misma entrada.
++  if (e.request.mode === 'navigate') {
++    e.respondWith(
++      fetch(e.request)
++        .then((res) => {
++          const copy = res.clone();
++          caches.open(CACHE).then((c) => c.put('/index.html', copy));
++          return res;
++        })
++        .catch(() => caches.match('/index.html').then((hit) => hit ?? caches.match('/'))),
++    );
++    return;
++  }
++
+   e.respondWith(
+     caches.match(e.request).then(
+       (hit) =>
+diff --git a/src/App.tsx b/src/App.tsx
+index e6bba91..1abf167 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -351,7 +351,26 @@ export default function App() {
+       {/* tabIndex -1 para que el salto mueva el foco de verdad, no solo el
+           scroll: <main> no es focusable por defecto, así que sin esto el
+           siguiente Tab volvería al principio de la cabecera. */}
++      {/* El orden es deliberado: la respuesta antes que el formulario.
++          "Your data" abría la página, y en un teléfono de 812px de alto el
++          panel completo —campo de API key, botón, aviso de privacidad y el
++          desplegable de entrada manual— ocupaba la primera pantalla entera:
++          la cifra que la gente viene a ver empezaba en y=784, justo bajo el
++          pliegue. Es además un panel de un solo uso: se rellena una vez y no
++          se vuelve a tocar en toda la sesión. Al pie sigue siendo alcanzable
++          desde los dos enlaces del banner de muestra (ambos a #own-numbers) y
++          desde el skip link, sin costarle una pantalla a cada visita. */}
+       <main id="main" tabIndex={-1}>
++        {isDemo && (
++          <p className="demobar">
++            <strong>Sample player.</strong> Everything below is live — the real formula on made-up
++            stats. <a href="#own-numbers">Load your API key or enter your own numbers</a> to replace
++            it.
++          </p>
++        )}
++
++        {routeSection}
++
+         <YourData
+           apiKey={apiKey}
+           onApiKey={setApiKey}
+@@ -363,16 +382,6 @@ export default function App() {
+             loadManual(d);
+           }}
+         />
+-
+-        {isDemo && (
+-          <p className="demobar">
+-            <strong>Sample player.</strong> Everything below is live — the real formula on made-up
+-            stats. Load your API key above, or <a href="#own-numbers">enter your own numbers</a>, to
+-            replace it.
+-          </p>
+-        )}
+-
+-        {routeSection}
+       </main>
+ 
+       <footer className="site-footer">
+diff --git a/src/components/BuildRatio.tsx b/src/components/BuildRatio.tsx
+index a14ae67..eb4d244 100644
+--- a/src/components/BuildRatio.tsx
++++ b/src/components/BuildRatio.tsx
+@@ -1,4 +1,4 @@
+-import { useMemo, useState } from 'react';
++import React, { useMemo, useState } from 'react';
+ import { Gym, PlayerState, STAT_LABEL, StatKey } from '../engine/types';
+ import {
+   evaluateGymEligibility,
+@@ -10,6 +10,19 @@ import { resolveUnlockTarget } from '../engine/planner';
+ import { BUILD_PRESETS, evaluateBuildRatio } from '../engine/build-ratio';
+ import { fmtGain, fmtInt } from '../format';
+ 
++/* El estado de cada fila se leía solo por el color del porcentaje: rojo por
++   debajo del objetivo, verde en objetivo, gris por encima. Es un fallo de WCAG
++   1.4.1 (información transmitida solo con color) y, en la práctica, obliga a
++   recordar qué significa cada tono en una tabla de cuatro filas. El símbolo
++   duplica el estado en una forma, y la barra de debajo convierte el par
++   "actual vs objetivo" en algo que se compara de un vistazo sin leer dos
++   números. aria-hidden porque el estado ya está en el texto de la celda. */
++const SHARE_MARK: Record<'behind' | 'on-track' | 'ahead', string> = {
++  behind: '▼',
++  'on-track': '●',
++  ahead: '▲',
++};
++
+ interface Props {
+   gyms: Gym[];
+   player: PlayerState;
+@@ -117,18 +130,21 @@ export function BuildRatio({ gyms, player, gate, hasBuild }: Props) {
+                   <tr key={row.stat}>
+                     <td>{STAT_LABEL[row.stat]}</td>
+                     <td className="num">{fmtInt(row.value)}</td>
+-                    <td
+-                      className="num"
+-                      style={{
+-                        color:
+-                          row.status === 'behind'
+-                            ? 'var(--danger)'
+-                            : row.status === 'on-track'
+-                              ? 'var(--best)'
+-                              : 'var(--muted)',
+-                      }}
+-                    >
++                    <td className={`num share-cell share-${row.status}`}>
++                      <span className="share-mark" aria-hidden="true">
++                        {SHARE_MARK[row.status]}
++                      </span>
+                       {(row.share * 100).toFixed(1)}%
++                      <span
++                        className="share-bar"
++                        aria-hidden="true"
++                        style={
++                          {
++                            '--share': `${Math.min(100, row.share * 100).toFixed(1)}%`,
++                            '--target': `${Math.min(100, row.targetShare * 100).toFixed(1)}%`,
++                          } as React.CSSProperties
++                        }
++                      />
+                     </td>
+                     <td className="num">{(row.targetShare * 100).toFixed(1)}%</td>
+                     <td className="num">
+diff --git a/src/components/Nav.tsx b/src/components/Nav.tsx
+index 3457fb0..ecd7ffd 100644
+--- a/src/components/Nav.tsx
++++ b/src/components/Nav.tsx
+@@ -35,6 +35,14 @@ export function Nav({ route, stage, hrefFor, onNavigate }: Props) {
+             r === '/cost' && !stage.hasPrices ? ' dim' : ''
+           }`}
+           aria-current={r === route ? 'page' : undefined}
++          // La pestaña Cost se pinta apagada cuando todavía no hay precios de
++          // mercado. Apagarla sin decir nada deja a la gente adivinando si está
++          // rota o deshabilitada — y sigue navegando, así que no lo está.
++          title={
++            r === '/cost' && !stage.hasPrices
++              ? 'Needs live market prices — load a Torn API key'
++              : undefined
++          }
+           onClick={(e) => {
+             // Un clic con modificador, o con un botón que no sea el principal,
+             // significa "ábrelo aparte". Eso lo resuelve el navegador mejor que
+diff --git a/src/components/TrainingPlan.tsx b/src/components/TrainingPlan.tsx
+index aa1bb43..9cd6a88 100644
+--- a/src/components/TrainingPlan.tsx
++++ b/src/components/TrainingPlan.tsx
+@@ -89,6 +89,15 @@ export function TrainingPlan({
+           : 0;
+ 
+       const recommendedHappy = book ? HAPPY_CAP : maxHappy;
++      // Se calcula aquí, no en el JSX, para poder comparar las cuatro frases
++      // entre sí antes de pintarlas — ver sharedHappy más abajo.
++      const happyLine = book
++        ? 'sustained 99,999 (book)'
++        : `train at your max ~${fmtInt(maxHappy)}${
++            regime.regime !== 'energy-training'
++              ? '; jump when affordable'
++              : '; optional 1 Ecstasy ×2'
++          }`;
+ 
+       // Best locked gym that would beat the usable one (upgrade target).
+       let upgrade: {
+@@ -128,6 +137,7 @@ export function TrainingPlan({
+         regime,
+         capped,
+         recommendedHappy,
++        happyLine,
+         gainRecommended: gainAt(recommendedHappy),
+         gainCap: gainAt(HAPPY_CAP),
+         upgrade,
+@@ -140,6 +150,18 @@ export function TrainingPlan({
+   // printed the identical paragraph three times under the shared one. Group the
+   // off-regime stats instead, so each distinct rationale appears exactly once
+   // and says which stats it is about.
++  // Mismo criterio que el de la racional: lo que sale idéntico en las cuatro
++  // tarjetas se imprime una vez. La fila Energy no depende del stat —era
++  // literalmente la misma frase cuatro veces— y la de Happy solo cambia si hay
++  // dos regímenes en juego, cosa que no ocurre en la mayoría de los casos. Con
++  // esto la tarjeta se queda con lo único que de verdad varía por stat: gimnasio,
++  // dots, la cifra y el próximo desbloqueo.
++  const energyLine = drugEnergy
++    ? `${drugEnergy.source.name} (${fmtMoney(drugEnergy.dollarsPerEnergy)}/E) + refill + natural`
++    : 'Xanax + refill + natural';
++  const happyLines = [...new Set(plans.filter((p) => p.gym).map((p) => p.happyLine))];
++  const sharedHappy = happyLines.length === 1 ? happyLines[0] : null;
++
+   const sharedRegime = plans.find((p) => p.regime.regime === stage.regime)?.regime ?? plans[0].regime;
+   const otherRegimes: { rationale: string; stats: StatKey[] }[] = [];
+   for (const p of plans) {
+@@ -181,6 +203,16 @@ export function TrainingPlan({
+           <strong>{o.stats.map((s) => STAT_LABEL[s]).join(', ')}:</strong> {o.rationale}
+         </div>
+       ))}
++      <div className="plan-shared">
++        {sharedHappy && (
++          <>
++            <span className="plan-k">Happy</span>
++            <span className="plan-v">{sharedHappy}</span>
++          </>
++        )}
++        <span className="plan-k">Energy</span>
++        <span className="plan-v">{energyLine}</span>
++      </div>
+ 
+       <div className="plan-grid">
+         {plans.map((p) => (
+@@ -200,24 +232,12 @@ export function TrainingPlan({
+                     {p.gym.name || 'Fight Club'} · {p.dots.toFixed(1)} dots · {p.gym.energyPerTrain}E
+                   </span>
+                 </div>
+-                <div className="plan-row">
+-                  <span className="plan-k">Happy</span>
+-                  <span className="plan-v">
+-                    {book
+-                      ? 'sustained 99,999 (book)'
+-                      : `train at your max ~${fmtInt(maxHappy)}${
+-                          p.regime.regime !== 'energy-training' ? '; jump when affordable' : '; optional 1 Ecstasy ×2'
+-                        }`}
+-                  </span>
+-                </div>
+-                <div className="plan-row">
+-                  <span className="plan-k">Energy</span>
+-                  <span className="plan-v">
+-                    {drugEnergy
+-                      ? `${drugEnergy.source.name} (${fmtMoney(drugEnergy.dollarsPerEnergy)}/E) + refill + natural`
+-                      : 'Xanax + refill + natural'}
+-                  </span>
+-                </div>
++                {!sharedHappy && (
++                  <div className="plan-row">
++                    <span className="plan-k">Happy</span>
++                    <span className="plan-v">{p.happyLine}</span>
++                  </div>
++                )}
+                 <div className="plan-gain">
+                   ≈ +{fmtGain(p.gainRecommended)}{' '}
+                   <span className="plan-gain-lbl">per train{book ? ' (book)' : ' at max happy'}</span>
+diff --git a/src/components/YourData.tsx b/src/components/YourData.tsx
+index d79d756..802cb72 100644
+--- a/src/components/YourData.tsx
++++ b/src/components/YourData.tsx
+@@ -18,9 +18,10 @@ interface Props {
+ /**
+  * Both ways to get your numbers in, in one place: paste an API key, or —
+  * behind a <details>, since it's an alternative path rather than content to
+- * hide — type stats by hand. Lives in the shell, above the AnswerBar, so it's
+- * reachable no matter which route you're on; the manual form stays collapsed
+- * so it doesn't shout at a player whose data is already loaded.
++ * hide — type stats by hand. Lives in the shell, al pie del <main>, so it's
++ * reachable no matter which route you're on without costing the answer its
++ * place above the fold (ver App.tsx); the manual form stays collapsed so it
++ * doesn't shout at a player whose data is already loaded.
+  */
+ export function YourData({ apiKey, onApiKey, loading, onLoad, error, onManual }: Props) {
+   const [stats, setStats] = useState<Record<StatKey, number>>({
+diff --git a/src/styles.css b/src/styles.css
+index d623584..ce55b0b 100644
+--- a/src/styles.css
++++ b/src/styles.css
+@@ -36,6 +36,20 @@ body {
+ 
+ @media (prefers-reduced-motion: no-preference) {
+   .readout-value { transition: color 120ms ease; }
++  /* Hasta aquí el único elemento con transición era la cifra del readout: cada
++     hover, cada foco y cada cambio de pestaña saltaban en 0 ms. Una sola regla
++     para todo lo que cambia de color o de borde al interactuar; la propiedad se
++     lista explícitamente en vez de `all` para no animar layout por accidente. */
++  button,
++  .nav-tab,
++  .toggle-btn,
++  .series-toggle,
++  .roadmap-archetypes button,
++  .footer-nav a,
++  details > summary {
++    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
++  }
++  details > summary::before { transition: transform 150ms ease; }
+ }
+ 
+ .app {
+@@ -93,8 +107,12 @@ body {
+ .panel > h2 {
+   font-family: var(--display);
+   font-weight: 600;
+-  font-size: var(--fs-base);
+-  color: var(--muted);
++  /* Estaba en --fs-base + --muted, el mismo tratamiento que un rótulo de celda:
++     el título de bloque y la etiqueta de un dato pesaban igual y la página se
++     leía plana. Un escalón de tamaño y el color de texto normal los separan sin
++     introducir un tamaño nuevo fuera de la escala. */
++  font-size: var(--fs-lead);
++  color: var(--text);
+   margin: 0 0 14px;
+ }
+ 
+@@ -181,8 +199,48 @@ summary:focus-visible {
+   border-radius: 6px;
+ }
+ 
++/* Los enlaces dentro de texto corrido (el banner de muestra, las notas al pie,
++   la sección "about") no tenían regla de color: heredaban el azul por defecto
++   del navegador — el que elige `color-scheme: dark` — que no está en la paleta
++   y era lo único de la página fuera del sistema. Las pestañas del nav, el
++   footer y el skip link ya declaran el suyo con mayor especificidad, así que
++   esta regla no los toca. */
++a { color: var(--accent); }
++a:hover { color: #e6a85d; }
++
+ label { font-size: var(--fs-sm); color: var(--muted); display: block; margin-bottom: 5px; }
+ 
++/* Los dos <details> del sitio ("I'd rather type my stats in" y los paneles
++   plegables) usaban el marcador nativo del navegador, que cambia de forma en
++   cada uno y no tiene estado hover. Un chevron propio que rota al abrir deja
++   claro que es un control y de qué lado está el contenido. list-style: none
++   quita el marcador en navegadores modernos; la regla -webkit- cubre Safari. */
++details > summary {
++  display: flex;
++  align-items: center;
++  gap: var(--sp-2);
++  padding: var(--sp-2) 0;
++  font-family: var(--display);
++  font-weight: 600;
++  font-size: var(--fs-base);
++  color: var(--text);
++  cursor: pointer;
++  list-style: none;
++}
++details > summary::-webkit-details-marker { display: none; }
++details > summary:hover { color: var(--accent); }
++details > summary::before {
++  content: '';
++  flex: none;
++  width: 6px;
++  height: 6px;
++  border-right: 2px solid var(--accent);
++  border-bottom: 2px solid var(--accent);
++  transform: rotate(-45deg);
++}
++details[open] > summary::before { transform: rotate(45deg); }
++.fold-hint { font-size: var(--fs-sm); font-weight: 400; color: var(--muted); }
++
+ button {
+   background: var(--accent);
+   color: #15110a;
+@@ -236,8 +294,63 @@ td.muted-cell { color: #8791a0; }
+   color: var(--muted);
+ }
+ 
++/* La columna Share distinguía por encima / en objetivo / por debajo solo con
++   color — falla WCAG 1.4.1, y en una tabla de cuatro filas obliga a recordar
++   qué significa cada tono. El símbolo lleva el estado sin color, y la barra
++   deja ver de un vistazo cuánto se desvía del objetivo: el relleno es la
++   participación real y la marca vertical es el objetivo del build.
++   --share y --target los inyecta BuildRatio.tsx por fila. */
++.share-cell { white-space: nowrap; }
++.share-mark { margin-right: 4px; font-size: var(--fs-label); }
++.share-behind { color: var(--danger); }
++.share-on-track { color: var(--best); }
++.share-ahead { color: var(--muted); }
++.share-bar {
++  display: block;
++  position: relative;
++  /* Ancho fijo y pegada a la derecha, bajo la cifra: la celda alinea a la
++     derecha y una barra a todo el ancho de la columna se despegaba del número
++     al que describe. Con el mismo máximo en las cuatro filas, los rellenos
++     siguen siendo comparables entre sí. */
++  width: 100%;
++  max-width: 120px;
++  min-width: 52px;
++  height: 3px;
++  margin-top: 5px;
++  margin-left: auto;
++  border-radius: 2px;
++  background: var(--line);
++  overflow: hidden;
++}
++.share-bar::before {
++  content: '';
++  position: absolute;
++  inset: 0 auto 0 0;
++  width: var(--share, 0%);
++  background: currentColor;
++}
++/* Marca del objetivo. Queda por encima del relleno, así que se ve tanto si la
++   participación se queda corta como si lo pasa. */
++.share-bar::after {
++  content: '';
++  position: absolute;
++  top: -2px;
++  bottom: -2px;
++  left: var(--target, 0%);
++  width: 1px;
++  background: var(--text);
++}
++
+ /* ---- Session simulator ---- */
++/* El grid reparte columnas de minmax(150px, 1fr), pero un <input> conserva su
++   ancho intrínseco (~217px por el atributo size por defecto) y no se encoge:
++   con cuatro columnas la última se salía 10px del viewport y el navegador
++   pintaba scroll horizontal en toda la página. min-width: 0 permite encoger la
++   pista y width: 100% hace que el control siga a su columna. */
+ .sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
++.sim-grid > * { min-width: 0; }
++.sim-grid input,
++.sim-grid select { width: 100%; }
+ 
+ .readouts { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 14px; }
+ @media (max-width: 640px) { .readouts { grid-template-columns: 1fr; } }
+@@ -308,9 +421,15 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+ .mod-actions { display: flex; gap: 10px; margin: 14px 0 4px; flex-wrap: wrap; }
+ .mod-pct { color: var(--accent); font-family: var(--mono); }
+ 
++/* Siempre son cuatro tarjetas, una por stat. Con auto-fit el ancho de la
++   ventana decide cuántas caben, y a partir de ~1000px entran tres: la cuarta
++   quedaba sola en una fila propia, desequilibrada y con el doble de ancho que
++   sus hermanas. Dos columnas fijas dan un 2×2 estable en cualquier ventana y
++   además dejan sitio para que la cifra y su etiqueta quepan en la misma línea
++   en las cuatro. Por debajo de 700px el bloque móvil las apila. */
+ .plan-grid {
+   display: grid;
+-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
++  grid-template-columns: repeat(2, minmax(0, 1fr));
+   gap: 14px;
+ }
+ .plan-card {
+@@ -340,7 +459,15 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+   padding-top: 2px;
+ }
+ .plan-v { flex: 1; }
++/* La etiqueta iba inline dentro de una caja de 30px: al no caber, "per train
++   at max happy" se partía y dejaba la última palabra huérfana dos líneas más
++   abajo, separada por el interlineado de la cifra. Como flex con wrap, la
++   etiqueta es un ítem propio: o cabe al lado, o baja entera y alineada. */
+ .plan-gain {
++  display: flex;
++  align-items: baseline;
++  flex-wrap: wrap;
++  gap: 0 8px;
+   font-family: var(--mono);
+   font-size: var(--fs-figure);
+   font-weight: 700;
+@@ -377,6 +504,16 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+   letter-spacing: 0;
+   color: var(--text);
+ }
++/* Las filas Happy y Energy salían idénticas en las cuatro tarjetas. Cuando
++   coinciden se imprimen una sola vez aquí y la tarjeta se queda con lo suyo.
++   Ver TrainingPlan.tsx. */
++.plan-shared {
++  display: grid;
++  grid-template-columns: 56px 1fr;
++  gap: 2px 10px;
++  font-size: var(--fs-base);
++  margin: 0 0 14px;
++}
+ .plan-gate-note {
+   font-size: var(--fs-sm);
+   color: var(--muted);
+@@ -879,14 +1016,24 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+   .plan-controls,
+   .history-controls,
+   .sharebar { flex-direction: column; align-items: stretch; }
++  /* `flex: 1 1 280px` en .apibar input fija el basis sobre el eje principal.
++     En escritorio ese eje es horizontal y los 280px son un ancho mínimo
++     razonable; aquí el contenedor pasa a column, el eje principal es vertical
++     y los mismos 280px se convirtieron en ALTURA: el campo de API key medía
++     280px y se comía la primera pantalla entera de cualquier ruta, dejando la
++     respuesta por debajo del pliegue. El basis vuelve a auto y la altura la
++     fija min-height como en el resto de controles. */
++  .apibar input[type='password'],
++  .apibar input[type='text'] { flex: 0 0 auto; }
+   .apibar input[type='password'],
++  .apibar input[type='text'],
+   .apibar button,
+   .qty-input,
+   .plan-select select,
+   .cmp-field > input,
+   .cmp-field > select,
+   .btn-primary,
+-  .toggle-btn { width: 100%; font-size: var(--fs-lead); min-height: 40px; }
++  .toggle-btn { width: 100%; font-size: var(--fs-lead); min-height: 44px; }
+   .cmp-field { flex-direction: column; align-items: stretch; gap: 4px; }
+   .cmp-field > select,
+   .cmp-field > input { max-width: none; }
+@@ -957,7 +1104,15 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+   cursor: pointer;
+ }
+ .nav-tab.on { color: var(--text); border-bottom-color: var(--accent); }
+-.nav-tab.dim { opacity: 0.45; }
++/* Era `opacity: 0.45` sobre --muted: 2.38:1 contra la superficie, muy por
++   debajo del 4.5 exigido, en un elemento que además sigue navegando. El estado
++   "todavía sin precios de mercado" lo comunican el color apagado y el title del
++   enlace (ver Nav.tsx), no un texto ilegible. */
++/* Mismo cálculo que td.muted-cell: --muted marca ya el estado inactivo de
++   todas las pestañas, así que la apagada necesita un paso más abajo que siga
++   pasando AA. #7f8796 da 4.57 sobre --surface, contra los 2.38 del opacity
++   anterior, y sigue leyéndose claramente como "todavía no". */
++.nav-tab.dim { color: #7f8796; }
+ .nav-dot {
+   display: inline-block;
+   width: 5px; height: 5px;
+@@ -974,5 +1129,32 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
+     border-top: 1px solid var(--line);
+     border-bottom: 0;
+     z-index: 20;
++    /* Con el padding de escritorio las cinco pestañas pedían 409px dentro de
++       375: "Progress" quedaba cortada por el borde derecho y no había nada que
++       sugiriera que se podía desplazar. Repartir el ancho a partes iguales las
++       mete completas. El padding inferior es el hueco del indicador de inicio
++       en iPhone: sin él las pestañas quedan debajo de la barra del sistema. */
++    gap: 0;
++    padding: 0;
++    padding-bottom: env(safe-area-inset-bottom, 0px);
++    overflow-x: visible;
++  }
++  .nav-tab {
++    flex: 1 1 0;
++    min-width: 0;
++    display: flex;
++    align-items: center;
++    justify-content: center;
++    /* 39px antes; 44 es el mínimo táctil en iOS y el que pide la guía. */
++    min-height: 44px;
++    padding: var(--sp-2) var(--sp-1);
++    font-size: var(--fs-sm);
++    /* La marca de pestaña activa se mueve al borde superior: en una barra
++       pegada abajo, un subrayado queda fuera de la pantalla. */
++    border-bottom: 0;
++    border-top: 2px solid transparent;
+   }
++  .nav-tab.on { border-top-color: var(--accent); }
++  /* El contenido tiene que despejar la barra fija más el área segura. */
++  .app { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+ }

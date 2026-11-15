@@ -126,7 +126,8 @@ export function JumpRoi({ gyms, player, modifiers, config, prices }: Props) {
             </a>{' '}
             → {DAYS_PER_XANAX} days of Pro, stackable, including the Pro alerts in the browser extension.
             Send <strong>{XANAX_PER_FACTION_MONTH} in one gift</strong> and your whole faction gets{' '}
-            {DAYS_PER_XANAX} days. Credited automatically about a minute after it arrives.
+            {DAYS_PER_XANAX} days. Credited automatically about a minute after it arrives.{' '}
+            <a href="/pro">More about Pro</a>.
           </p>
           {player.playerId ? (
             <button type="button" onClick={recheck} disabled={checking}>

@@ -323,6 +323,7 @@ ${body}
             ? `<p>${related.map((r) => `<a href="${canon(r.path)}">${esc(r.name)}</a>`).join(' · ')}</p>`
             : ''
         }
+        <p><a href="/pro">Get Pro</a> — 1 Xanax, 30 days. Everything else stays free.</p>
         <p>
           Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
           and is sent only to api.torn.com.
@@ -1005,6 +1006,79 @@ emit(
     related: related('/xanax-vs-lsd/'),
   }),
   0.7,
+);
+
+// --- /pro/
+// Página de venta del Supporter Pro. Hasta ahora el CTA solo vivía dentro del
+// panel ROI de /cost, visible únicamente con una key cargada.
+emit(
+  '/pro/',
+  page({
+    path: '/pro/',
+    title: 'Torn Training Pro — 1 Xanax, 30 Days',
+    description:
+      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (happy jump ROI at live prices, Pro alerts), or 30 Xanax for your whole faction.',
+    h1: 'Torn Training Pro',
+    sub: 'Everything on this site stays free. Pro adds the money side of training — and keeps the tool running.',
+    crumbs: [
+      { name: 'Torn Training Optimizer', path: '/' },
+      { name: 'Pro', path: '/pro/' },
+    ],
+    body: `      <h2>What Pro adds</h2>
+      <ul>
+        <li><strong>Happy jump ROI at live market prices</strong> — what a jump and a normal 36-hour stack each cost, $ per stat, and what every extra stat point from the jump really costs you.</li>
+        <li><strong>Pro alerts in the browser extension</strong> — booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
+      </ul>
+
+      <h2>How to get it</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Send to <a href="https://www.torn.com/profiles.php?XID=2885363">[2885363]</a></th><th>You get</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1 Xanax</td><td>30 days of Pro for you — stackable, paying early never loses days</td></tr>
+          <tr><td class="num">30 Xanax in one gift</td><td>30 days of Pro for <strong>everyone in your faction</strong></td></tr>
+        </tbody>
+      </table></div>
+      <p>
+        Credited automatically about a minute after the gift arrives — no message needed. Then load
+        your API key in the <a href="/cost">calculator</a> (or the extension) and Pro switches on.
+      </p>
+
+      <h2>Check your Pro status</h2>
+      <style>
+        #pro-check input { background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+        #pro-check button { background: var(--accent); color: var(--ink); border: 0; border-radius: 6px; padding: 7px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+      </style>
+      <form id="pro-check" class="callout" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <label>Torn ID <input id="pid" inputmode="numeric" pattern="[0-9]+" required size="10" /></label>
+        <label>Faction ID (optional) <input id="fid" inputmode="numeric" pattern="[0-9]*" size="8" /></label>
+        <button type="submit">Check</button>
+        <span id="pro-out" role="status" style="flex-basis:100%"></span>
+      </form>
+      <script>
+        document.getElementById('pro-check').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const out = document.getElementById('pro-out');
+          const id = document.getElementById('pid').value.trim();
+          const f = document.getElementById('fid').value.trim();
+          out.textContent = 'Checking…';
+          try {
+            const r = await (await fetch('/api/pro?id=' + id + (f ? '&faction=' + f : ''))).json();
+            out.textContent = r.pro
+              ? 'Pro active until ' + new Date(r.expires).toLocaleDateString() + '.'
+              : r.expires ? 'Pro expired on ' + new Date(r.expires).toLocaleDateString() + '.' : 'No Pro yet for this ID.';
+          } catch { out.textContent = 'Could not check right now — try again in a minute.'; }
+        });
+      </script>
+
+      <h2>FAQ</h2>
+      <h3>Do I need to give you my API key?</h3>
+      <p>No. Pro is matched by your Torn ID from the gift itself. Your key stays in your browser and goes only to api.torn.com — see the <a href="/privacy">privacy policy</a>.</p>
+      <h3>Does anything free become paid?</h3>
+      <p>No. The calculator, the guides and the standard alerts stay free.</p>
+      <h3>I sent it and nothing changed.</h3>
+      <p>Wait a minute and use the checker above. Still nothing? Send a Torn message to <a href="https://www.torn.com/messages.php#/p=compose&amp;XID=2885363">[2885363]</a> with the time of the gift.</p>`,
+  }),
+  0.5,
 );
 
 // --- /privacy/

@@ -55,10 +55,11 @@ export function AboutSection() {
 
       <h2>Is my API key safe?</h2>
       <p>
-        Yes. Your key stays in your browser and is only ever sent to api.torn.com — never to us.
-        There is no account and your stats are not stored anywhere. The only server call is the
-        optional Pro check, which sends your Torn player and faction IDs — never your key — to see whether you
-        have sent a Xanax. It's free, has no ads, and is not affiliated with Torn.
+        Yes. Your key stays in your browser and is only ever sent to api.torn.com — unless you turn on daily tracking, which stores it encrypted and uses it only to read your own stats.
+        By default there is no account and your stats are not stored anywhere; the Pro check sends
+        only your Torn player and faction IDs. Optional daily tracking (Progress tab) stores your key
+        encrypted to save one snapshot a day, and you can delete it all with one click. It's free, has
+        no ads, and is not affiliated with Torn.
       </p>
 
       <p>

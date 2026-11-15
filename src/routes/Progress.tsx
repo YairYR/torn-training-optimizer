@@ -1,4 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { CloudSync } from '../components/CloudSync';
+import { FactionDashboard } from '../components/FactionDashboard';
+import { HistoryPoint } from '../engine/history';
 import { Planner } from '../components/Planner';
 import { RouteProps } from './types';
 
@@ -15,10 +18,13 @@ const Projector = lazy(() =>
 const ChartFallback = () => <p className="footnote">Loading chart…</p>;
 
 export function Progress(p: RouteProps) {
+  const [cloud, setCloud] = useState<HistoryPoint[]>([]);
   return (
     <>
+      <CloudSync player={p.player} apiKey={p.apiKey} onHistory={setCloud} />
+      <FactionDashboard refresh={cloud.length} />
       <Suspense fallback={<ChartFallback />}>
-        <HistoryChart player={p.player} />
+        <HistoryChart player={p.player} extra={cloud} />
         <ProgressTracker
           player={p.player}
           gyms={p.gyms}

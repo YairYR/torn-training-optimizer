@@ -981,3 +981,7 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
 .roi-inputs { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); align-items: center; margin: var(--sp-2) 0 var(--sp-3); }
 .pro-lock { border: 1px dashed var(--accent); border-radius: 8px; padding: var(--sp-3); background: var(--surface-2); }
 .pro-lock p { margin: 0 0 var(--sp-2); }
+
+/* Seguimiento diario */
+.cloud-share { display: block; margin: var(--sp-2) 0 var(--sp-3); }
+.btn-quiet { background: transparent; color: var(--muted); border: 1px solid var(--line); }

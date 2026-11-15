@@ -4,15 +4,38 @@
   "redirects": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.torntraining.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.torntraining.com"
+        }
+      ],
       "destination": "https://torntraining.com/:path*",
       "permanent": true
     }
   ],
   "rewrites": [
-    { "source": "/build", "destination": "/index.html" },
-    { "source": "/compare", "destination": "/index.html" },
-    { "source": "/cost", "destination": "/index.html" },
-    { "source": "/progress", "destination": "/index.html" }
+    {
+      "source": "/build",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/compare",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cost",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/progress",
+      "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "17 6 * * *"
+    }
   ]
 }

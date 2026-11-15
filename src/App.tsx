@@ -291,7 +291,7 @@ export default function App() {
   if (player && gyms && config && stage) {
     const routeProps = {
       gyms, player, modifiers, gate, config, prices, energyPerDay, stage,
-      unlockedGymId,
+      unlockedGymId, apiKey,
       onConfig: patchConfig,
       onUnlockedGym: setUnlockedGymId,
       onMod: setMod,
@@ -385,11 +385,12 @@ export default function App() {
           <a href="/gym-dots">Gym Dots Chart</a>
           <a href="/stat-cap">The 50M Stat Cap</a>
           <a href="/gyms">All Gyms</a>
+          <a href="/pro">Get Pro</a>
           <a href="/privacy">Privacy</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
-        and is sent only to api.torn.com. Your stats are never stored on any server; checking Pro
-        sends only your player and faction IDs.{' '}
+        and is sent only to api.torn.com, unless you turn on daily tracking.{' '}
+        <a href="/privacy">How your data is handled</a>.{' '}
         <a
           href="https://www.torn.com/messages.php#/p=compose&XID=2885363"
           target="_blank"

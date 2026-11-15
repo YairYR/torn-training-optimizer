@@ -15,6 +15,8 @@ export interface RouteProps {
   energyPerDay: number;
   stage: Stage;
   unlockedGymId: number | null;
+  /** Para el alta del seguimiento diario. Vacía con el jugador de muestra o entrada manual. */
+  apiKey: string;
   onConfig: (patch: Partial<SessionConfig>) => void;
   onUnlockedGym: (id: number) => void;
   onMod: (stat: StatKey, value: number) => void;

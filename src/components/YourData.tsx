@@ -64,7 +64,7 @@ export function YourData({ apiKey, onApiKey, loading, onLoad, error, onManual }:
           {loading ? 'Loading…' : 'Load data'}
         </button>
         <p className="hint">
-          The key stays in your browser and is sent only to api.torn.com. It needs a Limited or Full
+          The key stays in your browser and is sent only to api.torn.com (unless you turn on daily tracking in Progress). It needs a Limited or Full
           key — stats, perks and personal stats are private. Your gym-gain modifiers are detected
           from your perks on load and can be edited below.
         </p>

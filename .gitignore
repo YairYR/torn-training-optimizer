@@ -28,3 +28,4 @@ public/sitemap.xml
 *.log
 .env
 .env.local
+public/privacy/

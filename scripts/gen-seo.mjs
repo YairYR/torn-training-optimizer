@@ -1007,6 +1007,60 @@ emit(
   0.7,
 );
 
+// --- /privacy/
+// La Chrome Web Store exige una URL de política de privacidad para la extensión.
+emit(
+  '/privacy/',
+  page({
+    path: '/privacy/',
+    title: 'Privacy Policy — Torn Training Optimizer',
+    description: 'What Torn Training Optimizer and its browser extension do with your Torn API key, stats and player ID.',
+    h1: 'Privacy policy',
+    sub: 'Short version: your API key and your stats never leave your browser except to go to api.torn.com.',
+    crumbs: [
+      { name: 'Torn Training Optimizer', path: '/' },
+      { name: 'Privacy', path: '/privacy/' },
+    ],
+    body: `      <h2>Your Torn API key</h2>
+      <p>
+        The website keeps your key in your browser’s local storage; the extension keeps it in
+        the extension’s local storage. In both cases it is sent only to api.torn.com, to read
+        your own data. It is never sent to torntraining.com or anyone else.
+      </p>
+
+      <h2>Your stats</h2>
+      <p>
+        Battle stats, bars, perks and cooldowns are read from the Torn API and processed in your
+        browser. They are not sent to or stored on any server we run.
+      </p>
+
+      <h2>Supporter Pro check</h2>
+      <p>
+        To check whether you have Pro, the website and the extension send your Torn player ID and
+        faction ID to torntraining.com. Separately, the author’s own Torn account events are read
+        to record Xanax gifts it receives: sender ID, quantity, time, and — for gifts of 30 or more —
+        the sender’s faction at that moment. That record is all we store, and it is used only to
+        grant Pro.
+      </p>
+
+      <h2>Analytics</h2>
+      <p>
+        The website uses Google Analytics to count visits and a few anonymous events (for example,
+        that a key was loaded — never the key itself). The extension does not use analytics.
+      </p>
+
+      <h2>Sharing</h2>
+      <p>No data is sold or shared with third parties. Nothing is used for advertising or credit decisions.</p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or deletion requests: send a Torn message to
+        <a href="https://www.torn.com/messages.php#/p=compose&amp;XID=2885363">[2885363]</a>.
+      </p>`,
+  }),
+  0.2,
+);
+
 // Antes del sitemap, no después: las tres páginas de prosa se fingerprintean
 // desde su fichero, así que el <style> y la fecha tienen que estar ya puestos
 // cuando lastmodOf las lea, o el cambio no re-data la entrada.

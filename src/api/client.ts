@@ -30,9 +30,10 @@ export async function call<T>(path: string, key: string): Promise<T> {
 export async function fetchPlayer(key: string): Promise<PlayerState> {
   // `basic` is added only for status.state — it is what tells us whether Crims
   // Gym is reachable. It carries no extra permission cost: a Limited key that
-  // can already read battlestats can read basic.
+  // can already read battlestats can read basic. `profile` (también pública)
+  // solo aporta la facción, para el pase Pro de facción.
   const data = await call<RawUser>(
-    '/user/?selections=battlestats,bars,personalstats,perks,gym,basic',
+    '/user/?selections=battlestats,bars,personalstats,perks,gym,basic,profile',
     key,
   );
   return normalizePlayer(data);

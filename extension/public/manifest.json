@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "Torn Training Optimizer",
-  "version": "1.0.0",
-  "description": "Live gym recommendations inside torn.com plus anti-waste training alerts: energy overflow, happy jumped, drug cooldown clear.",
+  "version": "1.1.0",
+  "description": "Live gym recommendations inside torn.com plus anti-waste training alerts: energy overflow, happy jumped, drug cooldown clear. Supporter Pro adds jump-ready, booster and happy-reset alerts.",
   "permissions": [
     "alarms",
     "notifications",
     "storage"
   ],
   "host_permissions": [
-    "https://api.torn.com/*"
+    "https://api.torn.com/*",
+    "https://torntraining.com/*"
   ],
   "background": {
     "service_worker": "background.js",

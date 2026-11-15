@@ -358,6 +358,7 @@ const HUBS = [
   { name: 'Training guide', path: '/guide/' },
   { name: 'Happy jump', path: '/happy-jump/' },
   { name: 'Specialist gyms', path: '/specialist-gyms/' },
+  { name: 'Fitness Center', path: '/fitness-center/' },
 ];
 
 const related = (exclude) => HUBS.filter((h) => h.path !== exclude).slice(0, 6);
@@ -777,32 +778,101 @@ ${gymTable(standard)}
 );
 
 // --- /training-ratios/
+// GSC nov 2026: "hanks ratio", "baldrs ratio" y variantes (~170 impresiones)
+// caían aquí sin una sección que las nombrara. Porcentajes de los hilos de
+// Hank's y Baldr's en los foros de Torn; cada uno cumple justo el 25% que
+// piden los specialists (ver /specialist-gyms).
+const ratioTable = (rows) => `      <div class="table-wrap"><table>
+        <thead><tr><th>Stat</th><th>Share of total</th><th>Trained in</th><th>Dots</th></tr></thead>
+        <tbody>
+${rows.map(([stat, pct, gym, dots]) => `          <tr><td>${stat}</td><td class="num">${pct}%</td><td>${gym}</td><td class="num">${dots}</td></tr>`).join('\n')}
+        </tbody>
+      </table></div>`;
+
 emit(
   '/training-ratios/',
   page({
     path: '/training-ratios/',
     article: true,
-    title: 'Torn Training Ratios — Hank\u2019s Ratio and Specialist Access',
+    title: 'Torn Training Ratios — Hank’s Ratio vs Baldr’s Ratio Explained',
     description:
-      'How stat ratios in Torn gate the 7.5, 8.0 and 9.0-dot specialist gyms, why the 1.25:1:1:0 build exists, and what leaving a stat behind actually buys you.',
+      'Hank’s ratio (1.25 : 1 : 1 : 0) and Baldr’s ratio (1.25 : 1 : 0.75 : 0.75) in Torn: the exact stat percentages, which specialist gym each stat trains in, and how much defense you give up.',
     h1: 'Torn training ratios',
-    sub: 'Specialist gyms do not care how big your stats are — they care how lopsided they are. That single rule shapes every serious Torn build.',
+    sub: 'Specialist gyms do not care how big your stats are — they care how lopsided they are. Hank’s and Baldr’s ratios are the two standard ways to buy that access.',
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Training ratios', path: '/training-ratios/' },
+    ],
+    schema: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'What is Hank’s ratio in Torn?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'A 1.25 : 1 : 1 : 0 build: one primary stat about 25% above two secondaries, and a fourth stat left far behind. With Defense as primary that is roughly 34.7% Defense, 27.8% Strength, 27.8% Speed and 9.7% Dexterity, so Defense trains at 8.0 dots in Mr. Isoyamas, Strength and Speed at 7.5 in Frontline Fitness, and Dexterity at 7.3 in George’s.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'What is Baldr’s ratio in Torn?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'A more balanced 1.25 : 1 : 0.75 : 0.75 build: roughly 30.9% primary, 24.7% secondary and 22.2% for each of the other two. The primary trains in its 8.0-dot single-stat gym, the secondary in the 7.5-dot two-stat gym, and the other two stay at George’s. No stat drops below about 22% of your total.',
+            },
+          },
+        ],
+      },
     ],
     body: `      <h2>Why ratios exist</h2>
       <p>
         Two-stat specialists need a pair of stats 25% above the other pair. Single-stat specialists
         need one stat 25% above your second highest. So access is bought with imbalance, and the
-        cost of that imbalance is a stat you deliberately never train.
+        cost of that imbalance is the stat — or stats — you train less.
       </p>
 
-      <h2>The common builds</h2>
+      <h2 id="hanks-ratio">Hank’s ratio (1.25 : 1 : 1 : 0)</h2>
+      <p>
+        One primary stat, two secondaries a quarter below it, and a fourth left behind. Most players
+        run it with Defense or Dexterity as the primary, which forces the other defensive stat to be
+        the one neglected. Example with Defense as primary:
+      </p>
+${ratioTable([
+  ['Defense', '34.72', 'Mr. Isoyamas', '8.0'],
+  ['Strength', '27.78', 'Frontline Fitness', '7.5'],
+  ['Speed', '27.78', 'Frontline Fitness', '7.5'],
+  ['Dexterity', '9.72', 'George’s', '7.3'],
+])}
+      <p>
+        With Dexterity as primary, swap in The Elites for Dexterity and leave Defense at George’s.
+        Three stats train in specialist gyms, so it is the highest-dot ratio — at the price of one
+        stat sitting under 10% of your total for your whole career.
+      </p>
+
+      <h2 id="baldrs-ratio">Baldr’s ratio (1.25 : 1 : 0.75 : 0.75)</h2>
+      <p>
+        The balanced alternative: a primary and a secondary in specialist gyms, the other two kept
+        level with each other. Example with Strength as primary:
+      </p>
+${ratioTable([
+  ['Strength', '30.86', 'Gym 3000', '8.0'],
+  ['Speed', '24.69', 'Frontline Fitness', '7.5'],
+  ['Defense', '22.22', 'George’s', '7.3'],
+  ['Dexterity', '22.22', 'George’s', '7.3'],
+])}
+      <p>
+        Strength and Speed complement each other offensively, which is why Baldr’s is the usual
+        pick for a Str/Spd build. Your lowest stat stays around 22% of the total instead of under 10%.
+      </p>
+
+      <h2>Hank’s vs Baldr’s vs balanced</h2>
       <ul>
-        <li><strong>1.25 : 1 : 1 : 0</strong> — the classic. Three stats trained, one abandoned, primary held a quarter above the rest. Unlocks an 8.0-dot single-stat gym for the primary.</li>
-        <li><strong>Balanced</strong> — no specialist access, George's at 7.3 forever. Simpler, and much better for defending against attacks.</li>
-        <li><strong>Two-stat</strong> — a pair 25% above the other pair, for the 7.5-dot Balboas or Frontline. A softer commitment than a single-stat build.</li>
+        <li><strong>Hank’s</strong> — three stats in specialist gyms; the most gain per energy, one stat abandoned.</li>
+        <li><strong>Baldr’s</strong> — two stats in specialist gyms; less gain, no glaring weakness.</li>
+        <li><strong>Balanced</strong> — no specialist access, George’s at 7.3 forever. Simplest, and the usual advice until you reach the last heavyweight gym.</li>
       </ul>
 
       <div class="flag">
@@ -810,17 +880,72 @@ emit(
         the whole ratio for, keeping the membership but losing access until you climb back.
       </div>
 
-      <h2>Is the imbalance worth it?</h2>
-      <p>
-        Going from George's 7.3 to an 8.0-dot specialist is about 9.6% more gain per energy on that
-        one stat — while the abandoned stat contributes nothing to your battle score. Whether that
-        trades well depends on what you want the stats for.
-      </p>
-
       <a class="cta" href="/build"><b>Check which specialists you qualify for →</b><br />Enter your four stats and it computes every ratio requirement for you.</a>`,
     related: related('/training-ratios/'),
   }),
   0.7,
+);
+
+// --- /fitness-center/
+// GSC nov 2026: "torn fitness center" (+ "perks") ~470 impresiones y 0 clics.
+// Solo los specials que tocan el gimnasio, con la wiki como fuente.
+emit(
+  '/fitness-center/',
+  page({
+    path: '/fitness-center/',
+    article: true,
+    title: 'Torn Fitness Center: Job Specials for Gym Training (Perks Explained)',
+    description:
+      'What a Fitness Center job does for your gym training in Torn: 50% less happy loss per train, Roid Rage strength gains per job point, and +3% gym gains at 10 stars.',
+    h1: 'Torn Fitness Center',
+    sub: 'The company type built around the gym. Its specials touch three parts of training: happy loss, free strength, and a flat gain bonus.',
+    crumbs: [
+      { name: 'Torn Training Optimizer', path: '/' },
+      { name: 'Fitness Center', path: '/fitness-center/' },
+    ],
+    schema: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: [
+          {
+            '@type': 'Question',
+            name: 'What does a Fitness Center job give for gym training in Torn?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'At 3 stars, Goal Oriented halves the happy you lose per train. At 5 stars, Roid Rage turns job points into about 4.5 energy worth of strength gains each in your current gym, unaffected by happy. At 10 stars, Training Regime adds 3% to all gym gains.',
+            },
+          },
+        ],
+      },
+    ],
+    body: `      <h2>The training specials</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Stars</th><th>Special</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td class="num">3</td><td>Goal Oriented (passive)</td><td>Happy loss per train reduced by 50%</td></tr>
+          <tr><td class="num">5</td><td>Roid Rage (job points)</td><td>About 4.5 energy worth of strength gains per job point, in your current gym; happy does not affect it</td></tr>
+          <tr><td class="num">7</td><td>Athlete (passive)</td><td>3% life regeneration per tick — not a training perk</td></tr>
+          <tr><td class="num">10</td><td>Training Regime (passive)</td><td>+3% to all gym gains</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>Which one matters for you</h2>
+      <ul>
+        <li><strong>Goal Oriented</strong> pays off most on long sessions and happy jumps: happy falls half as fast, so late trains in a big energy dump run at higher happy.</li>
+        <li><strong>Roid Rage</strong> is free strength on top of your energy. It uses your current gym, so it is worth more once you train in a high-dot strength gym.</li>
+        <li><strong>Training Regime</strong> is a small, permanent multiplier. Gym-gain bonuses multiply rather than add, so it stacks with faction, property, education and book perks.</li>
+      </ul>
+
+      <div class="callout">
+        Starting a Fitness Center costs $17,000,000. Specials depend on the company’s star rating,
+        not on your position in it.
+      </div>
+
+      <a class="cta" href="/"><b>See what your perks add up to →</b><br />Load your API key and the calculator reads your job, faction and education gym bonuses automatically.</a>`,
+    related: related('/fitness-center/'),
+  }),
+  0.6,
 );
 
 // --- /xanax-vs-lsd/

@@ -51,3 +51,29 @@ describe('evaluateAlerts', () => {
     expect(evaluateAlerts(s, enabled).map((a) => a.id)).toContain('lowHappyHighEnergy');
   });
 });
+
+describe('Pro alerts', () => {
+  const ready = { ...snap, energy: { current: 1000, maximum: 150 }, drugCooldown: 0, boosterCooldown: 0 };
+  // 12:13 UTC -> 2 min to the 12:15 reset.
+  const jumped = { ...snap, happy: { current: 60_000, maximum: 5025 }, now: Date.UTC(2026, 10, 15, 12, 13) };
+
+  it('stay silent without Pro', () => {
+    const ids = evaluateAlerts({ ...ready, ...jumped }, cfg).map((a) => a.id);
+    expect(ids).not.toContain('jumpReady');
+    expect(ids).not.toContain('happyResetSoon');
+    expect(ids).not.toContain('boosterReady');
+  });
+
+  it('fire jump ready with 1000+ energy and both cooldowns clear', () => {
+    const ids = evaluateAlerts(ready, cfg, true).map((a) => a.id);
+    expect(ids).toContain('jumpReady');
+    expect(ids).toContain('boosterReady');
+    expect(evaluateAlerts({ ...ready, boosterCooldown: 600 }, cfg, true).map((a) => a.id)).not.toContain('jumpReady');
+  });
+
+  it('warn 3 minutes or less before the quarter-hour reset', () => {
+    expect(evaluateAlerts(jumped, cfg, true).map((a) => a.id)).toContain('happyResetSoon');
+    const early = { ...jumped, now: Date.UTC(2026, 10, 15, 12, 5) };
+    expect(evaluateAlerts(early, cfg, true).map((a) => a.id)).not.toContain('happyResetSoon');
+  });
+});

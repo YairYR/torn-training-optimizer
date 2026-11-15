@@ -322,7 +322,7 @@ ${
     : `
       <a class="cta" href="/pro">
         <b>Support the tool — 1 Xanax = 30 days of Pro →</b><br />
-        Happy jump ROI at live prices and Pro alerts. Faction leaders: 30 Xanax gives every member Pro plus a stats dashboard.
+        Happy jump ROI at live prices, with Pro alerts coming soon. Faction leaders: 30 Xanax gives every member Pro plus a stats dashboard.
       </a>`
 }
 
@@ -1025,7 +1025,7 @@ emit(
     path: '/pro/',
     title: 'Torn Training Pro — 1 Xanax, 30 Days',
     description:
-      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (happy jump ROI at live prices, Pro alerts), or 30 Xanax for your whole faction.',
+      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (happy jump ROI at live prices; Pro alerts coming soon), or 30 Xanax for your whole faction.',
     h1: 'Torn Training Pro',
     sub: 'Everything on this site stays free. Pro adds the money side of training — and keeps the tool running.',
     crumbs: [
@@ -1036,7 +1036,7 @@ emit(
       <ul>
         <li><strong>Happy jump ROI at live market prices</strong> — what a jump and a normal 36-hour stack each cost, $ per stat, and what every extra stat point from the jump really costs you.</li>
         <li><strong>Faction dashboard</strong> (faction pass) — leader and co-leader see every member who shares their stats: totals, stat split and 30-day growth, updated daily.</li>
-        <li><strong>Pro alerts in the browser extension</strong> — booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
+        <li><strong>Pro alerts in the browser extension — coming soon</strong> (pending Chrome Web Store review): booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
       </ul>
 
       <h2>How to get it</h2>

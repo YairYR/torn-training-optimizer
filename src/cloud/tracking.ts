@@ -70,3 +70,29 @@ export const toHistory = (rows: SnapshotRow[]): HistoryPoint[] =>
  * 16 nivel de acceso insuficiente, 18 pausada por el dueño.
  */
 export const isDeadKeyError = (code: number) => [2, 13, 16, 18].includes(code);
+
+/** Mínimo de miembros que comparten para mostrar rankings: con menos, la mediana delataría números ajenos. */
+export const MIN_SHARERS = 5;
+
+export interface FactionRank {
+  sharers: number;
+  rankTotal: number;
+  rankGrowth: number | null;
+  myGrowth: number | null;
+  medianGrowth: number | null;
+}
+
+/** Posición del jugador entre los que comparten; solo agregados, nunca números de otros. */
+export function factionRank(members: MemberSummary[], me: number): FactionRank | null {
+  const mine = members.find((m) => m.playerId === me);
+  if (!mine || members.length < MIN_SHARERS) return null;
+  const growths = members.map((m) => m.growth).filter((g): g is number => g != null).sort((a, b) => b - a);
+  const mid = growths.length ? growths[Math.floor((growths.length - 1) / 2)] : null;
+  return {
+    sharers: members.length,
+    rankTotal: [...members].sort((a, b) => b.total - a.total).indexOf(mine) + 1,
+    rankGrowth: mine.growth == null ? null : growths.indexOf(mine.growth) + 1,
+    myGrowth: mine.growth,
+    medianGrowth: mid,
+  };
+}

@@ -18,3 +18,12 @@ export function fmtPerPoint(n: number | null): string {
   if (n >= 1000) return '$' + Math.round(n).toLocaleString('en-US');
   return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
+
+/** 398966085 → "399.0M"; para cifras grandes en texto corrido. */
+export function fmtCompact(n: number): string {
+  const a = Math.abs(n);
+  if (a >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
+  if (a >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (a >= 1e3) return `${(n / 1e3).toFixed(1)}k`;
+  return `${Math.round(n)}`;
+}

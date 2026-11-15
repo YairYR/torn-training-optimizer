@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { seal, unseal, signSession, verifySession } from './crypto';
-import { summarize, toHistory, isDeadKeyError } from './tracking';
+import { summarize, toHistory, isDeadKeyError, factionRank } from './tracking';
 
 const S = 'test-secret-with-enough-entropy-123456';
 
@@ -48,5 +48,25 @@ describe('tracking', () => {
   it('only drops keys on permanent errors', () => {
     expect(isDeadKeyError(2)).toBe(true);
     expect(isDeadKeyError(5)).toBe(false); // too many requests: transitorio
+  });
+});
+
+describe('factionRank', () => {
+  const m = (playerId: number, total: number, growth: number | null) => ({
+    playerId, name: '', day: '', total, growth,
+    stats: { strength: total, defense: 0, speed: 0, dexterity: 0 },
+  });
+  const five = [m(1, 500, 0.05), m(2, 400, 0.2), m(3, 300, 0.1), m(4, 200, 0.01), m(5, 100, 0.3)];
+
+  it('hides ranks below five sharers', () => {
+    expect(factionRank(five.slice(0, 4), 1)).toBeNull();
+  });
+
+  it('ranks by total and by growth, with the median', () => {
+    expect(factionRank(five, 3)).toEqual({ sharers: 5, rankTotal: 3, rankGrowth: 3, myGrowth: 0.1, medianGrowth: 0.1 });
+  });
+
+  it('is null for someone who does not share', () => {
+    expect(factionRank(five, 9)).toBeNull();
   });
 });

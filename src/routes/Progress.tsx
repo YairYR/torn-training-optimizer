@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
 import { CloudSync } from '../components/CloudSync';
 import { FactionDashboard } from '../components/FactionDashboard';
+import { ProInsights } from '../components/ProInsights';
 import { HistoryPoint } from '../engine/history';
 import { Planner } from '../components/Planner';
 import { RouteProps } from './types';
@@ -22,6 +23,7 @@ export function Progress(p: RouteProps) {
   return (
     <>
       <CloudSync player={p.player} apiKey={p.apiKey} onHistory={setCloud} />
+      <ProInsights player={p.player} points={cloud} />
       <FactionDashboard refresh={cloud.length} />
       <Suspense fallback={<ChartFallback />}>
         <HistoryChart player={p.player} extra={cloud} />

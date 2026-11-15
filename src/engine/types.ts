@@ -36,6 +36,8 @@ export interface PlayerState {
    * recommendation rather than being cosmetic. null when unknown.
    */
   inJail?: boolean | null;
+  /** Torn player id, from the API key. null/undefined for manual entry. */
+  playerId?: number | null;
 }
 
 export interface Gym {

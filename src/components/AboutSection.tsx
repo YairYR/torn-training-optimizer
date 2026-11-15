@@ -56,8 +56,9 @@ export function AboutSection() {
       <h2>Is my API key safe?</h2>
       <p>
         Yes. Your key stays in your browser and is only ever sent to api.torn.com — never to us.
-        There is no server, no database and no account, so nothing is stored remotely. It's free, has
-        no ads, and is not affiliated with Torn.
+        There is no account and your stats are not stored anywhere. The only server call is the
+        optional Pro check, which sends your Torn player ID — never your key — to see whether you
+        have sent a Xanax. It's free, has no ads, and is not affiliated with Torn.
       </p>
 
       <p>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Gym, PlayerState, STAT_KEYS, SessionConfig, StatKey, ManualData } from './engine/types';
 import { fetchGyms, fetchPlayer } from './api/client';
 import { fetchPrices } from './api/market';
+import { track } from './analytics';
 import { Prices } from './engine/cost-model';
 import {
   bestUsableGymIdForStat,
@@ -122,6 +123,7 @@ export default function App() {
         fetchPrices(apiKey, PRICED_ITEMS).catch(() => null),
       ]);
       setPlayer(p);
+      track('api_key_loaded');
       setGyms(g);
       setPrices(pr);
       // Otherwise `manual` still holds the sample player from the mount
@@ -385,7 +387,16 @@ export default function App() {
           <a href="/gyms">All Gyms</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
-        and is sent only to api.torn.com. Your stats are never stored on any server.
+        and is sent only to api.torn.com. Your stats are never stored on any server; checking Pro
+        sends only your player ID.{' '}
+        <a
+          href="https://www.torn.com/messages.php#/p=compose&XID=2885363"
+          target="_blank"
+          rel="noopener"
+          onClick={() => track('report_data_error')}
+        >
+          Spotted a wrong number? Tell me in Torn.
+        </a>
       </footer>
     </div>
   );

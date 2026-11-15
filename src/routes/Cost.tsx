@@ -1,4 +1,5 @@
 import { Economics } from '../components/Economics';
+import { JumpRoi } from '../components/JumpRoi';
 import { Optimizer } from '../components/Optimizer';
 import { SessionSimulator } from '../components/SessionSimulator';
 import { RouteProps } from './types';
@@ -13,6 +14,13 @@ export function Cost(p: RouteProps) {
         </p>
       )}
       <Economics
+        gyms={p.gyms}
+        player={p.player}
+        modifiers={p.modifiers[p.config.stat]}
+        config={p.config}
+        prices={p.prices}
+      />
+      <JumpRoi
         gyms={p.gyms}
         player={p.player}
         modifiers={p.modifiers[p.config.stat]}

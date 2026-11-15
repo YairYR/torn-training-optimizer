@@ -316,6 +316,15 @@ ${STYLE}
       <p class="sub">${sub}</p>
 
 ${body}
+${
+  canon(path) === '/pro'
+    ? ''
+    : `
+      <a class="cta" href="/pro">
+        <b>Support the tool — 1 Xanax = 30 days of Pro →</b><br />
+        Happy jump ROI at live prices and Pro alerts. Faction leaders: 30 Xanax gives every member Pro plus a stats dashboard.
+      </a>`
+}
 
       <footer>
         ${
@@ -323,7 +332,6 @@ ${body}
             ? `<p>${related.map((r) => `<a href="${canon(r.path)}">${esc(r.name)}</a>`).join(' · ')}</p>`
             : ''
         }
-        <p><a href="/pro">Get Pro</a> — 1 Xanax, 30 days. Everything else stays free.</p>
         <p>
           Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
           and is sent only to api.torn.com unless you turn on daily tracking. <a href="/privacy">Privacy</a>.

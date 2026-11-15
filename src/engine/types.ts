@@ -40,6 +40,9 @@ export interface PlayerState {
   playerId?: number | null;
   /** Faction id, for the faction Pro pass. null when factionless or unknown. */
   factionId?: number | null;
+  factionName?: string | null;
+  /** Cargo en la facción según `profile` ("Leader", "Co-leader", ...). */
+  factionPosition?: string | null;
 }
 
 export interface Gym {

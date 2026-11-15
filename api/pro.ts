@@ -103,10 +103,18 @@ async function handle(request: Request) {
   const who = faction ? `or=(player_id.eq.${id},faction_id.eq.${faction})` : `player_id=eq.${id}`;
   const res = await sb(`donations?${who}&select=player_id,faction_id,qty,ts`);
   if (!res.ok) return Response.json({ error: 'storage' }, { status: 502 });
-  const expires = proExpiry((await res.json()) as Credit[], id, faction);
+  const rows = (await res.json()) as Credit[];
+  const expires = proExpiry(rows, id, faction);
+  // Solo el pase de facción (player 0 = sin envíos propios): decide si a un líder
+  // todavía hay que ofrecérselo aunque ya tenga Pro personal.
+  const factionPass = faction != null && proExpiry(rows, 0, faction) * 1000 > Date.now();
 
   return Response.json(
-    { pro: expires * 1000 > Date.now(), expires: expires ? new Date(expires * 1000).toISOString() : null },
+    {
+      pro: expires * 1000 > Date.now(),
+      expires: expires ? new Date(expires * 1000).toISOString() : null,
+      factionPass,
+    },
     { headers: { 'Cache-Control': 'no-store' } },
   );
 }

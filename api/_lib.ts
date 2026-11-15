@@ -8,6 +8,17 @@ import { utcDay } from '../src/cloud/tracking.js';
 declare const process: { env: Record<string, string | undefined> };
 export const env = (k: string) => process.env[k] ?? '';
 
+/**
+ * Secreto de cifrado y sesiones. Falla cerrado: el repo es público, así que un
+ * secreto vacío o corto permitiría a cualquiera falsificar sesiones y descifrar
+ * keys guardadas.
+ */
+export function appSecret(): string {
+  const s = env('APP_SECRET');
+  if (s.length < 32) throw new Error('APP_SECRET is missing or shorter than 32 characters');
+  return s;
+}
+
 export function sb(path: string, init: RequestInit = {}) {
   const key = env('SUPABASE_SECRET_KEY');
   return fetch(`${env('SUPABASE_URL')}/rest/v1/${path}`, {
@@ -26,7 +37,7 @@ export async function torn<T>(path: string, key: string): Promise<T & TornError>
 
 /** Player id de la sesión del request (Authorization: Bearer <token>), o null. */
 export const sessionOf = (req: Request) =>
-  verifySession(env('APP_SECRET'), req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? null);
+  verifySession(appSecret(), req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? null);
 
 export interface Me {
   player_id: number;

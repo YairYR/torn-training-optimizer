@@ -5,7 +5,7 @@
 // (AES-GCM, APP_SECRET) y la usa únicamente el cron diario.
 
 import { seal, signSession } from '../src/cloud/crypto.js';
-import { env, json, readMe, saveSnapshot, sb, sessionOf } from './_lib.js';
+import { appSecret, json, readMe, saveSnapshot, sb, sessionOf } from './_lib.js';
 
 async function handle(req: Request) {
   if (req.method === 'DELETE') {
@@ -29,7 +29,7 @@ async function handle(req: Request) {
       player_id: me.player_id,
       name: me.name,
       faction_id: me.faction?.faction_id || null,
-      key_enc: await seal(env('APP_SECRET'), key),
+      key_enc: await seal(appSecret(), key),
       share_faction: share === true,
       last_ok: new Date().toISOString(),
       last_error: null,
@@ -38,7 +38,7 @@ async function handle(req: Request) {
   if (!up.ok) return json({ error: 'storage' }, 502);
   await saveSnapshot(me);
 
-  return json({ token: await signSession(env('APP_SECRET'), me.player_id), playerId: me.player_id });
+  return json({ token: await signSession(appSecret(), me.player_id), playerId: me.player_id });
 }
 
 export default { fetch: handle };

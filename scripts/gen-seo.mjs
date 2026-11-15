@@ -322,7 +322,7 @@ ${
     : `
       <a class="cta" href="/pro">
         <b>Support the tool — 1 Xanax = 30 days of Pro →</b><br />
-        Happy jump ROI at live prices, with Pro alerts coming soon. Faction leaders: 30 Xanax gives every member Pro plus a stats dashboard.
+        Weekly insights, your real-pace milestones, faction rank and happy jump ROI. Faction leaders: 30 Xanax gives every member Pro plus a stats dashboard.
       </a>`
 }
 
@@ -1025,7 +1025,7 @@ emit(
     path: '/pro/',
     title: 'Torn Training Pro — 1 Xanax, 30 Days',
     description:
-      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (happy jump ROI at live prices; Pro alerts coming soon), or 30 Xanax for your whole faction.',
+      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (progress insights, happy jump ROI at live prices; Pro alerts coming soon), or 30 Xanax for your whole faction.',
     h1: 'Torn Training Pro',
     sub: 'Everything on this site stays free. Pro adds the money side of training — and keeps the tool running.',
     crumbs: [
@@ -1034,6 +1034,7 @@ emit(
     ],
     body: `      <h2>What Pro adds</h2>
       <ul>
+        <li><strong>Progress insights</strong> (with free daily tracking) — your week at a glance, the date you hit your next milestone on every stat at your real pace, and your rank in your faction by 30-day growth.</li>
         <li><strong>Happy jump ROI at live market prices</strong> — what a jump and a normal 36-hour stack each cost, $ per stat, and what every extra stat point from the jump really costs you.</li>
         <li><strong>Faction dashboard</strong> (faction pass) — leader and co-leader see every member who shares their stats: totals, stat split and 30-day growth, updated daily.</li>
         <li><strong>Pro alerts in the browser extension — coming soon</strong> (pending Chrome Web Store review): booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
@@ -1111,7 +1112,7 @@ emit(
         <tbody>
           <tr>
             <td>Default: only in your browser. With daily tracking on: one battle-stats snapshot per day, your name and faction ID, kept until you stop tracking.</td>
-            <td>Nobody by default. If you opt in: your faction\u2019s leader and co-leader see your latest stats and 30-day growth.</td>
+            <td>Nobody by default. If you opt in: your faction\u2019s leader and co-leader see your latest stats and 30-day growth, and you count anonymously toward faction ranks (5+ sharers, no individual numbers).</td>
             <td>Gym calculations; with tracking on, your history chart and the faction dashboard.</td>
             <td>Default: your browser only. With tracking on: stored encrypted (AES-GCM) on our server, used once a day to read your own stats, never shared. Deleted when you stop tracking or if Torn reports the key as invalid.</td>
             <td>Limited (battle stats, bars, profile)</td>
@@ -1138,8 +1139,9 @@ emit(
       <p>
         If you tick \u201cshare with my faction\u2019s leader and co-leader\u201d, they can see your latest
         stats, your stat split and your 30-day growth in the faction dashboard. Only the current leader
-        and co-leader of your current faction, as reported by the Torn API, can see it. Untick it at any
-        time.
+        and co-leader of your current faction, as reported by the Torn API, can see it. Members who
+        share also count toward an anonymous faction ranking: Pro members see only their own position
+        and the faction median, and only when 5 or more members share. Untick it at any time.
       </p>
 
       <h2>Deleting your data</h2>

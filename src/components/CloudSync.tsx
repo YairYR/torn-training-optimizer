@@ -78,7 +78,7 @@ export function CloudSync({ player, apiKey, onHistory }: Props) {
               disabled={busy || !canStart}
               onChange={(e) => void start(e.target.checked)}
             />{' '}
-            Share my stats with my faction&apos;s leader and co-leader
+            Share my stats with my faction&apos;s leader and co-leader (and count anonymously in faction ranks)
           </label>
           <button type="button" className="btn-quiet" onClick={stop} disabled={busy}>
             Stop tracking &amp; delete my data
@@ -93,7 +93,7 @@ export function CloudSync({ player, apiKey, onHistory }: Props) {
           </p>
           <label className="cloud-share">
             <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} /> Share my stats
-            with my faction&apos;s leader and co-leader
+            with my faction&apos;s leader and co-leader (and count anonymously in faction ranks)
           </label>
           <button type="button" onClick={() => void start(share)} disabled={busy || !canStart}>
             {busy ? 'Saving…' : 'Start daily tracking'}

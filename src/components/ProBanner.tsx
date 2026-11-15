@@ -48,8 +48,9 @@ export function ProBanner({ player }: { player: PlayerState }) {
         </p>
       ) : (
         <p>
-          <strong>Go Pro for 1 Xanax.</strong> Happy jump ROI at live market prices, with Pro alerts in
-          the browser extension coming soon. 30 days, stackable — everything else stays free.
+          <strong>Go Pro for 1 Xanax.</strong> Weekly insights, the date you hit your next milestone at your
+          real pace, your faction rank and happy jump ROI at live prices. 30 days, stackable — everything
+          else stays free.
         </p>
       )}
       <div className="pro-banner-actions">

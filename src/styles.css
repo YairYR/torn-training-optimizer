@@ -1000,3 +1000,6 @@ button.ghost:hover { background: rgba(217, 154, 78, 0.1); }
 .pro-banner-cta { background: var(--accent); color: var(--ink); font-weight: 600; padding: 8px 14px; border-radius: 6px; text-decoration: none; white-space: nowrap; }
 .pro-banner-faction .pro-banner-cta { background: var(--best); }
 .pro-banner-x { background: transparent; border: 0; color: var(--muted); font-size: 20px; line-height: 1; padding: 4px 6px; cursor: pointer; }
+.panel h2 .pro-tag { font-size: 10px; color: var(--accent); border: 1px solid var(--accent-dim); border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 2px; letter-spacing: 0.06em; }
+.insight-list { margin: 0 0 var(--sp-3); padding-left: 18px; }
+.insight-list li { margin-bottom: 6px; }

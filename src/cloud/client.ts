@@ -64,3 +64,14 @@ export async function fetchFaction(): Promise<FactionResult | null> {
   const res = await fetch('/api/faction', { headers: auth() });
   return { status: res.status, ...(await res.json().catch(() => ({}))) };
 }
+
+export type RankResult =
+  | ({ status: 200 } & import('./tracking').FactionRank)
+  | { status: 200 | 402; sharers: number; needed: number }
+  | { status: number };
+
+export async function fetchRank(): Promise<RankResult | null> {
+  if (!getToken()) return null;
+  const res = await fetch('/api/rank', { headers: auth() });
+  return { status: res.status, ...(await res.json().catch(() => ({}))) };
+}

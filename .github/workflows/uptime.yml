@@ -1,0 +1,25 @@
+name: Uptime
+
+# Cada hora: si la home o las funciones de /api fallan, el workflow falla y
+# GitHub envía un email. Detecta caídas como las del 15-nov (import sin .js,
+# secretos faltantes) sin esperar a que un usuario lo note.
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Home
+        run: curl -fsS -o /dev/null https://torntraining.com/
+
+      - name: Pro check responde JSON
+        run: curl -fsS 'https://torntraining.com/api/pro?id=2885363' | grep -q '"pro"'
+
+      - name: Funciones con sesión cargan (401 sin token, no 500)
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://torntraining.com/api/history)
+          echo "api/history → $code"
+          test "$code" = 401

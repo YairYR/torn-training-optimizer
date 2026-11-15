@@ -493,14 +493,33 @@ emit(
   '/gyms/',
   page({
     path: '/gyms/',
-    title: 'All Torn Gyms: Dots, Energy and Unlock Costs',
-    description:
-      'Every gym in Torn — 24 standard gyms and the specialists — with dot values for all four battle stats, energy per train and cost to join. One page per gym with full detail.',
+    // GSC, nov 2026: /gyms recibía 12.6k impresiones en posición 5.2 con CTR
+    // del 3%, sobre consultas tipo "torn gyms", "torn gym list", "torn city
+    // gyms". El title nuevo pone la consulta literal primero y el conteo, que
+    // es lo que distingue un listado completo de la wiki en la SERP.
+    title: `Torn Gyms List: All ${gyms.length} Gyms, Dots, Energy & Unlock Costs`,
+    description: `Every Torn City gym in one list — ${standard.length} standard, ${specialist.length} specialist and the jail gym — with dots per battle stat, energy per train, join cost and unlock order. A free calculator shows which ones you can use.`,
     h1: 'All Torn gyms',
     sub: `${gyms.length} gyms: ${standard.length} standard ones you progress through with gym EXP, ${specialist.length} specialists gated on stat ratios, and the jail gym.`,
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Gyms', path: '/gyms/' },
+    ],
+    // El índice es literalmente una lista de entidades con página propia:
+    // ItemList se lo dice a Google sin ambigüedad, en el orden de desbloqueo.
+    schema: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        name: 'Torn gyms',
+        numberOfItems: gyms.length,
+        itemListElement: [...standard, ...specialist, ...jail].map((g, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: g.name,
+          url: `${SITE}/gyms/${g.slug}`,
+        })),
+      },
     ],
     body: `      <h2>Standard gyms</h2>
 ${gymTable(standard)}

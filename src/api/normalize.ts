@@ -82,6 +82,8 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     // Solo para consultar el Pro (api/pro.ts). Viene en `basic`, ya pedido arriba.
     playerId: raw.player_id != null ? Number(raw.player_id) : null,
     factionId: raw.faction?.faction_id || null,
+    factionName: raw.faction?.faction_name ?? null,
+    factionPosition: raw.faction?.position ?? null,
   };
 }
 
@@ -125,5 +127,5 @@ export interface RawUser {
   /** From the `basic` selection. */
   player_id?: number;
   /** From `profile`. faction_id 0 = sin facción. */
-  faction?: { faction_id?: number };
+  faction?: { faction_id?: number; faction_name?: string; position?: string };
 }

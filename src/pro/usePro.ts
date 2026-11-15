@@ -4,6 +4,8 @@ import { track } from '../analytics';
 export interface ProStatus {
   pro: boolean;
   expires: string | null;
+  /** Pase de facción activo (aparte del Pro personal). */
+  factionPass?: boolean;
 }
 
 /**

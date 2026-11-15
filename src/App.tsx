@@ -3,6 +3,7 @@ import { Gym, PlayerState, STAT_KEYS, SessionConfig, StatKey, ManualData } from 
 import { fetchGyms, fetchPlayer } from './api/client';
 import { fetchPrices } from './api/market';
 import { track } from './analytics';
+import { ProBanner } from './components/ProBanner';
 import { Prices } from './engine/cost-model';
 import {
   bestUsableGymIdForStat,
@@ -373,6 +374,8 @@ export default function App() {
             replace it.
           </p>
         )}
+
+        {player && <ProBanner player={player} />}
 
         {routeSection}
       </main>

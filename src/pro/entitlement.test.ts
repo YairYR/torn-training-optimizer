@@ -17,6 +17,14 @@ describe('parseDonation', () => {
     expect(parseDonation('e2', ev('You were sent a Xanax from <a href="profiles.php?XID=7">A</a>'))?.qty).toBe(1);
   });
 
+  it('reads the real v1 event text ("some Xanax")', () => {
+    const d = parseDonation(
+      'jCx7KSGmbwkzeMwmX528',
+      ev('You were sent some Xanax from <a href = http://www.torn.com/http://www.torn.com/profiles.php?XID=894553>--Huntress--</a>'),
+    );
+    expect(d).toEqual({ eventId: 'jCx7KSGmbwkzeMwmX528', playerId: 894553, qty: 1, ts: 1_000 });
+  });
+
   it('ignores other items and outgoing sends', () => {
     expect(parseDonation('e3', ev('You were sent 1x Ecstasy from <a href="profiles.php?XID=7">A</a>'))).toBeNull();
     expect(parseDonation('e4', ev('You sent 1x Xanax to <a href="profiles.php?XID=7">A</a>'))).toBeNull();

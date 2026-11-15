@@ -20,7 +20,10 @@ export interface Donation {
 // <a href=...XID=123>"). Si Torn cambia el texto deja de acreditar en silencio;
 // api/pro.ts registra cualquier evento con "Xanax" que no case, para verlo en
 // los logs de Vercel.
-const SENT = /You were sent (?:(\d+)\s*x\s*|an? )?Xanax\b[\s\S]*?XID=(\d+)/i;
+// ponytail: la API v1 escribe "some Xanax" sin cantidad (visto en producción,
+// nov 2026); se acredita como 1. Si un envío de varios llega igual, cada Xanax
+// extra se pierde: pasar a la v2 de events, que trae la cantidad, si pasa.
+const SENT = /You were sent (?:(\d+)\s*x\s*|an? |some )?Xanax\b[\s\S]*?XID=(\d+)/i;
 
 export function parseDonation(eventId: string, e: { timestamp: number; event: string }): Donation | null {
   const m = SENT.exec(e.event);

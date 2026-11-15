@@ -9,19 +9,8 @@
 //   SUPABASE_URL         https://<ref>.supabase.co
 //   SUPABASE_SECRET_KEY  secret key del proyecto (no la publishable)
 
-import { parseDonation, proExpiry, Credit, Donation, XANAX_PER_FACTION_MONTH } from '../src/pro/entitlement.js'; // ESM en Node exige la extensión
-
-// Sin @types/node por una sola línea: el runtime de Vercel ya trae process.
-declare const process: { env: Record<string, string | undefined> };
-const env = (k: string) => process.env[k] ?? '';
-
-function sb(path: string, init: RequestInit = {}) {
-  const key = env('SUPABASE_SECRET_KEY');
-  return fetch(`${env('SUPABASE_URL')}/rest/v1/${path}`, {
-    ...init,
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...init.headers },
-  });
-}
+import { parseDonation, proExpiry, Credit, Donation, XANAX_PER_FACTION_MONTH } from '../src/pro/entitlement.js';
+import { env, sb } from './_lib.js'; // ESM en Node exige la extensión
 
 interface TornEvents {
   events?: Record<string, { timestamp: number; event: string }>;

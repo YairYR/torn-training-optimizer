@@ -25,6 +25,8 @@ import { fmtInt, fmtGain } from '../format';
 
 interface Props {
   player: PlayerState;
+  /** Puntos del seguimiento diario en el servidor; se mezclan con lo importado. */
+  extra?: HistoryPoint[];
 }
 
 type SeriesKey = StatKey | 'total';
@@ -47,7 +49,9 @@ const compact = (n: number) =>
       ? `${(n / 1e3).toFixed(0)}k`
       : `${n}`;
 
-export function HistoryChart({ player }: Props) {
+const NONE: HistoryPoint[] = [];
+
+export function HistoryChart({ player, extra = NONE }: Props) {
   const [history, setHistory] = useState<HistoryPoint[]>(() => loadHistory());
   const [logScale, setLogScale] = useState(false);
   const [hidden, setHidden] = useState<Set<SeriesKey>>(() => new Set(['total']));
@@ -56,7 +60,10 @@ export function HistoryChart({ player }: Props) {
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
   // Imported history + the live "today" point.
-  const rows = useMemo(() => withLivePoint(history, player.stats), [history, player.stats]);
+  const rows = useMemo(
+    () => withLivePoint(mergeHistories(history, extra), player.stats),
+    [history, extra, player.stats],
+  );
 
   const data = useMemo(
     () =>

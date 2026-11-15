@@ -326,7 +326,7 @@ ${body}
         <p><a href="/pro">Get Pro</a> — 1 Xanax, 30 days. Everything else stays free.</p>
         <p>
           Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
-          and is sent only to api.torn.com.
+          and is sent only to api.torn.com unless you turn on daily tracking. <a href="/privacy">Privacy</a>.
         </p>
       </footer>
     </main>
@@ -1027,6 +1027,7 @@ emit(
     body: `      <h2>What Pro adds</h2>
       <ul>
         <li><strong>Happy jump ROI at live market prices</strong> — what a jump and a normal 36-hour stack each cost, $ per stat, and what every extra stat point from the jump really costs you.</li>
+        <li><strong>Faction dashboard</strong> (faction pass) — leader and co-leader see every member who shares their stats: totals, stat split and 30-day growth, updated daily.</li>
         <li><strong>Pro alerts in the browser extension</strong> — booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
       </ul>
 
@@ -1035,7 +1036,7 @@ emit(
         <thead><tr><th>Send to <a href="https://www.torn.com/profiles.php?XID=2885363">[2885363]</a></th><th>You get</th></tr></thead>
         <tbody>
           <tr><td class="num">1 Xanax</td><td>30 days of Pro for you — stackable, paying early never loses days</td></tr>
-          <tr><td class="num">30 Xanax in one gift</td><td>30 days of Pro for <strong>everyone in your faction</strong></td></tr>
+          <tr><td class="num">30 Xanax in one gift</td><td>30 days of Pro for <strong>everyone in your faction</strong>, plus the faction dashboard for your leader and co-leader</td></tr>
         </tbody>
       </table></div>
       <p>
@@ -1072,7 +1073,7 @@ emit(
 
       <h2>FAQ</h2>
       <h3>Do I need to give you my API key?</h3>
-      <p>No. Pro is matched by your Torn ID from the gift itself. Your key stays in your browser and goes only to api.torn.com — see the <a href="/privacy">privacy policy</a>.</p>
+      <p>No. Pro is matched by your Torn ID from the gift itself. Your key stays in your browser and goes only to api.torn.com, unless you turn on optional daily tracking — see the <a href="/privacy">privacy policy</a>.</p>
       <h3>Does anything free become paid?</h3>
       <p>No. The calculator, the guides and the standard alerts stay free.</p>
       <h3>I sent it and nothing changed.</h3>
@@ -1088,24 +1089,55 @@ emit(
   page({
     path: '/privacy/',
     title: 'Privacy Policy — Torn Training Optimizer',
-    description: 'What Torn Training Optimizer and its browser extension do with your Torn API key, stats and player ID.',
+    description: 'What Torn Training Optimizer and its browser extension do with your Torn API key, stats and player ID, including optional daily tracking and faction sharing.',
     h1: 'Privacy policy',
-    sub: 'Short version: your API key and your stats never leave your browser except to go to api.torn.com.',
+    sub: 'By default your API key and your stats stay in your browser. Daily tracking and faction sharing are opt-in, and you can delete everything at any time.',
     crumbs: [
       { name: 'Torn Training Optimizer', path: '/' },
       { name: 'Privacy', path: '/privacy/' },
     ],
-    body: `      <h2>Your Torn API key</h2>
+    body: `      <h2>Torn API usage</h2>
+      <p>As required by Torn\u2019s API terms, this is exactly what the tool does with your key:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Data storage</th><th>Data sharing</th><th>Purpose of use</th><th>Key storage &amp; sharing</th><th>Key access level</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Default: only in your browser. With daily tracking on: one battle-stats snapshot per day, your name and faction ID, kept until you stop tracking.</td>
+            <td>Nobody by default. If you opt in: your faction\u2019s leader and co-leader see your latest stats and 30-day growth.</td>
+            <td>Gym calculations; with tracking on, your history chart and the faction dashboard.</td>
+            <td>Default: your browser only. With tracking on: stored encrypted (AES-GCM) on our server, used once a day to read your own stats, never shared. Deleted when you stop tracking or if Torn reports the key as invalid.</td>
+            <td>Limited (battle stats, bars, profile)</td>
+          </tr>
+        </tbody>
+      </table></div>
+
+      <h2>Your Torn API key</h2>
       <p>
-        The website keeps your key in your browser’s local storage; the extension keeps it in
-        the extension’s local storage. In both cases it is sent only to api.torn.com, to read
-        your own data. It is never sent to torntraining.com or anyone else.
+        By default the website keeps your key in your browser\u2019s local storage and the extension in
+        its own local storage, and both send it only to api.torn.com. If you turn on daily tracking,
+        the key is also sent once to torntraining.com, stored encrypted, and used only by a daily job
+        that reads your own battle stats.
       </p>
 
       <h2>Your stats</h2>
       <p>
-        Battle stats, bars, perks and cooldowns are read from the Torn API and processed in your
-        browser. They are not sent to or stored on any server we run.
+        Without tracking, everything is computed in your browser and nothing is stored on our server.
+        With tracking on, one snapshot per day (strength, defense, speed, dexterity) is stored so you
+        can see your history even on days you do not visit.
+      </p>
+
+      <h2>Faction sharing (optional)</h2>
+      <p>
+        If you tick \u201cshare with my faction\u2019s leader and co-leader\u201d, they can see your latest
+        stats, your stat split and your 30-day growth in the faction dashboard. Only the current leader
+        and co-leader of your current faction, as reported by the Torn API, can see it. Untick it at any
+        time.
+      </p>
+
+      <h2>Deleting your data</h2>
+      <p>
+        \u201cStop tracking &amp; delete my data\u201d in the Progress tab removes your key, your profile
+        and every snapshot immediately.
       </p>
 
       <h2>Supporter Pro check</h2>
@@ -1113,8 +1145,7 @@ emit(
         To check whether you have Pro, the website and the extension send your Torn player ID and
         faction ID to torntraining.com. Separately, the author’s own Torn account events are read
         to record Xanax gifts it receives: sender ID, quantity, time, and — for gifts of 30 or more —
-        the sender’s faction at that moment. That record is all we store, and it is used only to
-        grant Pro.
+        the sender’s faction at that moment. That record is used only to grant Pro.
       </p>
 
       <h2>Analytics</h2>

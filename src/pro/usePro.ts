@@ -11,10 +11,10 @@ export interface ProStatus {
  * y devuelve null. El resultado se cachea una hora en localStorage para no
  * llamar a la función en cada visita; `recheck` lo salta tras donar.
  */
-export function usePro(playerId: number | null | undefined) {
+export function usePro(playerId: number | null | undefined, factionId?: number | null) {
   const [status, setStatus] = useState<ProStatus | null>(null);
   const [checking, setChecking] = useState(false);
-  const cacheKey = `tto-pro-${playerId}`;
+  const cacheKey = `tto-pro-${playerId}-${factionId ?? 0}`;
 
   const check = useCallback(
     async (force: boolean) => {
@@ -27,7 +27,7 @@ export function usePro(playerId: number | null | undefined) {
       }
       setChecking(true);
       try {
-        const res = await fetch(`/api/pro?id=${playerId}`);
+        const res = await fetch(`/api/pro?id=${playerId}${factionId ? `&faction=${factionId}` : ''}`);
         if (!res.ok) return;
         const s = (await res.json()) as ProStatus;
         setStatus(s);
@@ -41,7 +41,7 @@ export function usePro(playerId: number | null | undefined) {
         setChecking(false);
       }
     },
-    [playerId, cacheKey],
+    [playerId, factionId, cacheKey],
   );
 
   useEffect(() => {

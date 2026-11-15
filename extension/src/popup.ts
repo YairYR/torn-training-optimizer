@@ -1,4 +1,5 @@
-import { AlertConfig, AlertId, DEFAULT_ALERT_CONFIG } from '../../src/engine/alerts';
+import { AlertConfig, AlertId, DEFAULT_ALERT_CONFIG, PRO_ALERTS } from '../../src/engine/alerts';
+import { PROFILE_URL, RECIPIENT_ID } from '../../src/pro/entitlement';
 
 const RULES: { id: AlertId; label: string }[] = [
   { id: 'energyOverflow', label: 'Energy almost full' },
@@ -6,10 +7,13 @@ const RULES: { id: AlertId; label: string }[] = [
   { id: 'drugReady', label: 'Drug cooldown clear' },
   { id: 'lowHappyHighEnergy', label: 'Low happy, high energy' },
   { id: 'educationDone', label: 'Education idle' },
+  { id: 'boosterReady', label: 'Booster cooldown clear' },
+  { id: 'jumpReady', label: 'Ready to happy jump' },
+  { id: 'happyResetSoon', label: 'Happy resets in ≤3 min' },
 ];
 
 async function load() {
-  const r = await chrome.storage.local.get(['apiKey', 'config']);
+  const r = await chrome.storage.local.get(['apiKey', 'config', 'pro']);
   const apiKey: string = r.apiKey ?? '';
   const config: AlertConfig = { ...DEFAULT_ALERT_CONFIG, ...(r.config ?? {}) };
 
@@ -26,7 +30,20 @@ async function load() {
     cb.dataset.id = rule.id;
     row.appendChild(cb);
     row.appendChild(document.createTextNode(rule.label));
+    if (PRO_ALERTS.includes(rule.id)) {
+      const tag = document.createElement('span');
+      tag.className = 'pro-tag';
+      tag.textContent = 'PRO';
+      row.appendChild(tag);
+    }
     list.appendChild(row);
+  }
+
+  const pro = document.getElementById('pro')!;
+  if (r.pro?.pro) {
+    pro.textContent = `Pro until ${new Date(r.pro.expires).toLocaleDateString()}.`;
+  } else {
+    pro.innerHTML = `PRO alerts: send 1 Xanax to <a href="${PROFILE_URL}" target="_blank">[${RECIPIENT_ID}]</a> for 30 days. Checked hourly.`;
   }
 }
 

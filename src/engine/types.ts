@@ -38,6 +38,8 @@ export interface PlayerState {
   inJail?: boolean | null;
   /** Torn player id, from the API key. null/undefined for manual entry. */
   playerId?: number | null;
+  /** Faction id, for the faction Pro pass. null when factionless or unknown. */
+  factionId?: number | null;
 }
 
 export interface Gym {

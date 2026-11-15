@@ -81,6 +81,7 @@ export function normalizePlayer(raw: RawUser): PlayerState {
     inJail: raw.status?.state != null ? /jail/i.test(raw.status.state) : null,
     // Solo para consultar el Pro (api/pro.ts). Viene en `basic`, ya pedido arriba.
     playerId: raw.player_id != null ? Number(raw.player_id) : null,
+    factionId: raw.faction?.faction_id || null,
   };
 }
 
@@ -123,4 +124,6 @@ export interface RawUser {
   active_gym?: number;
   /** From the `basic` selection. */
   player_id?: number;
+  /** From `profile`. faction_id 0 = sin facción. */
+  faction?: { faction_id?: number };
 }

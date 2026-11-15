@@ -388,7 +388,7 @@ export default function App() {
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
         and is sent only to api.torn.com. Your stats are never stored on any server; checking Pro
-        sends only your player ID.{' '}
+        sends only your player and faction IDs.{' '}
         <a
           href="https://www.torn.com/messages.php#/p=compose&XID=2885363"
           target="_blank"

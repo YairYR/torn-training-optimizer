@@ -6,9 +6,11 @@ create table donations (
   event_id  text primary key,           -- id del evento de Torn: deduplica reintentos
   player_id bigint not null,
   qty       int not null check (qty > 0),
-  ts        bigint not null             -- segundos epoch, como la API de Torn
+  ts        bigint not null,            -- segundos epoch, como la API de Torn
+  faction_id bigint                     -- solo en envíos de 30+ Xanax: pase de facción
 );
 create index donations_player on donations (player_id);
+create index donations_faction on donations (faction_id);
 
 create table sync_state (
   id        int primary key default 1 check (id = 1),

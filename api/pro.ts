@@ -1,4 +1,4 @@
-// GET /api/pro?id=<torn player id>  →  { pro, expires }
+// GET /api/pro?id=<torn player id>[&faction=<faction id>]  →  { pro, expires }
 //
 // Lee los eventos de la cuenta del autor con una key Limited (TORN_KEY), acredita
 // cada "You were sent Nx Xanax" en Supabase y devuelve el vencimiento del Pro de
@@ -9,7 +9,7 @@
 //   SUPABASE_URL         https://<ref>.supabase.co
 //   SUPABASE_SECRET_KEY  secret key del proyecto (no la publishable)
 
-import { expiryOf, parseDonation, Donation } from '../src/pro/entitlement.js'; // ESM en Node exige la extensión
+import { parseDonation, proExpiry, Credit, Donation, XANAX_PER_FACTION_MONTH } from '../src/pro/entitlement.js'; // ESM en Node exige la extensión
 
 // Sin @types/node por una sola línea: el runtime de Vercel ya trae process.
 declare const process: { env: Record<string, string | undefined> };
@@ -26,6 +26,18 @@ function sb(path: string, init: RequestInit = {}) {
 interface TornEvents {
   events?: Record<string, { timestamp: number; event: string }>;
   error?: { code: number; error: string };
+}
+
+/** Facción actual de un jugador (perfil público). null si no tiene o si falla. */
+async function factionOf(playerId: number): Promise<number | null> {
+  try {
+    const r = (await (
+      await fetch(`https://api.torn.com/user/${playerId}?selections=profile&key=${env('TORN_KEY')}&comment=TrainingOptimizer`)
+    ).json()) as { faction?: { faction_id?: number } };
+    return r.faction?.faction_id || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -65,10 +77,21 @@ async function sync() {
   }
 
   if (rows.length) {
+    const credits = await Promise.all(
+      rows.map(async (d) => ({
+        event_id: d.eventId,
+        player_id: d.playerId,
+        qty: d.qty,
+        ts: d.ts,
+        // La facción se fija al momento del envío: si el remitente cambia
+        // después, el pase se queda con la facción que pagó.
+        faction_id: d.qty >= XANAX_PER_FACTION_MONTH ? await factionOf(d.playerId) : null,
+      })),
+    );
     await sb('donations?on_conflict=event_id', {
       method: 'POST',
       headers: { Prefer: 'resolution=ignore-duplicates' },
-      body: JSON.stringify(rows.map((d) => ({ event_id: d.eventId, player_id: d.playerId, qty: d.qty, ts: d.ts }))),
+      body: JSON.stringify(credits),
     });
   }
   if (newest > state.last_ts) {
@@ -77,16 +100,21 @@ async function sync() {
 }
 
 async function handle(request: Request) {
-  const id = Number(new URL(request.url).searchParams.get('id'));
-  if (!Number.isInteger(id) || id <= 0) return Response.json({ error: 'id' }, { status: 400 });
+  const q = new URL(request.url).searchParams;
+  const id = Number(q.get('id'));
+  const faction = Number(q.get('faction')) || null;
+  if (!Number.isInteger(id) || id <= 0 || (faction != null && !Number.isInteger(faction))) {
+    return Response.json({ error: 'id' }, { status: 400 });
+  }
 
   // Un fallo de Torn o de la sincronización no debe negar el Pro ya pagado:
   // se registra y se responde con lo que ya está guardado.
   await sync().catch((e) => console.error('pro: sync failed', e));
 
-  const res = await sb(`donations?player_id=eq.${id}&select=qty,ts`);
+  const who = faction ? `or=(player_id.eq.${id},faction_id.eq.${faction})` : `player_id=eq.${id}`;
+  const res = await sb(`donations?${who}&select=player_id,faction_id,qty,ts`);
   if (!res.ok) return Response.json({ error: 'storage' }, { status: 502 });
-  const expires = expiryOf((await res.json()) as { qty: number; ts: number }[]);
+  const expires = proExpiry((await res.json()) as Credit[], id, faction);
 
   return Response.json(
     { pro: expires * 1000 > Date.now(), expires: expires ? new Date(expires * 1000).toISOString() : null },

@@ -4,7 +4,7 @@ import {
   AlertId,
   DEFAULT_ALERT_CONFIG,
 } from '../../src/engine/alerts';
-import { fetchSnapshot } from './api';
+import { fetchSnapshot, proStatus } from './api';
 
 const ALARM = 'poll';
 const POLL_MINUTES = 1; // chrome.alarms minimum is 1 minute
@@ -46,7 +46,8 @@ async function poll() {
     return; // stay quiet on transient errors
   }
 
-  const alerts = evaluateAlerts(snap, config);
+  const pro = (await proStatus(snap.playerId, snap.factionId))?.pro ?? false;
+  const alerts = evaluateAlerts(snap, config, pro);
   const nowFired: Partial<Record<AlertId, boolean>> = {};
 
   for (const alert of alerts) {

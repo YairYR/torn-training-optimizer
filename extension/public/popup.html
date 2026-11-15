@@ -52,6 +52,8 @@
       }
       #status { color: #5ec0a8; font-size: 12px; text-align: center; height: 16px; margin-top: 6px; }
       .hint { font-size: 11px; color: #8c95a4; margin-top: 10px; line-height: 1.4; }
+      .hint a { color: #d99a4e; }
+      .pro-tag { margin-left: auto; font-size: 9.5px; color: #d99a4e; border: 1px solid #8f6a37; border-radius: 4px; padding: 0 4px; }
     </style>
   </head>
   <body>
@@ -61,7 +63,8 @@
     <div id="rules"></div>
     <button id="save">Save</button>
     <div id="status"></div>
-    <p class="hint">Polls every minute. The key stays local and is sent only to api.torn.com.</p>
+    <p class="hint" id="pro"></p>
+    <p class="hint">Polls every minute. The key stays local and is sent only to api.torn.com; the Pro check sends only your player and faction IDs to torntraining.com.</p>
     <script type="module" src="popup.js"></script>
   </body>
 </html>

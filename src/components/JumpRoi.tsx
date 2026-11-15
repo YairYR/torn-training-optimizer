@@ -3,7 +3,7 @@ import { Gym, PlayerState, SessionConfig, STAT_LABEL } from '../engine/types';
 import { Prices } from '../engine/cost-model';
 import { jumpRoi, STACK_HOURS } from '../engine/jump-roi';
 import { usePro } from '../pro/usePro';
-import { DAYS_PER_XANAX, PROFILE_URL, RECIPIENT_ID } from '../pro/entitlement';
+import { DAYS_PER_XANAX, PROFILE_URL, RECIPIENT_ID, XANAX_PER_FACTION_MONTH } from '../pro/entitlement';
 import { track } from '../analytics';
 import { fmtGain, fmtInt, fmtMoney, fmtPerPoint } from '../format';
 
@@ -18,7 +18,7 @@ interface Props {
 export function JumpRoi({ gyms, player, modifiers, config, prices }: Props) {
   const [edvds, setEdvds] = useState(5);
   const [novelties, setNovelties] = useState(false);
-  const { status, checking, recheck } = usePro(player.playerId);
+  const { status, checking, recheck } = usePro(player.playerId, player.factionId);
 
   const gym = gyms.find((g) => g.id === config.gymId);
   const dots = gym ? gym.dots[config.stat] : 0;
@@ -124,8 +124,9 @@ export function JumpRoi({ gyms, player, modifiers, config, prices }: Props) {
             <a href={PROFILE_URL} target="_blank" rel="noopener" onClick={() => track('pro_cta_click')}>
               [{RECIPIENT_ID}]
             </a>{' '}
-            → {DAYS_PER_XANAX} days of Pro, stackable. It is credited automatically about a minute after
-            it arrives.
+            → {DAYS_PER_XANAX} days of Pro, stackable, including the Pro alerts in the browser extension.
+            Send <strong>{XANAX_PER_FACTION_MONTH} in one gift</strong> and your whole faction gets{' '}
+            {DAYS_PER_XANAX} days. Credited automatically about a minute after it arrives.
           </p>
           {player.playerId ? (
             <button type="button" onClick={recheck} disabled={checking}>

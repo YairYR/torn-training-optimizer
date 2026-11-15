@@ -57,7 +57,7 @@ export function AboutSection() {
       <p>
         Yes. Your key stays in your browser and is only ever sent to api.torn.com — never to us.
         There is no account and your stats are not stored anywhere. The only server call is the
-        optional Pro check, which sends your Torn player ID — never your key — to see whether you
+        optional Pro check, which sends your Torn player and faction IDs — never your key — to see whether you
         have sent a Xanax. It's free, has no ads, and is not affiliated with Torn.
       </p>
 

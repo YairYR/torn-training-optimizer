@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseDonation, expiryOf } from './entitlement';
+import { parseDonation, expiryOf, proExpiry } from './entitlement';
 
 const ev = (event: string) => ({ timestamp: 1_000, event });
 const DAY = 86_400;
@@ -47,5 +47,29 @@ describe('expiryOf', () => {
 
   it('restarts from the payment date after a lapse', () => {
     expect(expiryOf([{ ts: 0, qty: 1 }, { ts: 100 * DAY, qty: 1 }])).toBe(130 * DAY);
+  });
+});
+
+describe('proExpiry', () => {
+  const rows = [
+    { player_id: 1, faction_id: null, qty: 1, ts: 0 }, // personal
+    { player_id: 2, faction_id: 9, qty: 31, ts: 0 }, // faction pass + 1 personal
+  ];
+
+  it('credits own gifts', () => {
+    expect(proExpiry(rows, 1, null)).toBe(30 * DAY);
+  });
+
+  it('gives every faction member 30 days per 30 Xanax gift', () => {
+    expect(proExpiry(rows, 3, 9)).toBe(30 * DAY);
+    expect(proExpiry(rows, 3, 8)).toBe(0);
+  });
+
+  it('keeps the remainder of a faction gift for the sender', () => {
+    expect(proExpiry([{ player_id: 2, faction_id: 9, qty: 31, ts: 0 }], 2, null)).toBe(30 * DAY);
+  });
+
+  it('takes the later of personal and faction expiry', () => {
+    expect(proExpiry([...rows, { player_id: 1, faction_id: null, qty: 2, ts: 0 }], 1, 9)).toBe(90 * DAY);
   });
 });

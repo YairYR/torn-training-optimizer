@@ -1,0 +1,22 @@
+name: CI
+
+# Corre en cada PR y en main: tests (incluye el chequeo de imports .js de /api),
+# build de la web y de la extensión. El deploy lo hace Vercel, no este workflow.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run build:ext

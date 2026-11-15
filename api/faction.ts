@@ -7,7 +7,7 @@
 import { unseal } from '../src/cloud/crypto.js';
 import { proExpiry, Credit } from '../src/pro/entitlement.js';
 import { summarize, utcDay, SnapshotRow } from '../src/cloud/tracking.js';
-import { env, json, sb, sessionOf, torn } from './_lib.js';
+import { appSecret, json, sb, sessionOf, torn } from './_lib.js';
 
 interface FactionBasic {
   ID: number;
@@ -24,7 +24,7 @@ async function handle(req: Request) {
   const [me] = (await (await sb(`members?player_id=eq.${id}&select=key_enc`)).json()) as { key_enc: string | null }[];
   if (!me?.key_enc) return json({ error: 'not tracked' }, 404);
 
-  const f = await torn<FactionBasic>('/faction/?selections=basic', await unseal(env('APP_SECRET'), me.key_enc));
+  const f = await torn<FactionBasic>('/faction/?selections=basic', await unseal(appSecret(), me.key_enc));
   if (f.error || !f.ID) return json({ error: 'no faction' }, 403);
   if (f.leader !== id && f['co-leader'] !== id) return json({ error: 'leader only', faction: f.name }, 403);
 

@@ -4,13 +4,13 @@
 
 import { unseal } from '../src/cloud/crypto.js';
 import { isDeadKeyError } from '../src/cloud/tracking.js';
-import { env, json, readMe, saveSnapshot, sb } from './_lib.js';
+import { appSecret, env, json, readMe, saveSnapshot, sb } from './_lib.js';
 
 async function track(m: { player_id: number; key_enc: string }) {
   const patch = (body: object) =>
     sb(`members?player_id=eq.${m.player_id}`, { method: 'PATCH', body: JSON.stringify(body) });
   try {
-    const me = await readMe(await unseal(env('APP_SECRET'), m.key_enc));
+    const me = await readMe(await unseal(appSecret(), m.key_enc));
     if (me.error) {
       await patch({ last_error: me.error.error, ...(isDeadKeyError(me.error.code) ? { key_enc: null } : {}) });
       return false;
@@ -25,7 +25,8 @@ async function track(m: { player_id: number; key_enc: string }) {
 }
 
 async function handle(req: Request) {
-  if (req.headers.get('authorization') !== `Bearer ${env('CRON_SECRET')}`) return json({ error: 'auth' }, 401);
+  const cron = env('CRON_SECRET');
+  if (!cron || req.headers.get('authorization') !== `Bearer ${cron}`) return json({ error: 'auth' }, 401);
 
   const members = (await (await sb('members?key_enc=not.is.null&select=player_id,key_enc')).json()) as {
     player_id: number;

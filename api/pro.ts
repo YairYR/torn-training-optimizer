@@ -9,7 +9,7 @@
 //   SUPABASE_URL         https://<ref>.supabase.co
 //   SUPABASE_SECRET_KEY  secret key del proyecto (no la publishable)
 
-import { expiryOf, parseDonation, Donation } from '../src/pro/entitlement';
+import { expiryOf, parseDonation, Donation } from '../src/pro/entitlement.js'; // ESM en Node exige la extensión
 
 // Sin @types/node por una sola línea: el runtime de Vercel ya trae process.
 declare const process: { env: Record<string, string | undefined> };

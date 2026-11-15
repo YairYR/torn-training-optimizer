@@ -62,9 +62,9 @@ export function AboutSection() {
 
       <p>
         New to gym training, or want the mechanics in depth? Read the{' '}
-        <a href="/guide/">full Torn gym training guide</a> — happy, energy, drugs and gyms, with
-        verified mechanics — check the <a href="/happy-jump/">happy jump calculator &amp; guide</a>,
-        or jump to the <a href="/specialist-gyms/">specialist gym requirements</a>.
+        <a href="/guide">full Torn gym training guide</a> — happy, energy, drugs and gyms, with
+        verified mechanics — check the <a href="/happy-jump">happy jump calculator &amp; guide</a>,
+        or jump to the <a href="/specialist-gyms">specialist gym requirements</a>.
       </p>
 
       <h2>Frequently asked questions</h2>

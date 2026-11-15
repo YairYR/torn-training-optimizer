@@ -8,7 +8,7 @@
     "dev": "node scripts/gen-seo.mjs && vite",
     "build": "tsc --noEmit && node scripts/gen-seo.mjs && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "node scripts/check-api-imports.mjs && vitest run",
     "test:watch": "vitest",
     "seo": "node scripts/gen-seo.mjs",
     "typecheck": "tsc --noEmit",

@@ -1,5 +1,9 @@
-import { HistoryPoint } from '../engine/history';
-import { StatKey, STAT_KEYS } from '../engine/types';
+// Solo imports de tipo: este módulo corre también en las funciones de /api, donde
+// Node ESM exige extensión en cada import de valor.
+import type { HistoryPoint } from '../engine/history';
+import type { StatKey } from '../engine/types';
+
+const STAT_KEYS: StatKey[] = ['strength', 'defense', 'speed', 'dexterity'];
 
 // Lógica pura del seguimiento diario: compartida por las funciones de /api y la app.
 

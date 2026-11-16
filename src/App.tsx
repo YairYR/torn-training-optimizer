@@ -389,6 +389,7 @@ export default function App() {
           <a href="/stat-cap">The 50M Stat Cap</a>
           <a href="/gyms">All Gyms</a>
           <a href="/pro">Get Pro</a>
+          <a href="https://chromewebstore.google.com/detail/torn-training-optimizer/eleofhojmldinnpklmmplgfelgebiici" target="_blank" rel="noopener">Chrome extension</a>
           <a href="/privacy">Privacy</a>
         </nav>
         Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser

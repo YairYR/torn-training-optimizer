@@ -9,6 +9,7 @@ export const DAYS_PER_XANAX = 30;
 /** Un solo envío de 30+ Xanax compra 30 días para toda la facción del remitente. */
 export const XANAX_PER_FACTION_MONTH = 30;
 export const PROFILE_URL = `https://www.torn.com/profiles.php?XID=${RECIPIENT_ID}`;
+export const EXTENSION_URL = 'https://chromewebstore.google.com/detail/torn-training-optimizer/eleofhojmldinnpklmmplgfelgebiici';
 
 export interface Donation {
   eventId: string;

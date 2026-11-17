@@ -89,6 +89,15 @@ export function TrainingPlan({
           : 0;
 
       const recommendedHappy = book ? HAPPY_CAP : maxHappy;
+      // Se calcula aquí, no en el JSX, para poder comparar las cuatro frases
+      // entre sí antes de pintarlas — ver sharedHappy más abajo.
+      const happyLine = book
+        ? 'sustained 99,999 (book)'
+        : `train at your max ~${fmtInt(maxHappy)}${
+            regime.regime !== 'energy-training'
+              ? '; jump when affordable'
+              : '; optional 1 Ecstasy ×2'
+          }`;
 
       // Best locked gym that would beat the usable one (upgrade target).
       let upgrade: {
@@ -128,6 +137,7 @@ export function TrainingPlan({
         regime,
         capped,
         recommendedHappy,
+        happyLine,
         gainRecommended: gainAt(recommendedHappy),
         gainCap: gainAt(HAPPY_CAP),
         upgrade,
@@ -140,6 +150,18 @@ export function TrainingPlan({
   // printed the identical paragraph three times under the shared one. Group the
   // off-regime stats instead, so each distinct rationale appears exactly once
   // and says which stats it is about.
+  // Mismo criterio que el de la racional: lo que sale idéntico en las cuatro
+  // tarjetas se imprime una vez. La fila Energy no depende del stat —era
+  // literalmente la misma frase cuatro veces— y la de Happy solo cambia si hay
+  // dos regímenes en juego, cosa que no ocurre en la mayoría de los casos. Con
+  // esto la tarjeta se queda con lo único que de verdad varía por stat: gimnasio,
+  // dots, la cifra y el próximo desbloqueo.
+  const energyLine = drugEnergy
+    ? `${drugEnergy.source.name} (${fmtMoney(drugEnergy.dollarsPerEnergy)}/E) + refill + natural`
+    : 'Xanax + refill + natural';
+  const happyLines = [...new Set(plans.filter((p) => p.gym).map((p) => p.happyLine))];
+  const sharedHappy = happyLines.length === 1 ? happyLines[0] : null;
+
   const sharedRegime = plans.find((p) => p.regime.regime === stage.regime)?.regime ?? plans[0].regime;
   const otherRegimes: { rationale: string; stats: StatKey[] }[] = [];
   for (const p of plans) {
@@ -181,6 +203,16 @@ export function TrainingPlan({
           <strong>{o.stats.map((s) => STAT_LABEL[s]).join(', ')}:</strong> {o.rationale}
         </div>
       ))}
+      <div className="plan-shared">
+        {sharedHappy && (
+          <>
+            <span className="plan-k">Happy</span>
+            <span className="plan-v">{sharedHappy}</span>
+          </>
+        )}
+        <span className="plan-k">Energy</span>
+        <span className="plan-v">{energyLine}</span>
+      </div>
 
       <div className="plan-grid">
         {plans.map((p) => (
@@ -200,24 +232,12 @@ export function TrainingPlan({
                     {p.gym.name || 'Fight Club'} · {p.dots.toFixed(1)} dots · {p.gym.energyPerTrain}E
                   </span>
                 </div>
-                <div className="plan-row">
-                  <span className="plan-k">Happy</span>
-                  <span className="plan-v">
-                    {book
-                      ? 'sustained 99,999 (book)'
-                      : `train at your max ~${fmtInt(maxHappy)}${
-                          p.regime.regime !== 'energy-training' ? '; jump when affordable' : '; optional 1 Ecstasy ×2'
-                        }`}
-                  </span>
-                </div>
-                <div className="plan-row">
-                  <span className="plan-k">Energy</span>
-                  <span className="plan-v">
-                    {drugEnergy
-                      ? `${drugEnergy.source.name} (${fmtMoney(drugEnergy.dollarsPerEnergy)}/E) + refill + natural`
-                      : 'Xanax + refill + natural'}
-                  </span>
-                </div>
+                {!sharedHappy && (
+                  <div className="plan-row">
+                    <span className="plan-k">Happy</span>
+                    <span className="plan-v">{p.happyLine}</span>
+                  </div>
+                )}
                 <div className="plan-gain">
                   ≈ +{fmtGain(p.gainRecommended)}{' '}
                   <span className="plan-gain-lbl">per train{book ? ' (book)' : ' at max happy'}</span>

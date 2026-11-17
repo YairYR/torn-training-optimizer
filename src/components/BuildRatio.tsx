@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Gym, PlayerState, STAT_LABEL, StatKey } from '../engine/types';
 import {
   evaluateGymEligibility,
@@ -9,6 +9,19 @@ import {
 import { resolveUnlockTarget } from '../engine/planner';
 import { BUILD_PRESETS, evaluateBuildRatio } from '../engine/build-ratio';
 import { fmtGain, fmtInt } from '../format';
+
+/* El estado de cada fila se leía solo por el color del porcentaje: rojo por
+   debajo del objetivo, verde en objetivo, gris por encima. Es un fallo de WCAG
+   1.4.1 (información transmitida solo con color) y, en la práctica, obliga a
+   recordar qué significa cada tono en una tabla de cuatro filas. El símbolo
+   duplica el estado en una forma, y la barra de debajo convierte el par
+   "actual vs objetivo" en algo que se compara de un vistazo sin leer dos
+   números. aria-hidden porque el estado ya está en el texto de la celda. */
+const SHARE_MARK: Record<'behind' | 'on-track' | 'ahead', string> = {
+  behind: '▼',
+  'on-track': '●',
+  ahead: '▲',
+};
 
 interface Props {
   gyms: Gym[];
@@ -117,18 +130,21 @@ export function BuildRatio({ gyms, player, gate, hasBuild }: Props) {
                   <tr key={row.stat}>
                     <td>{STAT_LABEL[row.stat]}</td>
                     <td className="num">{fmtInt(row.value)}</td>
-                    <td
-                      className="num"
-                      style={{
-                        color:
-                          row.status === 'behind'
-                            ? 'var(--danger)'
-                            : row.status === 'on-track'
-                              ? 'var(--best)'
-                              : 'var(--muted)',
-                      }}
-                    >
+                    <td className={`num share-cell share-${row.status}`}>
+                      <span className="share-mark" aria-hidden="true">
+                        {SHARE_MARK[row.status]}
+                      </span>
                       {(row.share * 100).toFixed(1)}%
+                      <span
+                        className="share-bar"
+                        aria-hidden="true"
+                        style={
+                          {
+                            '--share': `${Math.min(100, row.share * 100).toFixed(1)}%`,
+                            '--target': `${Math.min(100, row.targetShare * 100).toFixed(1)}%`,
+                          } as React.CSSProperties
+                        }
+                      />
                     </td>
                     <td className="num">{(row.targetShare * 100).toFixed(1)}%</td>
                     <td className="num">

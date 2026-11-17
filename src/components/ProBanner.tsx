@@ -42,18 +42,25 @@ export function ProBanner({ player }: { player: PlayerState }) {
     <aside className={`pro-banner pro-banner-${variant}`} aria-label="Torn Training Pro">
       {variant === 'faction' ? (
         <p>
-          <strong>Lead {player.factionName ?? 'your faction'}?</strong> Send {XANAX_PER_FACTION_MONTH} Xanax in
-          one gift and <strong>every member gets Pro for 30 days</strong> — plus a dashboard of everyone&apos;s
-          stats, split and 30-day growth for you and your co-leader.
+          <strong>Lead {player.factionName ?? 'your faction'}?</strong> {XANAX_PER_FACTION_MONTH} Xanax in one
+          gift = <strong>Pro for every member</strong>
+          <span className="pro-banner-more">
+            {' '}for 30 days — plus a dashboard of everyone&apos;s stats, split and 30-day growth for you and your
+            co-leader
+          </span>
+          .
         </p>
       ) : (
         <p>
-          <strong>Go Pro for 1 Xanax.</strong> Weekly insights, the date you hit your next milestone at your
-          real pace, your faction rank, happy jump ROI at live prices and Pro alerts in the{' '}
-          <a href={EXTENSION_URL} target="_blank" rel="noopener">
-            Chrome extension
-          </a>
-          . 30 days, stackable — everything else stays free.
+          <strong>Go Pro for 1 Xanax</strong> — 30 days, stackable.
+          <span className="pro-banner-more">
+            {' '}Weekly insights, the date you hit your next milestone at your real pace, your faction rank,
+            happy jump ROI at live prices and Pro alerts in the{' '}
+            <a href={EXTENSION_URL} target="_blank" rel="noopener">
+              Chrome extension
+            </a>
+            . Everything else stays free.
+          </span>
         </p>
       )}
       <div className="pro-banner-actions">

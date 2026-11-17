@@ -18,9 +18,10 @@ interface Props {
 /**
  * Both ways to get your numbers in, in one place: paste an API key, or —
  * behind a <details>, since it's an alternative path rather than content to
- * hide — type stats by hand. Lives in the shell, above the AnswerBar, so it's
- * reachable no matter which route you're on; the manual form stays collapsed
- * so it doesn't shout at a player whose data is already loaded.
+ * hide — type stats by hand. Lives in the shell, al pie del <main>, so it's
+ * reachable no matter which route you're on without costing the answer its
+ * place above the fold (ver App.tsx); the manual form stays collapsed so it
+ * doesn't shout at a player whose data is already loaded.
  */
 export function YourData({ apiKey, onApiKey, loading, onLoad, error, onManual }: Props) {
   const [stats, setStats] = useState<Record<StatKey, number>>({

@@ -35,6 +35,14 @@ export function Nav({ route, stage, hrefFor, onNavigate }: Props) {
             r === '/cost' && !stage.hasPrices ? ' dim' : ''
           }`}
           aria-current={r === route ? 'page' : undefined}
+          // La pestaña Cost se pinta apagada cuando todavía no hay precios de
+          // mercado. Apagarla sin decir nada deja a la gente adivinando si está
+          // rota o deshabilitada — y sigue navegando, así que no lo está.
+          title={
+            r === '/cost' && !stage.hasPrices
+              ? 'Needs live market prices — load a Torn API key'
+              : undefined
+          }
           onClick={(e) => {
             // Un clic con modificador, o con un botón que no sea el principal,
             // significa "ábrelo aparte". Eso lo resuelve el navegador mejor que

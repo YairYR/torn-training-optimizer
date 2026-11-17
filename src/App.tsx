@@ -354,7 +354,28 @@ export default function App() {
       {/* tabIndex -1 para que el salto mueva el foco de verdad, no solo el
           scroll: <main> no es focusable por defecto, así que sin esto el
           siguiente Tab volvería al principio de la cabecera. */}
+      {/* El orden es deliberado: la respuesta antes que el formulario.
+          "Your data" abría la página, y en un teléfono de 812px de alto el
+          panel completo —campo de API key, botón, aviso de privacidad y el
+          desplegable de entrada manual— ocupaba la primera pantalla entera:
+          la cifra que la gente viene a ver empezaba en y=784, justo bajo el
+          pliegue. Es además un panel de un solo uso: se rellena una vez y no
+          se vuelve a tocar en toda la sesión. Al pie sigue siendo alcanzable
+          desde los dos enlaces del banner de muestra (ambos a #own-numbers) y
+          desde el skip link, sin costarle una pantalla a cada visita. */}
       <main id="main" tabIndex={-1}>
+        {isDemo && (
+          <p className="demobar">
+            <strong>Sample player.</strong> Everything below is live — the real formula on made-up
+            stats. <a href="#own-numbers">Load your API key or enter your own numbers</a> to replace
+            it.
+          </p>
+        )}
+
+        {player && <ProBanner player={player} />}
+
+        {routeSection}
+
         <YourData
           apiKey={apiKey}
           onApiKey={setApiKey}
@@ -366,18 +387,6 @@ export default function App() {
             loadManual(d);
           }}
         />
-
-        {isDemo && (
-          <p className="demobar">
-            <strong>Sample player.</strong> Everything below is live — the real formula on made-up
-            stats. Load your API key above, or <a href="#own-numbers">enter your own numbers</a>, to
-            replace it.
-          </p>
-        )}
-
-        {player && <ProBanner player={player} />}
-
-        {routeSection}
       </main>
 
       <footer className="site-footer">

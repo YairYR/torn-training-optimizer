@@ -334,7 +334,7 @@ ${
         }
         <p>
           Unofficial fan-made tool · not affiliated with Torn.com. Your API key stays in your browser
-          and is sent only to api.torn.com unless you turn on daily tracking. <a href="/privacy">Privacy</a>.
+          and is sent only to api.torn.com unless you turn on daily tracking. <a href="https://chromewebstore.google.com/detail/torn-training-optimizer/eleofhojmldinnpklmmplgfelgebiici">Chrome extension</a> · <a href="/privacy">Privacy</a>.
         </p>
       </footer>
     </main>
@@ -1025,7 +1025,7 @@ emit(
     path: '/pro/',
     title: 'Torn Training Pro — 1 Xanax, 30 Days',
     description:
-      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (progress insights, happy jump ROI at live prices; Pro alerts coming soon), or 30 Xanax for your whole faction.',
+      'Support the free Torn gym calculator: send 1 Xanax for 30 days of Pro (progress insights, happy jump ROI at live prices, Pro alerts in the Chrome extension), or 30 Xanax for your whole faction.',
     h1: 'Torn Training Pro',
     sub: 'Everything on this site stays free. Pro adds the money side of training — and keeps the tool running.',
     crumbs: [
@@ -1037,7 +1037,7 @@ emit(
         <li><strong>Progress insights</strong> (with free daily tracking) — your week at a glance, the date you hit your next milestone on every stat at your real pace, and your rank in your faction by 30-day growth.</li>
         <li><strong>Happy jump ROI at live market prices</strong> — what a jump and a normal 36-hour stack each cost, $ per stat, and what every extra stat point from the jump really costs you.</li>
         <li><strong>Faction dashboard</strong> (faction pass) — leader and co-leader see every member who shares their stats: totals, stat split and 30-day growth, updated daily.</li>
-        <li><strong>Pro alerts in the browser extension — coming soon</strong> (pending Chrome Web Store review): booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
+        <li><strong>Pro alerts in the <a href="https://chromewebstore.google.com/detail/torn-training-optimizer/eleofhojmldinnpklmmplgfelgebiici">Chrome extension</a></strong>: booster cooldown clear, ready to happy jump (1,000+ energy, both cooldowns clear), and a warning 3 minutes before boosted happy resets.</li>
       </ul>
 
       <h2>How to get it</h2>

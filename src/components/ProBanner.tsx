@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PlayerState } from '../engine/types';
 import { usePro } from '../pro/usePro';
-import { PROFILE_URL, RECIPIENT_ID, XANAX_PER_FACTION_MONTH } from '../pro/entitlement';
+import { EXTENSION_URL, PROFILE_URL, RECIPIENT_ID, XANAX_PER_FACTION_MONTH } from '../pro/entitlement';
 import { track } from '../analytics';
 
 const HIDE = 'tto.proBanner';
@@ -49,8 +49,11 @@ export function ProBanner({ player }: { player: PlayerState }) {
       ) : (
         <p>
           <strong>Go Pro for 1 Xanax.</strong> Weekly insights, the date you hit your next milestone at your
-          real pace, your faction rank and happy jump ROI at live prices. 30 days, stackable — everything
-          else stays free.
+          real pace, your faction rank, happy jump ROI at live prices and Pro alerts in the{' '}
+          <a href={EXTENSION_URL} target="_blank" rel="noopener">
+            Chrome extension
+          </a>
+          . 30 days, stackable — everything else stays free.
         </p>
       )}
       <div className="pro-banner-actions">
